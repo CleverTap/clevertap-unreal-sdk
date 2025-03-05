@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright CleverTap All Rights Reserved.
 
 #pragma once
 
@@ -8,8 +8,9 @@
 class FCleverTapModule : public IModuleInterface
 {
 public:
-
-	/** IModuleInterface implementation */
+	// <IModuleInterface>
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	// </IModuleInterface>
 };
+
