@@ -44,8 +44,7 @@ void UCleverTapSubsystem::InitializeCommonInstance(const UCleverTapConfig* Confi
 	if (!ensure(UObjectInitialized()))
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("InitializeCleverTapSDK() called before UObject initialization. The"
-			" default object for 'UCleverTapConfig' can't be accessed. Please use the"
-			" InitializeCleverTapSDK(const FCleverTapInstanceConfig&) overload instead.")
+			" default object for 'UCleverTapConfig' can't be accessed.")
 		);
 		return;
 	}

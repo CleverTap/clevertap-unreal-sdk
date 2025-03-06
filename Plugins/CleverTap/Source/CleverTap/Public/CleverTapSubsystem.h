@@ -8,7 +8,6 @@
 #include "CleverTapSubsystem.generated.h"
 
 class FCleverTapInstance;
-class FCleverTapInstanceConfig;
 class UCleverTapConfig;
 
 /**
