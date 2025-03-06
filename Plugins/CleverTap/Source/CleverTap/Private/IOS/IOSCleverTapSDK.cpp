@@ -2,7 +2,7 @@
 
 #include "CleverTapConfig.h"
 
-namespace CleverTap { namespace IOS {
+namespace CleverTapSDK { namespace IOS {
 
 FCleverTapInstance* FPlatformSDK::TryInitializeCommonInstance(const UCleverTapConfig& Config)
 {
@@ -13,5 +13,5 @@ void FPlatformSDK::DestroyInstance(FCleverTapInstance& Inst)
 {
 }
 
-} } // namespace CleverTap::IOS
+} } // namespace CleverTapSDK::IOS
 

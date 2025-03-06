@@ -5,7 +5,7 @@
 class UCleverTapConfig;
 class FCleverTapInstance;
 
-namespace CleverTap { namespace GenericPlatform {
+namespace CleverTapSDK { namespace GenericPlatform {
 
 class FPlatformInstance
 { };
@@ -26,5 +26,5 @@ struct FGenericPlatformSDK
 	static void DestroyInstance(FCleverTapInstance& Inst);
 };
 
-} } // namespace CleverTap::GenericPlatform
+} } // namespace CleverTapSDK::GenericPlatform
 

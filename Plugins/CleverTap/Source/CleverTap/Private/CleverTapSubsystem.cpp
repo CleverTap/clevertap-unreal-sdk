@@ -24,7 +24,7 @@ void UCleverTapSubsystem::FCommonInstanceDeleter::operator()(FCleverTapInstance*
 
 void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	CleverTap::Ignore(Collection);
+	CleverTapSDK::Ignore(Collection);
 
 	const UCleverTapConfig* const Config = UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
 	if (!ensure(IsValid(Config)))

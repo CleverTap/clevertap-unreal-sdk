@@ -4,7 +4,7 @@
 
 #include "GenericPlatformCleverTapSDK.h"
 
-namespace CleverTap { namespace Android {
+namespace CleverTapSDK { namespace Android {
 
 class FPlatformInstance
 { };
@@ -15,5 +15,5 @@ struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
 	static void DestroyInstance(FCleverTapInstance& Inst);
 };
 
-} } // namespace CleverTap::Android
+} } // namespace CleverTapSDK::Android
 

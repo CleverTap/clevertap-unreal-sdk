@@ -3,18 +3,18 @@
 #include "CleverTapConfig.h"
 #include "CleverTapUtilities.h"
 
-namespace CleverTap { namespace GenericPlatform {
+namespace CleverTapSDK { namespace GenericPlatform {
 
 FCleverTapInstance* FGenericPlatformSDK::TryInitializeCommonInstance(const UCleverTapConfig& Config)
 {
-	CleverTap::Ignore(Config);
+	CleverTapSDK::Ignore(Config);
 	return nullptr;
 }
 
 void FGenericPlatformSDK::DestroyInstance(FCleverTapInstance& Inst)
 {
-	CleverTap::Ignore(Inst);
+	CleverTapSDK::Ignore(Inst);
 }
 
-} } // namespace CleverTap::GenericPlatform
+} } // namespace CleverTapSDK::GenericPlatform
 

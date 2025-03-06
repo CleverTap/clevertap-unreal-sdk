@@ -5,20 +5,20 @@
 #if PLATFORM_ANDROID
 #include "Android/AndroidCleverTapSDK.h"
 
-using FCleverTapPlatformSDK = CleverTap::Android::FPlatformSDK;
-using FCleverTapPlatformInstance = CleverTap::Android::FPlatformInstance;
+using FCleverTapPlatformSDK = CleverTapSDK::Android::FPlatformSDK;
+using FCleverTapPlatformInstance = CleverTapSDK::Android::FPlatformInstance;
 
 #elif PLATFORM_IOS
 #include "IOS/IOSCleverTapSDK.h"
 
-using FCleverTapPlatformSDK = CleverTap::IOS::FPlatformSDK;
-using FCleverTapPlatformInstance = CleverTap::IOS::FPlatformInstance;
+using FCleverTapPlatformSDK = CleverTapSDK::IOS::FPlatformSDK;
+using FCleverTapPlatformInstance = CleverTapSDK::IOS::FPlatformInstance;
 
 #else
 #include "GenericPlatformCleverTapSDK.h"
 
-using FCleverTapPlatformSDK = CleverTap::GenericPlatform::FGenericPlatformSDK;
-using FCleverTapPlatformInstance = CleverTap::GenericPlatform::FPlatformInstance;
+using FCleverTapPlatformSDK = CleverTapSDK::GenericPlatform::FGenericPlatformSDK;
+using FCleverTapPlatformInstance = CleverTapSDK::GenericPlatform::FPlatformInstance;
 #endif
 
 /**

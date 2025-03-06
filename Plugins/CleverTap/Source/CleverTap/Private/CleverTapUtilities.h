@@ -2,7 +2,7 @@
 
 #pragma once
 
-namespace CleverTap
+namespace CleverTapSDK
 {
 	namespace Details
 	{
