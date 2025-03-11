@@ -2,10 +2,13 @@
 
 #include "CleverTapConfig.h"
 
+#import <CleverTapSDK/CleverTap.h>
+
 namespace CleverTapSDK { namespace IOS {
 
 FCleverTapInstance* FPlatformSDK::TryInitializeCommonInstance(const UCleverTapConfig& Config)
 {
+	[CleverTap autoIntegrate];
 	return nullptr;
 }
 

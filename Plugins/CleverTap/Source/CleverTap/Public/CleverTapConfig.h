@@ -32,5 +32,11 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere)
 	FString ProjectToken;
+
+	/**
+	 * The region code for the project taken from https://developer.clevertap.com/docs/idc#ios
+	 */
+	UPROPERTY(config, EditAnywhere)
+	FString RegionCode;
 };
 

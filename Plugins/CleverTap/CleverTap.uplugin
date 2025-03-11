@@ -18,7 +18,13 @@
 		{
 			"Name": "CleverTap",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatform": [
+				"Win64",
+				"Mac",
+				"IOS",
+				"Android"
+			]
 		}
 	]
 }
