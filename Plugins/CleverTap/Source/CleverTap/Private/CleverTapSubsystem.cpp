@@ -127,6 +127,11 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	return *SharedInstanceImpl;
 }
 
+bool UCleverTapSubsystem::IsSharedInstanceInitialized() const
+{
+	return SharedInstanceImpl.IsValid();
+}
+
 void UCleverTapSubsystem::SetLogLevel(ECleverTapLogLevel Level)
 {
 	FCleverTapPlatformSDK::SetLogLevel(Level);

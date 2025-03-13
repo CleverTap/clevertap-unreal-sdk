@@ -34,6 +34,12 @@ public:
 	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
 
 	/**
+	 * Returns true if the shared instance has been initialized.
+	 */
+	UFUNCTION(BlueprintCallable)
+	bool IsSharedInstanceInitialized() const;
+
+	/**
 	 * Sets platform SDK's current log level and also adjust's the shared instance's log level.
 	 */
 	UFUNCTION(BlueprintCallable)
