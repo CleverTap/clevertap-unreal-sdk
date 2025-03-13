@@ -1,19 +1,31 @@
+// Copyright CleverTap All Rights Reserved.
 #include "GenericPlatformCleverTapSDK.h"
 
 #include "CleverTapConfig.h"
 #include "CleverTapUtilities.h"
+#include "NullCleverTapInstance.h"
 
 namespace CleverTapSDK { namespace GenericPlatform {
 
-FCleverTapInstance* FGenericPlatformSDK::TryInitializeCommonInstance(const UCleverTapConfig& Config)
+void FGenericPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 {
-	CleverTapSDK::Ignore(Config);
-	return nullptr;
+	CleverTapSDK::Ignore(Level);
 }
 
-void FGenericPlatformSDK::DestroyInstance(FCleverTapInstance& Inst)
+TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
+	const UCleverTapConfig& Config
+)
 {
-	CleverTapSDK::Ignore(Inst);
+	CleverTapSDK::Ignore(Config);
+	return MakeUnique<FNullCleverTapInstance>();
+}
+
+TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
+	const UCleverTapConfig& Config, const FString& CleverTapId
+)
+{
+	CleverTapSDK::Ignore(Config, CleverTapId);
+	return MakeUnique<FNullCleverTapInstance>();
 }
 
 } } // namespace CleverTapSDK::GenericPlatform

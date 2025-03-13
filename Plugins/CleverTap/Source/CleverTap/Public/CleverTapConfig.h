@@ -1,8 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CleverTapLogLevel.h"
 #include "CleverTapConfig.generated.h"
 
 /**
@@ -15,11 +15,16 @@ class CLEVERTAP_API UCleverTapConfig : public UObject
 
 public:
 	/**
-	 * If true then the UCleverTapSubsystem will setup the common CleverTap instance when the
+	 * Gets the platform log level based on if this is a development build or not.
+	 */
+	ECleverTapLogLevel GetActiveLogLevel() const;
+
+	/**
+	 * If true then the UCleverTapSubsystem will setup the shared CleverTap instance when the
 	 *  subsystem initializes. This value is only used on the UCleverTapConfig default object.
 	 */
 	UPROPERTY(config, EditAnywhere)
-	bool bAutoInitializeCommonInstance = true; 
+	bool bAutoInitializeSharedInstance = true;
 
 	/**
 	 * The project ID taken from the CleverTap dashboard
@@ -38,5 +43,17 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere)
 	FString RegionCode;
+
+	/**
+	 * The platform SDK log level to use for development builds
+	 */
+	UPROPERTY(config, EditAnywhere)
+	ECleverTapLogLevel DevelopmentLogLevel = ECleverTapLogLevel::Verbose;
+
+	/**
+	 * The platform SDK log level to use for shipping builds
+	 */
+	UPROPERTY(config, EditAnywhere)
+	ECleverTapLogLevel ShippingLogLevel = ECleverTapLogLevel::Off;
 };
 

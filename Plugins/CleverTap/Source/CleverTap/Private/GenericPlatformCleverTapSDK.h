@@ -1,29 +1,38 @@
 // Copyright CleverTap All Rights Reserved.
-
 #pragma once
 
+#include "CoreMinimal.h"
+#include "CleverTapInstance.h"
+
+enum class ECleverTapLogLevel : uint8;
 class UCleverTapConfig;
-class FCleverTapInstance;
 
 namespace CleverTapSDK { namespace GenericPlatform {
-
-class FPlatformInstance
-{ };
 
 struct FGenericPlatformSDK
 {
 	/**
-	 * Initialize the common (shared) CleverTap instance. If successful this returns a non-null
-	 *  instance object. This instance object can be used to call other SDK methods. It should
-	 *  eventually be destroyed using the DestroyInstance(FCleverTapInstance&) method.
+	 * Sets the the platform log level for the CleverTap SDK.
 	 */
-	static FCleverTapInstance* TryInitializeCommonInstance(const UCleverTapConfig& Config);
+	static void SetLogLevel(ECleverTapLogLevel Level);
 
 	/**
-	 * Shutdown the specified CleverTap instance. After calling this method the specified instance
-	 *  should not be used in other method calls.
+	 * Initialize the shared CleverTap instance. If successful this returns a non-null
+	 *  instance object. This instance object can be used to call other SDK methods. It should
+	 *  eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
 	 */
-	static void DestroyInstance(FCleverTapInstance& Inst);
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+		const UCleverTapConfig& Config
+	);
+
+	/**
+	 * Initialize the shared CleverTap instance with a custom CleverTap Id. If successful this
+	 *  returns a non-null instance object. This instance object can be used to call other SDK methods.
+	 *  It should eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
+	 */
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+		const UCleverTapConfig& Config, const FString& CleverTapId
+	);
 };
 
 } } // namespace CleverTapSDK::GenericPlatform

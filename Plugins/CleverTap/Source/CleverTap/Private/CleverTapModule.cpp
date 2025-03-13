@@ -1,5 +1,4 @@
 // Copyright CleverTap All Rights Reserved.
-
 #include "CleverTapModule.h"
 
 #include "CleverTapConfig.h"

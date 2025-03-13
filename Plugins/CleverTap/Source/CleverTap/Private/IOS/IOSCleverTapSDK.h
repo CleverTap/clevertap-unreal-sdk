@@ -1,18 +1,19 @@
 // Copyright CleverTap All Rights Reserved.
-
 #pragma once
 
 #include "GenericPlatformCleverTapSDK.h"
 
 namespace CleverTapSDK { namespace IOS {
 
-class FPlatformInstance
-{ };
-
 struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
 {
-	static FCleverTapInstance* TryInitializeCommonInstance(const UCleverTapConfig& Config);
-	static void DestroyInstance(FCleverTapInstance& Inst);
+	static void SetLogLevel(ECleverTapLogLevel Level);
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+		const UCleverTapConfig& Config
+	);
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+		const UCleverTapConfig& Config, const FString& CleverTapId
+	);
 };
 
 } } // namespace CleverTapSDK::IOS
