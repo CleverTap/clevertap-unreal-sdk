@@ -1,8 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
 #include "IOS/IOSCleverTapSDK.h"
 
-#include "CleverTapConfig.h"
 #include "CleverTapInstance.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
 
 #import <CleverTapSDK/CleverTap.h>
@@ -52,20 +52,32 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config
+	const FCleverTapInstanceConfig& Config
 )
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+
+	NSString* AccountId = Config.ProjectId.GetNSString();
+	NSString* Token = Config.ProjectToken.GetNSString();
+	NSString* Region = Config.RegionCode.GetNSString();
+	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
+
 	CleverTap* const SharedInst = [CleverTap autoIntegrate];
-	FPlatformSDK::SetLogLevel(Config.GetActiveLogLevel());
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config, const FString& CleverTapId
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
 )
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+
+	NSString* AccountId = Config.ProjectId.GetNSString();
+	NSString* Token = Config.ProjectToken.GetNSString();
+	NSString* Region = Config.RegionCode.GetNSString();
+	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
+
 	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID: CleverTapId.GetNSString()];
-	FPlatformSDK::SetLogLevel(Config.GetActiveLogLevel());
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 

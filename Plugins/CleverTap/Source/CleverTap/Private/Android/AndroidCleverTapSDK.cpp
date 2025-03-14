@@ -1,8 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
 #include "Android/AndroidCleverTapSDK.h"
 
-#include "CleverTapConfig.h"
 #include "CleverTapInstance.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapUtilities.h"
 
 namespace {
@@ -26,7 +26,7 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config
+	const FCleverTapInstanceConfig& Config
 )
 {
 	CleverTapSDK::Ignore(Config);
@@ -34,7 +34,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config, const FString& CleverTapId
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
 )
 {
 	CleverTapSDK::Ignore(Config, CleverTapId);

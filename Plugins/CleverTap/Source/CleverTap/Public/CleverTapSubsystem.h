@@ -7,6 +7,7 @@
 #include "Subsystems/EngineSubsystem.h"
 #include "CleverTapSubsystem.generated.h"
 
+struct FCleverTapInstanceConfig;
 class UCleverTapConfig;
 
 /**
@@ -24,6 +25,11 @@ public:
 	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig* Config = nullptr);
 
 	/**
+	 * Explicitly initialize the shared CleverTap instance.
+	 */
+	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
+
+	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
 	ICleverTapInstance& InitializeSharedInstance(const FString& CleverTapId);
@@ -32,6 +38,13 @@ public:
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
 	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
+
+	/**
+	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
+	 */
+	ICleverTapInstance& InitializeSharedInstance(
+		const FCleverTapInstanceConfig& Config, const FString& CleverTapId
+	);
 
 	/**
 	 * Returns true if the shared instance has been initialized.
