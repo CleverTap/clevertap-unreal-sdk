@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--CleverTap plugin additions-->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+    <buildGradleAdditions>
+        <insert>
+            dependencies {
+                implementation 'com.clevertap.android:clevertap-android-sdk:7.2.2' // checkout the latest sdk version at https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
+            }
+        </insert>
+    </buildGradleAdditions>
+</root>
+
+

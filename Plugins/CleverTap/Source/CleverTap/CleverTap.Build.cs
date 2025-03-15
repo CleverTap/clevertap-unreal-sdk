@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class CleverTap : ModuleRules
 {
@@ -44,5 +45,11 @@ public class CleverTap : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 		);
+
+		if (Target.Platform == UnrealTargetPlatform.Android)
+		{
+    		AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "Android/CleverTap_UPL.xml"));
+		}
+
 	}
 }
