@@ -62,6 +62,55 @@ static jobject GetJavaApplication(JNIEnv* env) {
     return application;
 }
 
+static jobject GetCleverTapInstance(JNIEnv* env) {
+    jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+    if (!cleverTapAPIClass) {
+        UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
+        return nullptr;
+    }
+    jmethodID getInstanceMethod = env->GetStaticMethodID(
+        cleverTapAPIClass, "getDefaultInstance",
+        "(Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;");
+    if (!getInstanceMethod) {
+        UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTap getDefaultInstance method!"));
+        return nullptr;
+    }
+    jobject activity = FAndroidApplication::GetGameActivityThis();
+    jobject cleverTapInstance =
+        env->CallStaticObjectMethod(cleverTapAPIClass, getInstanceMethod, activity);
+    if (cleverTapInstance == nullptr) {
+        UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
+    }
+    return cleverTapInstance;
+}
+
+static void CallOnUserLogin(JNIEnv* env, jobject cleverTapInstance) {
+    UE_LOG(LogCleverTap, Log, TEXT("CallOnUserLogin"));
+
+    // Get HashMap class and constructor
+    jclass hashMapClass = env->FindClass("java/util/HashMap");
+    jmethodID hashMapConstructor = env->GetMethodID(hashMapClass, "<init>", "()V");
+
+    // Create an empty HashMap instance
+    jobject emptyHashMap = env->NewObject(hashMapClass, hashMapConstructor);
+
+    // Get the OnUserLogin method
+    jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+    if (!cleverTapAPIClass) {
+        UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
+    }
+    jmethodID onUserLoginMethod =
+        env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
+
+    // Call onUserLogin with an empty HashMap
+    env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, emptyHashMap);
+
+    // Clean up local references
+    env->DeleteLocalRef(emptyHashMap);
+    env->DeleteLocalRef(hashMapClass);
+
+    UE_LOG(LogTemp, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
+}
 
 static bool InitCleverTap() {
     UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::::InitCleverTap()"));
@@ -71,25 +120,11 @@ static bool InitCleverTap() {
         UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
         return false;
     }
-  
-    jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
-    if (!cleverTapAPIClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
-        return false;
-    }
-    jmethodID getInstanceMethod = env->GetStaticMethodID(
-        cleverTapAPIClass, "getDefaultInstance",
-        "(Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;");
-    if (!getInstanceMethod) {
-        UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTap getDefaultInstance method!"));
-        return false;
-    }
 
-    jobject activity = FAndroidApplication::GetGameActivityThis();
-    jobject cleverTapInstance =
-        env->CallStaticObjectMethod(cleverTapAPIClass, getInstanceMethod, activity);
+    jobject cleverTapInstance = GetCleverTapInstance(env);
     if (cleverTapInstance) {
         UE_LOG(LogCleverTap, Log, TEXT("CleverTap Initialized Successfully!"));
+        CallOnUserLogin(env, cleverTapInstance);
         return true;
 
     } else {
