@@ -8,6 +8,17 @@
             }
         </insert>
     </buildGradleAdditions>
+    <gameApplicationAttachBaseContextAdditions>
+        <insert>
+            com.clevertap.android.sdk.ActivityLifecycleCallback.register(this);
+        </insert>
+    </gameApplicationAttachBaseContextAdditions>
+    <gameApplicationOnCreateAdditions>
+        <insert>
+            com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+        </insert>
+    </gameApplicationOnCreateAdditions>
+    
 </root>
 
 
