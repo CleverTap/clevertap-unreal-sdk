@@ -13,5 +13,7 @@ UCLASS()
 class CLEVERTAPSAMPLE_API ACleverTapSampleGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+	void BeginPlay() override;
 };

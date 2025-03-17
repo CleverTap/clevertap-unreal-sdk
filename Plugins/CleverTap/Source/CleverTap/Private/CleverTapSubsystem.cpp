@@ -1,26 +1,50 @@
 // Copyright CleverTap All Rights Reserved.
-
 #include "CleverTapSubsystem.h"
 
 #include "CleverTapConfig.h"
 #include "CleverTapLog.h"
 #include "CleverTapPlatformSDK.h"
 #include "CleverTapUtilities.h"
+#include "NullCleverTapInstance.h"
 #include "UObject/UObjectBase.h"
 
 //==================================================================================================
-// UCleverTapSubsystem::FCommonInstanceDeleter
+// UCleverTapSubsystem
 
-void UCleverTapSubsystem::FCommonInstanceDeleter::operator()(FCleverTapInstance* Ptr) const
+namespace {
+
+FNullCleverTapInstance& CommonNullInstance()
 {
-	if (Ptr != nullptr)
-	{
-		FCleverTapPlatformSDK::DestroyInstance(*Ptr);
-	}
+	static FNullCleverTapInstance Singleton;
+	return Singleton;
 }
 
-//==================================================================================================
-// UCleverTapSubsystem
+const UCleverTapConfig* TryResolveCleverTapConfig(const UCleverTapConfig* MaybeExplicitConfig = nullptr)
+{
+	if (MaybeExplicitConfig)
+	{
+		return MaybeExplicitConfig;
+	}
+
+	if (!UObjectInitialized())
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("InitializeSharedInstance() called before UObject initialization."
+			" The default object for 'UCleverTapConfig' can't be accessed.")
+		);
+		return nullptr;
+	}
+
+	const UCleverTapConfig* const DefaultConfig
+		= UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
+	if (!IsValid(DefaultConfig))
+	{
+		return nullptr;
+	}
+
+	return DefaultConfig;
+}
+
+} // namespace (anonymous)
 
 void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -33,38 +57,111 @@ void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 
-	if (Config->bAutoInitializeCommonInstance)
+	if (Config->bAutoInitializeSharedInstance)
 	{
-		InitializeCommonInstance(Config);
+		InitializeSharedInstance(Config);
 	}
 }
 
-void UCleverTapSubsystem::InitializeCommonInstance(const UCleverTapConfig* Config)
+ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverTapConfig* Config)
 {
-	if (!ensure(UObjectInitialized()))
+	if (SharedInstanceImpl != nullptr)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("InitializeCleverTapSDK() called before UObject initialization. The"
-			" default object for 'UCleverTapConfig' can't be accessed.")
+		return *SharedInstanceImpl; // Already initialized
+	}
+
+	Config = TryResolveCleverTapConfig(Config);
+	if (!IsValid(Config))
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
+		return CommonNullInstance();
+	}
+
+	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance"));
+
+	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(*Config);
+	UE_CLOG(SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+	return *SharedInstanceImpl;
+}
+
+ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString& CleverTapId)
+{
+	if (SharedInstanceImpl != nullptr)
+	{
+		return *SharedInstanceImpl; // Already initialized
+	}
+
+	const UCleverTapConfig* const Config = TryResolveCleverTapConfig();
+	if (!IsValid(Config))
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
+		return CommonNullInstance();
+	}
+
+	return InitializeSharedInstance(*Config, CleverTapId);
+}
+
+ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
+	const UCleverTapConfig& Config, const FString& CleverTapId
+)
+{
+	if (SharedInstanceImpl != nullptr)
+	{
+		return *SharedInstanceImpl; // Already initialized
+	}
+
+	if (CleverTapId.IsEmpty())
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("InitializeSharedInstance() with CleverTap Id was passed an"
+			" empty id. Defaulting to InitializeSharedInstance() without a custom CleverTap Id.")
 		);
-		return;
+		return InitializeSharedInstance(&Config);
 	}
 
-	if (Config == nullptr)
+	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance with CleverTap Id '%s'"),
+		*CleverTapId
+	);
+
+	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config, CleverTapId);
+	UE_CLOG(SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+	return *SharedInstanceImpl;
+}
+
+bool UCleverTapSubsystem::IsSharedInstanceInitialized() const
+{
+	return SharedInstanceImpl.IsValid();
+}
+
+void UCleverTapSubsystem::SetLogLevel(ECleverTapLogLevel Level)
+{
+	FCleverTapPlatformSDK::SetLogLevel(Level);
+}
+
+ICleverTapInstance& UCleverTapSubsystem::SharedInstance()
+{
+	if (SharedInstanceImpl == nullptr)
 	{
-		Config = UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
-		if (!ensure(IsValid(Config)))
-		{
-			UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
-			return;
-		}
+		return InitializeSharedInstance();
 	}
+	return *SharedInstanceImpl;
+}
 
-	UE_LOG(LogCleverTap, Log, TEXT("Initializing the common (shared) CleverTap instance"));
+void UCleverTapSubsystem::BlueprintInitializeSharedInstance(const UCleverTapConfig* Config)
+{
+	InitializeSharedInstance(Config);
+}
 
-	FCleverTapInstance* const MaybeInstance = FCleverTapPlatformSDK::TryInitializeCommonInstance(*Config);
-	if (MaybeInstance != nullptr)
+void UCleverTapSubsystem::BlueprintInitializeSharedInstanceWithId(
+	const UCleverTapConfig* Config, const FString& CleverTapId
+)
+{
+	if (Config)
 	{
-		CommonInstance.Reset(MaybeInstance);
+		InitializeSharedInstance(*Config, CleverTapId);
+	}
+	else
+	{
+		InitializeSharedInstance(CleverTapId);
 	}
 }
 

@@ -1,5 +1,4 @@
 // Copyright CleverTap All Rights Reserved.
-
 #pragma once
 
 namespace CleverTapSDK

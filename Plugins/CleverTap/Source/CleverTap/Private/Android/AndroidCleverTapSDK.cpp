@@ -1,13 +1,15 @@
+// Copyright CleverTap All Rights Reserved.
 #include "Android/AndroidCleverTapSDK.h"
 #include "CleverTapPlatformSDK.h"
 
 #include "CleverTapConfig.h"
+#include "CleverTapInstance.h"
 #include "CleverTapLog.h"
+#include "CleverTapUtilities.h"
 
 #include "Android/AndroidApplication.h"
 
-namespace CleverTapSDK {
-namespace Android {
+namespace {
 
 static jclass LoadJavaClass(JNIEnv* env, const char* classPath) {
     // todo there has to be a simpler way to do this!
@@ -133,15 +135,31 @@ static bool InitCleverTap() {
     }
 }
 
-FCleverTapInstance* FPlatformSDK::TryInitializeCommonInstance(const UCleverTapConfig& Config) {
-    if (InitCleverTap()) {
-        return new FCleverTapInstance{};
-    }
+class FAndroidCleverTapInstance : public ICleverTapInstance {
+public:
+    FAndroidCleverTapInstance() { InitCleverTap(); }
 
-    return nullptr;
+    FString GetCleverTapId() const override { return FString{}; } // todo hmm
+};
+
+} // namespace
+
+namespace CleverTapSDK {
+namespace Android {
+
+void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level) { CleverTapSDK::Ignore(Level); }
+
+TUniquePtr<ICleverTapInstance>
+FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config) {
+    CleverTapSDK::Ignore(Config);
+    return MakeUnique<FAndroidCleverTapInstance>();
 }
 
-void FPlatformSDK::DestroyInstance(FCleverTapInstance& Inst) { delete &Inst; }
+TUniquePtr<ICleverTapInstance>
+FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId) {
+    CleverTapSDK::Ignore(Config, CleverTapId);
+    return MakeUnique<FAndroidCleverTapInstance>();
+}
 
 } // namespace Android
 } // namespace CleverTapSDK

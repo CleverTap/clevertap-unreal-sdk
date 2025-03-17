@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 using System.IO;
 
@@ -51,5 +52,21 @@ public class CleverTap : ModuleRules
     		AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "Android/CleverTap_UPL.xml"));
 		}
 
+
+		if (Target.Platform == UnrealTargetPlatform.IOS)
+		{
+			PrivateDefinitions.Add("CLEVERTAP_NO_INAPP_SUPPORT=0");
+
+			string ThirdPartyPath = Path.Combine(ModuleDirectory, "..", "ThirdParty", "IOS");
+			string CleverTapFrameworkPath = Path.Combine(ThirdPartyPath, "CleverTapSDK.framework.zip");
+			string SDWebImageFrameworkPath = Path.Combine(ThirdPartyPath, "SDWebImage.framework.zip");
+			PublicAdditionalFrameworks.Add(new Framework("CleverTapSDK", CleverTapFrameworkPath, bCopyFramework: true));
+			PublicAdditionalFrameworks.Add(new Framework("SDWebImage", SDWebImageFrameworkPath, bCopyFramework: true));
+			RuntimeDependencies.Add(CleverTapFrameworkPath);
+			RuntimeDependencies.Add(SDWebImageFrameworkPath);
+
+			string RelPluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+			AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(RelPluginPath, "CleverTapUPL.xml"));
+		}
 	}
 }
