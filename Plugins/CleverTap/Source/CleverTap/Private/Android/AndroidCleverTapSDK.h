@@ -4,16 +4,15 @@
 
 #include "GenericPlatformCleverTapSDK.h"
 
-namespace CleverTapSDK { namespace Android {
+namespace CleverTapSDK {
+namespace Android {
 
-class FPlatformInstance
-{ };
+class FPlatformInstance {};
 
-struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
-{
-	static FCleverTapInstance* TryInitializeCommonInstance(const UCleverTapConfig& Config);
-	static void DestroyInstance(FCleverTapInstance& Inst);
+struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK {
+    static FCleverTapInstance* TryInitializeCommonInstance(const UCleverTapConfig& Config);
+    static void DestroyInstance(FCleverTapInstance& Inst);
 };
 
-} } // namespace CleverTapSDK::Android
-
+} // namespace Android
+} // namespace CleverTapSDK
