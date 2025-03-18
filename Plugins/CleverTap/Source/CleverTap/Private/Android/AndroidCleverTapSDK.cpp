@@ -11,155 +11,173 @@
 
 namespace {
 
-static jclass LoadJavaClass(JNIEnv* env, const char* classPath) {
-    // todo there has to be a simpler way to do this!
-    jobject activity = FAndroidApplication::GetGameActivityThis();
-    jclass activityClass = env->GetObjectClass(activity);
-    if (!activityClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("Couldn't get GameActivity class"));
-        return nullptr;
-    }
-    jmethodID getClassLoader =
-        env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-    if (!getClassLoader) {
-        UE_LOG(LogCleverTap, Error, TEXT("Couldn't get getClassLoader method from GameActivity"));
-        return nullptr;
-    }
-    jobject classLoader = env->CallObjectMethod(activity, getClassLoader);
-    if (!classLoader) {
-        UE_LOG(LogCleverTap, Error, TEXT("Couldn't get ClassLoader from GameActivity"));
-        return nullptr;
-    }
-    jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
-    if (!classLoaderClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("Couldn't find ClassLoader class"));
-        return nullptr;
-    }
-    jmethodID loadClass =
-        env->GetMethodID(classLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (!loadClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("Couldn't find ClassLoader loadClass method"));
-        return nullptr;
-    }
-    jstring className = env->NewStringUTF(classPath);
-    jclass foundClass = (jclass)env->CallObjectMethod(classLoader, loadClass, className);
-    if (!foundClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("Failed to load class: %s"), *FString(classPath));
-    }
-    return foundClass;
+static jclass LoadJavaClass(JNIEnv* env, const char* classPath)
+{
+	// todo there has to be a simpler way to do this!
+	jobject activity = FAndroidApplication::GetGameActivityThis();
+	jclass	activityClass = env->GetObjectClass(activity);
+	if (!activityClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Couldn't get GameActivity class"));
+		return nullptr;
+	}
+	jmethodID getClassLoader = env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
+	if (!getClassLoader)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Couldn't get getClassLoader method from GameActivity"));
+		return nullptr;
+	}
+	jobject classLoader = env->CallObjectMethod(activity, getClassLoader);
+	if (!classLoader)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Couldn't get ClassLoader from GameActivity"));
+		return nullptr;
+	}
+	jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
+	if (!classLoaderClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Couldn't find ClassLoader class"));
+		return nullptr;
+	}
+	jmethodID loadClass = env->GetMethodID(classLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+	if (!loadClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Couldn't find ClassLoader loadClass method"));
+		return nullptr;
+	}
+	jstring className = env->NewStringUTF(classPath);
+	jclass	foundClass = (jclass)env->CallObjectMethod(classLoader, loadClass, className);
+	if (!foundClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to load class: %s"), *FString(classPath));
+	}
+	return foundClass;
 }
 
-static jobject GetJavaApplication(JNIEnv* env) {
-    jobject activity = FAndroidApplication::GetGameActivityThis();
-    jclass activityClass = env->GetObjectClass(activity);
-    jmethodID getApplicationMethod =
-        env->GetMethodID(activityClass, "getApplication", "()Landroid/app/Application;");
+static jobject GetJavaApplication(JNIEnv* env)
+{
+	jobject	  activity = FAndroidApplication::GetGameActivityThis();
+	jclass	  activityClass = env->GetObjectClass(activity);
+	jmethodID getApplicationMethod = env->GetMethodID(activityClass, "getApplication", "()Landroid/app/Application;");
 
-    jobject application = env->CallObjectMethod(activity, getApplicationMethod);
-    if (application) {
-        UE_LOG(LogTemp, Log, TEXT("Successfully got Java Application instance."));
-    } else {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get Java Application instance."));
-    }
-    return application;
+	jobject application = env->CallObjectMethod(activity, getApplicationMethod);
+	if (application)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Successfully got Java Application instance."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to get Java Application instance."));
+	}
+	return application;
 }
 
-static jobject GetCleverTapInstance(JNIEnv* env) {
-    jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
-    if (!cleverTapAPIClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
-        return nullptr;
-    }
-    jmethodID getInstanceMethod = env->GetStaticMethodID(
-        cleverTapAPIClass, "getDefaultInstance",
-        "(Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;");
-    if (!getInstanceMethod) {
-        UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTap getDefaultInstance method!"));
-        return nullptr;
-    }
-    jobject activity = FAndroidApplication::GetGameActivityThis();
-    jobject cleverTapInstance =
-        env->CallStaticObjectMethod(cleverTapAPIClass, getInstanceMethod, activity);
-    if (cleverTapInstance == nullptr) {
-        UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
-    }
-    return cleverTapInstance;
+static jobject GetCleverTapInstance(JNIEnv* env)
+{
+	jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+	if (!cleverTapAPIClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
+		return nullptr;
+	}
+	jmethodID getInstanceMethod = env->GetStaticMethodID(
+		cleverTapAPIClass, "getDefaultInstance", "(Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;");
+	if (!getInstanceMethod)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTap getDefaultInstance method!"));
+		return nullptr;
+	}
+	jobject activity = FAndroidApplication::GetGameActivityThis();
+	jobject cleverTapInstance = env->CallStaticObjectMethod(cleverTapAPIClass, getInstanceMethod, activity);
+	if (cleverTapInstance == nullptr)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
+	}
+	return cleverTapInstance;
 }
 
-static void CallOnUserLogin(JNIEnv* env, jobject cleverTapInstance) {
-    UE_LOG(LogCleverTap, Log, TEXT("CallOnUserLogin"));
+static void CallOnUserLogin(JNIEnv* env, jobject cleverTapInstance)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CallOnUserLogin"));
 
-    // Get HashMap class and constructor
-    jclass hashMapClass = env->FindClass("java/util/HashMap");
-    jmethodID hashMapConstructor = env->GetMethodID(hashMapClass, "<init>", "()V");
+	// Get HashMap class and constructor
+	jclass	  hashMapClass = env->FindClass("java/util/HashMap");
+	jmethodID hashMapConstructor = env->GetMethodID(hashMapClass, "<init>", "()V");
 
-    // Create an empty HashMap instance
-    jobject emptyHashMap = env->NewObject(hashMapClass, hashMapConstructor);
+	// Create an empty HashMap instance
+	jobject emptyHashMap = env->NewObject(hashMapClass, hashMapConstructor);
 
-    // Get the OnUserLogin method
-    jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
-    if (!cleverTapAPIClass) {
-        UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
-    }
-    jmethodID onUserLoginMethod =
-        env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
+	// Get the OnUserLogin method
+	jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+	if (!cleverTapAPIClass)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
+	}
+	jmethodID onUserLoginMethod = env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
 
-    // Call onUserLogin with an empty HashMap
-    env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, emptyHashMap);
+	// Call onUserLogin with an empty HashMap
+	env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, emptyHashMap);
 
-    // Clean up local references
-    env->DeleteLocalRef(emptyHashMap);
-    env->DeleteLocalRef(hashMapClass);
+	// Clean up local references
+	env->DeleteLocalRef(emptyHashMap);
+	env->DeleteLocalRef(hashMapClass);
 
-    UE_LOG(LogTemp, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
+	UE_LOG(LogTemp, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
 }
 
-static bool InitCleverTap() {
-    UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::::InitCleverTap()"));
+static bool InitCleverTap()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::::InitCleverTap()"));
 
-    JNIEnv* env = FAndroidApplication::GetJavaEnv();
-    if (env == nullptr) {
-        UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
-        return false;
-    }
+	JNIEnv* env = FAndroidApplication::GetJavaEnv();
+	if (env == nullptr)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
+		return false;
+	}
 
-    jobject cleverTapInstance = GetCleverTapInstance(env);
-    if (cleverTapInstance) {
-        UE_LOG(LogCleverTap, Log, TEXT("CleverTap Initialized Successfully!"));
-        CallOnUserLogin(env, cleverTapInstance);
-        return true;
-
-    } else {
-        UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
-        return false;
-    }
+	jobject cleverTapInstance = GetCleverTapInstance(env);
+	if (cleverTapInstance)
+	{
+		UE_LOG(LogCleverTap, Log, TEXT("CleverTap Initialized Successfully!"));
+		CallOnUserLogin(env, cleverTapInstance);
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
+		return false;
+	}
 }
 
-class FAndroidCleverTapInstance : public ICleverTapInstance {
+class FAndroidCleverTapInstance : public ICleverTapInstance
+{
 public:
-    FAndroidCleverTapInstance() { InitCleverTap(); }
+	FAndroidCleverTapInstance() { InitCleverTap(); }
 
-    FString GetCleverTapId() const override { return FString{}; } // todo hmm
+	FString GetCleverTapId() const override { return FString{}; } // todo hmm
 };
 
 } // namespace
 
-namespace CleverTapSDK {
-namespace Android {
+namespace CleverTapSDK { namespace Android {
 
-void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level) { CleverTapSDK::Ignore(Level); }
-
-TUniquePtr<ICleverTapInstance>
-FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config) {
-    CleverTapSDK::Ignore(Config);
-    return MakeUnique<FAndroidCleverTapInstance>();
+void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
+{
+	CleverTapSDK::Ignore(Level);
 }
 
-TUniquePtr<ICleverTapInstance>
-FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId) {
-    CleverTapSDK::Ignore(Config, CleverTapId);
-    return MakeUnique<FAndroidCleverTapInstance>();
+TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config)
+{
+	CleverTapSDK::Ignore(Config);
+	return MakeUnique<FAndroidCleverTapInstance>();
 }
 
-} // namespace Android
-} // namespace CleverTapSDK
+TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
+	const UCleverTapConfig& Config, const FString& CleverTapId)
+{
+	CleverTapSDK::Ignore(Config, CleverTapId);
+	return MakeUnique<FAndroidCleverTapInstance>();
+}
+
+}} // namespace CleverTapSDK::Android
