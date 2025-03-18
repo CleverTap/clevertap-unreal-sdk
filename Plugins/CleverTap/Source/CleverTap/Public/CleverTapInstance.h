@@ -17,4 +17,3 @@ public:
 	 */
 	virtual FString GetCleverTapId() const = 0;
 };
-

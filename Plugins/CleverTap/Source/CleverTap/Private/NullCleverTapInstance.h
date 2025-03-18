@@ -11,4 +11,3 @@ class FNullCleverTapInstance : public ICleverTapInstance
 public:
 	FString GetCleverTapId() const override;
 };
-

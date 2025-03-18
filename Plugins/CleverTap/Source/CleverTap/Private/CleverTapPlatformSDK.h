@@ -2,18 +2,17 @@
 #pragma once
 
 #if PLATFORM_ANDROID
-#include "Android/AndroidCleverTapSDK.h"
+	#include "Android/AndroidCleverTapSDK.h"
 
 using FCleverTapPlatformSDK = CleverTapSDK::Android::FPlatformSDK;
 
 #elif PLATFORM_IOS
-#include "IOS/IOSCleverTapSDK.h"
+	#include "IOS/IOSCleverTapSDK.h"
 
 using FCleverTapPlatformSDK = CleverTapSDK::IOS::FPlatformSDK;
 
 #else
-#include "GenericPlatformCleverTapSDK.h"
+	#include "GenericPlatformCleverTapSDK.h"
 
 using FCleverTapPlatformSDK = CleverTapSDK::GenericPlatform::FGenericPlatformSDK;
 #endif
-

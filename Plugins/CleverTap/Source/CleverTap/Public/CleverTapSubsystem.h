@@ -13,7 +13,7 @@ class UCleverTapConfig;
 /**
  * A UEngineSubsystem for interaction with the CleverTap SDK
  */
-UCLASS(BlueprintType, ClassGroup=CleverTap)
+UCLASS(BlueprintType, ClassGroup = CleverTap)
 class CLEVERTAP_API UCleverTapSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
@@ -42,9 +42,7 @@ public:
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(
-		const FCleverTapInstanceConfig& Config, const FString& CleverTapId
-	);
+	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Returns true if the shared instance has been initialized.
@@ -72,19 +70,16 @@ private:
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	UFUNCTION(BlueprintCallable, meta=(DisplayName="InitializeSharedInstance"))
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstance"))
 	void BlueprintInitializeSharedInstance(const UCleverTapConfig* Config);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with an optional custom CleverTap
 	 *  Id.
 	 */
-	UFUNCTION(BlueprintCallable, meta=(DisplayName="InitializeSharedInstanceWithId"))
-	void BlueprintInitializeSharedInstanceWithId(
-		const UCleverTapConfig* Config, const FString& CleverTapId
-	);
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"))
+	void BlueprintInitializeSharedInstanceWithId(const UCleverTapConfig* Config, const FString& CleverTapId);
 
 private:
 	TUniquePtr<ICleverTapInstance> SharedInstanceImpl;
 };
-

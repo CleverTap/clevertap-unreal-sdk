@@ -22,4 +22,3 @@ enum class ECleverTapLogLevel : uint8
 	// If supported by the platform this may contain more information than debug
 	Verbose,
 };
-

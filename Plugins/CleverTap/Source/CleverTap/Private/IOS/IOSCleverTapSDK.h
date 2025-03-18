@@ -8,13 +8,9 @@ namespace CleverTapSDK { namespace IOS {
 struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
 {
 	static void SetLogLevel(ECleverTapLogLevel Level);
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const FCleverTapInstanceConfig& Config
-	);
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const FCleverTapInstanceConfig& Config, const FString& CleverTapId
-	);
+		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 };
 
-} } // namespace CleverTapSDK::IOS
-
+}} // namespace CleverTapSDK::IOS

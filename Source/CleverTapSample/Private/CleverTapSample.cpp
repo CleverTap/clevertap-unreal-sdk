@@ -3,5 +3,5 @@
 #include "CleverTapSample.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, CleverTapSample, "CleverTapSample" );
+IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, CleverTapSample, "CleverTapSample");
 DEFINE_LOG_CATEGORY(LogCleverTapSample);

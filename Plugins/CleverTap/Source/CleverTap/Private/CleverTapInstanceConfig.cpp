@@ -18,4 +18,3 @@ FCleverTapInstanceConfig FCleverTapInstanceConfig::FromCleverTapConfig(const UCl
 	InstanceConfig.LogLevel = Config->GetActiveLogLevel();
 	return InstanceConfig;
 }
-

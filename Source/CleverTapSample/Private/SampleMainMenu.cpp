@@ -30,8 +30,7 @@ void USampleMainMenu::InitializeSharedInstanceFromConfig()
 }
 
 void USampleMainMenu::ExplicitlyInitializeSharedInstance(
-	const FString& Id, const FString& Token, const FString& RegionCode
-)
+	const FString& Id, const FString& Token, const FString& RegionCode)
 {
 	check(CleverTapSys != nullptr);
 
@@ -58,15 +57,10 @@ void USampleMainMenu::PopulateUI() const
 	{
 		const FString CleverTapId = SharedInst.GetCleverTapId();
 		CleverTapIdText->SetText(
-			FText::Format(
-				NSLOCTEXT("CleverTapSample", "SampleMainMenuIdText", "CleverTap Id: {Id}"),
-				[&]{
-					FFormatNamedArguments Args;
-					Args.Add("Id", FText::FromString(CleverTapId));
-					return Args;
-				}()
-			)
-		);
+			FText::Format(NSLOCTEXT("CleverTapSample", "SampleMainMenuIdText", "CleverTap Id: {Id}"), [&] {
+				FFormatNamedArguments Args;
+				Args.Add("Id", FText::FromString(CleverTapId));
+				return Args;
+			}()));
 	}
 }
-

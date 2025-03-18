@@ -35,4 +35,3 @@ struct FCleverTapInstanceConfig
 	 */
 	static FCleverTapInstanceConfig FromCleverTapConfig(const UCleverTapConfig* Config);
 };
-

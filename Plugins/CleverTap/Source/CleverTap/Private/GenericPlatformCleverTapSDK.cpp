@@ -12,21 +12,17 @@ void FGenericPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 	CleverTapSDK::Ignore(Level);
 }
 
-TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
-	const FCleverTapInstanceConfig& Config
-)
+TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
 	CleverTapSDK::Ignore(Config);
 	return MakeUnique<FNullCleverTapInstance>();
 }
 
 TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
-	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
-)
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
 	CleverTapSDK::Ignore(Config, CleverTapId);
 	return MakeUnique<FNullCleverTapInstance>();
 }
 
-} } // namespace CleverTapSDK::GenericPlatform
-
+}} // namespace CleverTapSDK::GenericPlatform

@@ -5,4 +5,3 @@ FString FNullCleverTapInstance::GetCleverTapId() const
 {
 	return FString{};
 }
-

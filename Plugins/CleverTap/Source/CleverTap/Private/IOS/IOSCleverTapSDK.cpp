@@ -12,21 +12,15 @@ namespace {
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
 public:
-	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance)
-		: NativeInstance{ InNativeInstance }
-	{
-	}
+	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance) : NativeInstance{ InNativeInstance } {}
 
-	FString GetCleverTapId() const override
-	{
-		return FString{ [NativeInstance profileGetCleverTapID] };
-	}
+	FString GetCleverTapId() const override { return FString{ [NativeInstance profileGetCleverTapID] }; }
 
 private:
 	CleverTap* NativeInstance{};
 };
 
-} // namespace (anonymous)
+} // namespace
 
 namespace CleverTapSDK { namespace IOS {
 
@@ -35,25 +29,28 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 	int const ObjCLevel = [Level] {
 		switch (Level)
 		{
-			case ECleverTapLogLevel::Off:     return CleverTapLogOff;
-			case ECleverTapLogLevel::Info:    return CleverTapLogInfo;
-			case ECleverTapLogLevel::Debug:   return CleverTapLogDebug;
-			case ECleverTapLogLevel::Verbose: return CleverTapLogDebug;
-			default: {
-				UE_LOG(LogCleverTap, Error,
-					TEXT("Unhandled ECleverTapLogLevel value. Defaulting to ECleverTapLogLevel::Off")
-				);
+			case ECleverTapLogLevel::Off:
 				return CleverTapLogOff;
-			} break;
+			case ECleverTapLogLevel::Info:
+				return CleverTapLogInfo;
+			case ECleverTapLogLevel::Debug:
+				return CleverTapLogDebug;
+			case ECleverTapLogLevel::Verbose:
+				return CleverTapLogDebug;
+			default:
+			{
+				UE_LOG(LogCleverTap, Error,
+					TEXT("Unhandled ECleverTapLogLevel value. Defaulting to ECleverTapLogLevel::Off"));
+				return CleverTapLogOff;
+			}
+			break;
 		}
 	}();
 
 	[CleverTap setDebugLevel:ObjCLevel];
 }
 
-TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const FCleverTapInstanceConfig& Config
-)
+TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
 	FPlatformSDK::SetLogLevel(Config.LogLevel);
 
@@ -67,8 +64,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
-)
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
 	FPlatformSDK::SetLogLevel(Config.LogLevel);
 
@@ -77,9 +73,8 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID: CleverTapId.GetNSString()];
+	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID:CleverTapId.GetNSString()];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 
-} } // namespace CleverTapSDK::IOS
-
+}} // namespace CleverTapSDK::IOS

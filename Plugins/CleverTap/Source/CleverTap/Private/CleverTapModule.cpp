@@ -17,8 +17,7 @@ void FCleverTapModule::StartupModule()
 		SettingsModule->RegisterSettings("Project", "Plugins", "CleverTap",
 			LOCTEXT("CleverTapSettingsName", "CleverTap SDK"),
 			LOCTEXT("CleverTapSettingsDescription", "Settings for the CleverTap SDK plugin"),
-			GetMutableDefault<UCleverTapConfig>()
-		);
+			GetMutableDefault<UCleverTapConfig>());
 	}
 }
 
@@ -28,6 +27,5 @@ void FCleverTapModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
-IMPLEMENT_MODULE(FCleverTapModule, CleverTap)
 
+IMPLEMENT_MODULE(FCleverTapModule, CleverTap)

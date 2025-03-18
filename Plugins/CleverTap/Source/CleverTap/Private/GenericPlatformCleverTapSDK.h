@@ -21,9 +21,7 @@ struct FGenericPlatformSDK
 	 *  instance object. This instance object can be used to call other SDK methods. It should
 	 *  eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
 	 */
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const FCleverTapInstanceConfig& Config
-	);
+	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 
 	/**
 	 * Initialize the shared CleverTap instance with a custom CleverTap Id. If successful this
@@ -31,9 +29,7 @@ struct FGenericPlatformSDK
 	 *  It should eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
 	 */
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const FCleverTapInstanceConfig& Config, const FString& CleverTapId
-	);
+		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 };
 
-} } // namespace CleverTapSDK::GenericPlatform
-
+}} // namespace CleverTapSDK::GenericPlatform

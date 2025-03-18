@@ -8,7 +8,7 @@
 /**
  * Configuration for CleverTap instances
  */
-UCLASS(BlueprintType, config=Engine)
+UCLASS(BlueprintType, config = Engine)
 class CLEVERTAP_API UCleverTapConfig : public UObject
 {
 	GENERATED_BODY()
@@ -56,4 +56,3 @@ public:
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
 	ECleverTapLogLevel ShippingLogLevel = ECleverTapLogLevel::Off;
 };
-

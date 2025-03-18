@@ -9,4 +9,3 @@ ECleverTapLogLevel UCleverTapConfig::GetActiveLogLevel() const
 	return DevelopmentLogLevel;
 #endif
 }
-

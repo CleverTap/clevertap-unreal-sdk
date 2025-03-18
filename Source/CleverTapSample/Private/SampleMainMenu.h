@@ -4,11 +4,13 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
-#include "Components/EditableText.h"
 #include "SampleMainMenu.generated.h"
 
 class UCleverTapSubsystem;
 
+/**
+ * Base class for the sample menu UI blueprint
+ */
 UCLASS()
 class USampleMainMenu : public UUserWidget
 {
@@ -21,18 +23,15 @@ public:
 	void InitializeSharedInstanceFromConfig();
 
 	UFUNCTION(BlueprintCallable)
-	void ExplicitlyInitializeSharedInstance(
-		const FString& Id, const FString& Token, const FString& RegionCode
-	);
+	void ExplicitlyInitializeSharedInstance(const FString& Id, const FString& Token, const FString& RegionCode);
 
 private:
 	void PopulateUI() const;
 
 private:
-	UPROPERTY(BlueprintReadWrite, meta=(BindWidget, AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* CleverTapIdText;
 
 	UPROPERTY()
 	UCleverTapSubsystem* CleverTapSys;
 };
-
