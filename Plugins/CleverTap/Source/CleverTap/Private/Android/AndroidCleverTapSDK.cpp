@@ -2,9 +2,9 @@
 #include "Android/AndroidCleverTapSDK.h"
 #include "CleverTapPlatformSDK.h"
 
-#include "CleverTapConfig.h"
 #include "CleverTapInstance.h"
 #include "CleverTapLog.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapUtilities.h"
 
 #include "Android/AndroidApplication.h"
@@ -251,14 +251,14 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 	CleverTapSDK::Ignore(Level);
 }
 
-TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const UCleverTapConfig& Config)
+TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
 	CleverTapSDK::Ignore(Config);
 	return MakeUnique<FAndroidCleverTapInstance>();
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config, const FString& CleverTapId)
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
 	CleverTapSDK::Ignore(Config, CleverTapId);
 	return MakeUnique<FAndroidCleverTapInstance>();

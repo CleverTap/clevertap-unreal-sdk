@@ -2,6 +2,7 @@
 #include "CleverTapSubsystem.h"
 
 #include "CleverTapConfig.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
 #include "CleverTapPlatformSDK.h"
 #include "CleverTapUtilities.h"
@@ -79,9 +80,22 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverT
 
 	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance"));
 
-	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(*Config);
+	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(Config));
+}
+
+ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
+{
+	if (SharedInstanceImpl != nullptr)
+	{
+		return *SharedInstanceImpl; // Already initialized
+	}
+
+	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance"));
+
+	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config);
 	UE_CLOG(SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
 	return *SharedInstanceImpl;
+
 }
 
 ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString& CleverTapId)
@@ -110,12 +124,24 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 		return *SharedInstanceImpl; // Already initialized
 	}
 
+	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(&Config), CleverTapId);
+}
+
+ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
+)
+{
+	if (SharedInstanceImpl != nullptr)
+	{
+		return *SharedInstanceImpl; // Already initialized
+	}
+
 	if (CleverTapId.IsEmpty())
 	{
 		UE_LOG(LogCleverTap, Warning, TEXT("InitializeSharedInstance() with CleverTap Id was passed an"
 			" empty id. Defaulting to InitializeSharedInstance() without a custom CleverTap Id.")
 		);
-		return InitializeSharedInstance(&Config);
+		return InitializeSharedInstance(Config);
 	}
 
 	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance with CleverTap Id '%s'"),

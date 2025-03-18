@@ -1,7 +1,7 @@
 // Copyright CleverTap All Rights Reserved.
 #include "GenericPlatformCleverTapSDK.h"
 
-#include "CleverTapConfig.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapUtilities.h"
 #include "NullCleverTapInstance.h"
 
@@ -13,7 +13,7 @@ void FGenericPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 }
 
 TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config
+	const FCleverTapInstanceConfig& Config
 )
 {
 	CleverTapSDK::Ignore(Config);
@@ -21,7 +21,7 @@ TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
 }
 
 TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
-	const UCleverTapConfig& Config, const FString& CleverTapId
+	const FCleverTapInstanceConfig& Config, const FString& CleverTapId
 )
 {
 	CleverTapSDK::Ignore(Config, CleverTapId);

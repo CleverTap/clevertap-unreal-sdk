@@ -2,7 +2,6 @@
 
 using System.IO;
 using UnrealBuildTool;
-using System.IO;
 
 public class CleverTap : ModuleRules
 {

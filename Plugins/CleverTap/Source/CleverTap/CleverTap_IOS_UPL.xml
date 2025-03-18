@@ -1,25 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-	<init>
-		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
-		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
-		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
-	</init>
-
-	<iosPListUpdates>
-		<setElement result="AccountIdKey" value="key" text="CleverTapAccountID"/>
-		<addElement tag="dict" once="true" name="AccountIdKey"/>
-		<setElement result="AccountIdValue" value="string" text="$S(CTProjectId)"/>
-		<addElement tag="dict" once="true" name="AccountIdValue"/>
-
-		<setElement result="TokenKey" value="key" text="CleverTapToken"/>
-		<addElement tag="dict" once="true" name="TokenKey"/>
-		<setElement result="TokenValue" value="string" text="$S(CTProjectToken)"/>
-		<addElement tag="dict" once="true" name="TokenValue"/>
-
-		<setElement result="RegionKey" value="key" text="CleverTapRegion"/>
-		<addElement tag="dict" once="true" name="RegionKey"/>
-		<setElement result="RegionValue" value="string" text="$S(CTRegionCode)"/>
-		<addElement tag="dict" once="true" name="RegionValue"/>
-	</iosPListUpdates>
 </root>

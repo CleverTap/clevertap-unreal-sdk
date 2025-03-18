@@ -5,7 +5,7 @@
 #include "CleverTapInstance.h"
 
 enum class ECleverTapLogLevel : uint8;
-class UCleverTapConfig;
+struct FCleverTapInstanceConfig;
 
 namespace CleverTapSDK { namespace GenericPlatform {
 
@@ -22,7 +22,7 @@ struct FGenericPlatformSDK
 	 *  eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
 	 */
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const UCleverTapConfig& Config
+		const FCleverTapInstanceConfig& Config
 	);
 
 	/**
@@ -31,7 +31,7 @@ struct FGenericPlatformSDK
 	 *  It should eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
 	 */
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
-		const UCleverTapConfig& Config, const FString& CleverTapId
+		const FCleverTapInstanceConfig& Config, const FString& CleverTapId
 	);
 };
 
