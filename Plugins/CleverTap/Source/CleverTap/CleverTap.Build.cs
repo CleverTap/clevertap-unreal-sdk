@@ -46,6 +46,12 @@ public class CleverTap : ModuleRules
 			}
 		);
 
+		if (Target.Platform == UnrealTargetPlatform.Android)
+		{
+    		AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "CleverTap_Android_UPL.xml"));
+		}
+
+
 		if (Target.Platform == UnrealTargetPlatform.IOS)
 		{
 			PrivateDefinitions.Add("CLEVERTAP_NO_INAPP_SUPPORT=0");
@@ -59,7 +65,7 @@ public class CleverTap : ModuleRules
 			RuntimeDependencies.Add(SDWebImageFrameworkPath);
 
 			string RelPluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
-			AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(RelPluginPath, "CleverTapUPL.xml"));
+			AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(RelPluginPath, "CleverTap_IOS_UPL.xml"));
 		}
 	}
 }

@@ -33,3 +33,4 @@ ProjectToken= ;Add your project token here. This is found on your project's Clev
 RegionCode= ;Reference https://developer.clevertap.com/docs/idc#ios to determine what region code string to put here
 ```
 Alternatively you can edit the Plugin's settings in the UE4Editor.
+
