@@ -34,12 +34,3 @@ RegionCode= ;Reference https://developer.clevertap.com/docs/idc#ios to determine
 ```
 Alternatively you can edit the Plugin's settings in the UE4Editor.
 
-
-## Android Configuration
-In the `[/Script/AndroidRuntimeSettings.AndroidRuntimeSettings]` section of your project's `Config\DefaultEngine.ini` file, 
-update the `ExtraApplicationsSettings` field to add your CleverTap project ID & token to the Android manifest.
-
-```ini
-[/Script/AndroidRuntimeSettings.AndroidRuntimeSettings]
-ExtraApplicationSettings=android:requestLegacyExternalStorage="true"\n <meta-data android:name="CLEVERTAP_ACCOUNT_ID" android:value="YOUR_PROJECT_ID"/>\n <meta-data android:name="CLEVERTAP_TOKEN" android:value="YOUR_PROJECT_TOKEN"/>
-```
