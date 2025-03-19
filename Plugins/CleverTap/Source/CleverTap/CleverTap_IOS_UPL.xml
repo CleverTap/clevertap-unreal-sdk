@@ -1,3 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+	<init>
+		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
+
+		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
+		<setBoolIsEqual result="CTProjectIdIsEmpty" arg1="$S(CTProjectId)" arg2=""/>
+
+		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
+		<setBoolIsEqual result="CTProjectTokenIsEmpty" arg1="$S(CTProjectToken)" arg2=""/>
+
+		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
+		<setBoolIsEqual result="CTRegionCodeIsEmpty" arg1="$S(CTRegionCode)" arg2=""/>
+	</init>
+
+	<iosPListUpdates>
+		<if condition="CTProjectIdIsEmpty">
+			<false>
+				<setElement result="AccountIdKey" value="key" text="CleverTapAccountID"/>
+				<addElement tag="dict" once="true" name="AccountIdKey"/>
+				<setElement result="AccountIdValue" value="string" text="$S(CTProjectId)"/>
+				<addElement tag="dict" once="true" name="AccountIdValue"/>
+			</false>
+		</if>
+
+		<if condition="CTProjectTokenIsEmpty">
+			<false>
+				<setElement result="TokenKey" value="key" text="CleverTapToken"/>
+				<addElement tag="dict" once="true" name="TokenKey"/>
+				<setElement result="TokenValue" value="string" text="$S(CTProjectToken)"/>
+				<addElement tag="dict" once="true" name="TokenValue"/>
+			</false>
+		</if>
+
+		<if condition="CTRegionCodeIsEmpty">
+			<false>
+				<setElement result="RegionKey" value="key" text="CleverTapRegion"/>
+				<addElement tag="dict" once="true" name="RegionKey"/>
+				<setElement result="RegionValue" value="string" text="$S(CTRegionCode)"/>
+				<addElement tag="dict" once="true" name="RegionValue"/>
+			</false>
+		</if>
+	</iosPListUpdates>
 </root>
