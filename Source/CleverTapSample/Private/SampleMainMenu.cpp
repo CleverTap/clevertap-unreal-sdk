@@ -38,6 +38,7 @@ void USampleMainMenu::ExplicitlyInitializeSharedInstance(
 	Config.ProjectId = Id;
 	Config.ProjectToken = Token;
 	Config.RegionCode = RegionCode;
+	Config.LogLevel = ECleverTapLogLevel::Verbose;
 	CleverTapSys->InitializeSharedInstance(Config);
 
 	check(CleverTapSys->IsSharedInstanceInitialized());

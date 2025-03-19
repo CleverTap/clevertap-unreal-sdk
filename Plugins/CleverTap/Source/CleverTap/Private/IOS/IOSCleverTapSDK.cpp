@@ -59,7 +59,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCle
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap autoIntegrate];
+	CleverTap* const SharedInst = [CleverTap sharedInstance];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 
@@ -73,7 +73,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID:CleverTapId.GetNSString()];
+	CleverTap* const SharedInst = [CleverTap sharedInstanceWithCleverTapID:CleverTapId.GetNSString()];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 

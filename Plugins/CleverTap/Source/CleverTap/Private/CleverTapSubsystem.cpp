@@ -77,8 +77,6 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverT
 		return CommonNullInstance();
 	}
 
-	UE_LOG(LogCleverTap, Log, TEXT("Initializing the shared CleverTap instance"));
-
 	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(Config));
 }
 
