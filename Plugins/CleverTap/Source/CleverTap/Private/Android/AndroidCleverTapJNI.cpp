@@ -152,9 +152,14 @@ void RegisterCleverTapLifecycleCallbacks(JNIEnv* env)
 	UE_LOG(LogCleverTap, Log, TEXT("Successfully registered CleverTap lifecycle callbacks via JNI"));
 }
 
+jclass GetCleverTapAPIClass(JNIEnv* env)
+{
+	return LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+}
+
 jobject GetCleverTapInstance(JNIEnv* env)
 {
-	jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
 	if (!cleverTapAPIClass)
 	{
 		return nullptr;
@@ -179,18 +184,13 @@ jobject GetCleverTapInstance(JNIEnv* env)
 	return cleverTapInstance;
 }
 
-static bool FindJavaLogLevelLevelFromString(JNIEnv* env, const FString& logLevelName, int* outputLogLevel)
+static jobject JavaLogLevelLevelFromString(JNIEnv* env, const FString& logLevelName)
 {
-	if (!outputLogLevel)
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("Missing outputLogLevel"));
-		return false;
-	}
 	jclass LogLevelClass = LoadJavaClass(env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
 	if (!LogLevelClass)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTapAPI$LogLevel class"));
-		return false;
+		return nullptr;
 	}
 
 	// Find the method to get the enum constant from the name
@@ -201,44 +201,20 @@ static bool FindJavaLogLevelLevelFromString(JNIEnv* env, const FString& logLevel
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Failed to %s"), *context);
 		env->DeleteLocalRef(LogLevelClass);
-		return false;
+		return nullptr;
 	}
 	// Get the enum constant from the name
 	context = TEXT("LogLevel.ValueOf(string)");
 	jstring JavaLogLevelName = env->NewStringUTF(TCHAR_TO_UTF8(*logLevelName));
-	jobject LogLevelEnum = env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLogLevelName);
+	jobject LogLevelEnumValue = env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLogLevelName);
 	env->DeleteLocalRef(JavaLogLevelName);
-	if (JNIExceptionThrown(env, context) || !LogLevelEnum)
+	env->DeleteLocalRef(LogLevelClass);
+	if (JNIExceptionThrown(env, context) || !LogLevelEnumValue)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Failed to get LogLevel enum for: %s"), *logLevelName);
-		env->DeleteLocalRef(LogLevelClass);
-		return false;
+		return nullptr;
 	}
-
-	// Now get the intValue() method of the enum instance
-	context = TEXT("Get LogLevel.intValue() method");
-	jmethodID IntValueMethod = env->GetMethodID(LogLevelClass, "intValue", "()I");
-	if (JNIExceptionThrown(env, context) || !IntValueMethod)
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("Failed to %s"), *context);
-		env->DeleteLocalRef(LogLevelEnum);
-		env->DeleteLocalRef(LogLevelClass);
-		return false;
-	}
-
-	// Call intValue() to get the corresponding integer value
-	int JavaLogLevel = env->CallIntMethod(LogLevelEnum, IntValueMethod);
-	if (JNIExceptionThrown(env, "intValue()"))
-	{
-		return false;
-	}
-
-	// Cleanup local references
-	env->DeleteLocalRef(LogLevelEnum);
-	env->DeleteLocalRef(LogLevelClass);
-
-	*outputLogLevel = JavaLogLevel;
-	return true;
+	return LogLevelEnumValue;
 }
 
 const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
@@ -262,17 +238,36 @@ const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
 	}
 }
 
-bool SetLogLevel(JNIEnv* env, const FString& logLevelName)
+bool SetDebugLevel(JNIEnv* env, const FString& logLevelName)
 {
-	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::SetLogLevel(%s)"), *logLevelName);
-
-	int javaLogLevel = 0;
-	if (!FindJavaLogLevelLevelFromString(env, logLevelName, &javaLogLevel))
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::SetDebugLevel(%s)"), *logLevelName);
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
+	if (!cleverTapAPIClass)
 	{
 		return false;
 	}
+	jmethodID SetDebugLogLevelMethod = env->GetStaticMethodID(
+		cleverTapAPIClass, "setDebugLevel", "(Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;)V");
+	if (JNIExceptionThrown(env, TEXT("GetStaticMethodID - setDebugLevel")) || !SetDebugLogLevelMethod)
+	{
+		env->DeleteLocalRef(cleverTapAPIClass);
+		return false;
+	}
 
-	UE_LOG(LogCleverTap, Log, TEXT("SetLogLevel(%s)->%d"), *logLevelName, javaLogLevel);
+	jobject javaLogLevel = JavaLogLevelLevelFromString(env, logLevelName);
+	if (!javaLogLevel)
+	{
+		env->DeleteLocalRef(cleverTapAPIClass);
+		return false;
+	}
+
+	env->CallStaticVoidMethod(cleverTapAPIClass, SetDebugLogLevelMethod, javaLogLevel);
+	env->DeleteLocalRef(cleverTapAPIClass);
+	env->DeleteLocalRef(javaLogLevel);
+	if (JNIExceptionThrown(env, TEXT("CallStaticVoidMethod - setDebugLevel")))
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -281,7 +276,7 @@ void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& tok
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::ChangeCredentials()"));
 
 	// Find the CleverTapAPI class
-	jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
 	if (!cleverTapAPIClass)
 	{
 		return;
@@ -328,10 +323,11 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
 	jobject emptyHashMap = env->NewObject(hashMapClass, hashMapConstructor);
 
 	// Get the OnUserLogin method
-	jclass cleverTapAPIClass = LoadJavaClass(env, "com.clevertap.android.sdk.CleverTapAPI");
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
 	if (!cleverTapAPIClass)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
+		return;
 	}
 	jmethodID onUserLoginMethod = env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
 
@@ -341,6 +337,7 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
 	// Clean up local references
 	env->DeleteLocalRef(emptyHashMap);
 	env->DeleteLocalRef(hashMapClass);
+	env->DeleteLocalRef(cleverTapAPIClass);
 
 	UE_LOG(LogCleverTap, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
 }
@@ -355,9 +352,6 @@ bool InitCleverTap()
 		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
 		return false;
 	}
-
-	SetLogLevel(env, "OFF");
-	SetLogLevel(env, "FOO");
 
 	// This happens too late for the Android CleverTapSDK to be happy:
 	//	RegisterCleverTapLifecycleCallbacks(env);

@@ -21,11 +21,13 @@ public:
 	{
 		CleverTapSDK::Android::JNI::InitCleverTap();
 
+		/* todo remove this
+		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel(123));
 		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Off);
 		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Info);
 		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Debug);
 		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Verbose);
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel(123));
+		**/
 	}
 
 	FString GetCleverTapId() const override { return FString{}; } // todo hmm
@@ -40,7 +42,7 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 		return;
 	}
 
-	JNI::SetLogLevel(env, JNI::CleverTapLogLevelName(Level));
+	JNI::SetDebugLevel(env, JNI::CleverTapLogLevelName(Level));
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
