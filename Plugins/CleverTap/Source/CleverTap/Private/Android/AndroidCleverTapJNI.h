@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CleverTapLogLevel.h"
+#include "CleverTapProfile.h"
 
 #include "Android/AndroidApplication.h"
 
@@ -17,9 +18,12 @@ jobject GetCleverTapInstance(JNIEnv* env);
 const char* CleverTapLogLevelName(ECleverTapLogLevel Level);
 bool SetDebugLevel(JNIEnv* env, const FString& logLevelName);
 void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& token, const FString& region);
-bool InitCleverTap();
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile );
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID );
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile);
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID);
 FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance);
+
+jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile);
+
+bool InitCleverTap();
 
 }}} // namespace CleverTapSDK::Android::JNI

@@ -1,6 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapProfile.h"
+
 #include "CoreMinimal.h"
 
 /**
@@ -16,4 +18,7 @@ public:
 	 *  assigned to the user profile.
 	 */
 	virtual FString GetCleverTapId() const = 0;
+
+	virtual void OnUserLogin(const FCleverTapProfile& profile) const = 0;
+	virtual void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const = 0;
 };

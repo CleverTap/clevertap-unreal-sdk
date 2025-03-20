@@ -19,14 +19,31 @@ class FAndroidCleverTapInstance : public ICleverTapInstance
 public:
 	FAndroidCleverTapInstance()
 	{
+		FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Verbose);
+
 		JNI::InitCleverTap();
 		// todo store scoped intance here
+
+		FCleverTapProfile profile;
+		OnUserLogin(profile);
 	}
 
 	FString GetCleverTapId() const override
 	{
 		auto* env = JNI::GetJNIEnv();
 		return JNI::GetCleverTapID(env, JNI::GetCleverTapInstance(env));
+	}
+
+	void OnUserLogin(const FCleverTapProfile& profile) const override
+	{
+		auto* env = JNI::GetJNIEnv();
+		JNI::OnUserLogin(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile));
+	};
+
+	void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const override
+	{
+		auto* env = JNI::GetJNIEnv();
+		JNI::OnUserLogin(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile), cleverTapId);
 	}
 };
 

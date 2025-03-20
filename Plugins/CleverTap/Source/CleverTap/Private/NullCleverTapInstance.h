@@ -10,4 +10,7 @@ class FNullCleverTapInstance : public ICleverTapInstance
 {
 public:
 	FString GetCleverTapId() const override;
+
+	void OnUserLogin(const FCleverTapProfile& profile) const override;
+	void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const override;
 };
