@@ -19,18 +19,15 @@ class FAndroidCleverTapInstance : public ICleverTapInstance
 public:
 	FAndroidCleverTapInstance()
 	{
-		CleverTapSDK::Android::JNI::InitCleverTap();
-
-		/* todo remove this
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel(123));
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Off);
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Info);
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Debug);
-		CleverTapSDK::Android::FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Verbose);
-		**/
+		JNI::InitCleverTap();
+		// todo store scoped intance here
 	}
 
-	FString GetCleverTapId() const override { return FString{}; } // todo hmm
+	FString GetCleverTapId() const override
+	{
+		auto* env = JNI::GetJNIEnv();
+		return JNI::GetCleverTapID(env, JNI::GetCleverTapInstance(env));
+	}
 };
 
 void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)

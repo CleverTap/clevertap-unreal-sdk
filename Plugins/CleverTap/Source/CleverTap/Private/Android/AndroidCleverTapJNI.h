@@ -7,6 +7,7 @@
 
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
+JNIEnv* GetJNIEnv();
 jclass LoadJavaClass(JNIEnv* env, const char* classPath);
 jclass GetCleverTapAPIClass(JNIEnv* env);
 jobject GetJavaApplication(JNIEnv* env);
@@ -18,5 +19,6 @@ bool SetDebugLevel(JNIEnv* env, const FString& logLevelName);
 void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& token, const FString& region);
 bool InitCleverTap();
 void OnUserLogin(JNIEnv* env, jobject cleverTapInstance);
+FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance);
 
 }}} // namespace CleverTapSDK::Android::JNI

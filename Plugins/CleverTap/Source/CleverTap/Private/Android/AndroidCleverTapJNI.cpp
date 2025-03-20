@@ -33,6 +33,16 @@ static bool JNIExceptionThrown(JNIEnv* env, const FString& context)
 	return false;
 }
 
+JNIEnv* GetJNIEnv()
+{
+	JNIEnv* env = FAndroidApplication::GetJavaEnv();
+	if (env == nullptr)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr!"));
+	}
+	return env;
+}
+
 jclass LoadJavaClass(JNIEnv* env, const char* classPath)
 {
 	// todo there has to be a simpler way to do this!
@@ -342,14 +352,55 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
 	UE_LOG(LogCleverTap, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
 }
 
+FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance)
+{
+	//	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::GetCleverTapID()"));
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
+	if (!cleverTapAPIClass)
+	{
+		return TEXT("");
+	}
+
+	// Get the getCleverTapID() method ID
+	FString context = TEXT("GetMethodID - getCleverTapID");
+	jmethodID GetIDMethod = env->GetMethodID(cleverTapAPIClass, "getCleverTapID", "()Ljava/lang/String;");
+	if (JNIExceptionThrown(env, context) || !GetIDMethod)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("%s failed"), *context);
+		env->DeleteLocalRef(cleverTapAPIClass);
+		return TEXT("");
+	}
+
+	// Call getCleverTapID() and retrieve a Java string
+	context = TEXT("CallObjectMethod - getCleverTapID");
+	jstring JavaID = (jstring)env->CallObjectMethod(cleverTapInstance, GetIDMethod);
+	if (JNIExceptionThrown(env, context) || !JavaID)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("%s failed"), *context);
+		env->DeleteLocalRef(cleverTapAPIClass);
+		return TEXT("");
+	}
+
+	// Convert Java string to Unreal FString
+	const char* IDChars = env->GetStringUTFChars(JavaID, nullptr);
+	FString CleverTapID = FString(IDChars);
+	env->ReleaseStringUTFChars(JavaID, IDChars);
+
+	// Cleanup
+	env->DeleteLocalRef(JavaID);
+	env->DeleteLocalRef(cleverTapAPIClass);
+
+	//	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::GetCleverTapID() = '%s'"), *CleverTapID);
+	return CleverTapID;
+}
+
 bool InitCleverTap()
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::InitCleverTap()"));
 
-	JNIEnv* env = FAndroidApplication::GetJavaEnv();
+	JNIEnv* env = GetJNIEnv();
 	if (env == nullptr)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
 		return false;
 	}
 
