@@ -36,7 +36,7 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 			case ECleverTapLogLevel::Debug:
 				return CleverTapLogDebug;
 			case ECleverTapLogLevel::Verbose:
-				return CleverTapLogVerbose;
+				return CleverTapLogDebug; // CleverTap IOS doesn't have LogLevel Verbose
 			default:
 			{
 				UE_LOG(LogCleverTap, Error,
