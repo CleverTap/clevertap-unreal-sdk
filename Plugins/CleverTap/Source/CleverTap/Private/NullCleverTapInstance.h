@@ -13,4 +13,6 @@ public:
 
 	void OnUserLogin(const FCleverTapProfile& profile) const override;
 	void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const override;
+
+	void PushProfile(const FCleverTapProfile& profile) const override;
 };

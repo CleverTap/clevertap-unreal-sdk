@@ -3,11 +3,12 @@
 
 #include "Android/AndroidCleverTapJNI.h"
 
-#include "CleverTapPlatformSDK.h"
 #include "CleverTapInstance.h"
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
 #include "CleverTapLogLevel.h"
-#include "CleverTapInstanceConfig.h"
+#include "CleverTapPlatformSDK.h"
+#include "CleverTapProfile.h"
 #include "CleverTapUtilities.h"
 
 #include "Android/AndroidApplication.h"
@@ -19,13 +20,15 @@ class FAndroidCleverTapInstance : public ICleverTapInstance
 public:
 	FAndroidCleverTapInstance()
 	{
-		FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Verbose);
+		FPlatformSDK::SetLogLevel(ECleverTapLogLevel::Verbose); // todo delete this
 
 		JNI::InitCleverTap();
 		// todo store scoped intance here
 
-		FCleverTapProfile profile;
+		// todo move/delete this, it's only testing code:
+		FCleverTapProfile profile = GetExampleCleverTapProfile();
 		OnUserLogin(profile);
+		PushProfile(profile);
 	}
 
 	FString GetCleverTapId() const override
@@ -44,6 +47,12 @@ public:
 	{
 		auto* env = JNI::GetJNIEnv();
 		JNI::OnUserLogin(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile), cleverTapId);
+	}
+
+	void PushProfile(const FCleverTapProfile& profile) const override
+	{
+		auto* env = JNI::GetJNIEnv();
+		JNI::PushProfile(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile));
 	}
 };
 

@@ -20,6 +20,7 @@ bool SetDebugLevel(JNIEnv* env, const FString& logLevelName);
 void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& token, const FString& region);
 void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile);
 void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID);
+void PushProfile(JNIEnv* env, jobject cleverTapInstance, jobject profile);
 FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance);
 
 jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile);

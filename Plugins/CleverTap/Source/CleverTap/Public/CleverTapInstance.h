@@ -21,4 +21,5 @@ public:
 
 	virtual void OnUserLogin(const FCleverTapProfile& profile) const = 0;
 	virtual void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const = 0;
+	virtual void PushProfile(const FCleverTapProfile& profile) const = 0;
 };

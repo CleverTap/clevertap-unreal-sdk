@@ -9,3 +9,5 @@ FString FNullCleverTapInstance::GetCleverTapId() const
 void FNullCleverTapInstance::OnUserLogin(const FCleverTapProfile& profile) const {}
 
 void FNullCleverTapInstance::OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const {}
+
+void FNullCleverTapInstance::PushProfile(const FCleverTapProfile& profile) const {}

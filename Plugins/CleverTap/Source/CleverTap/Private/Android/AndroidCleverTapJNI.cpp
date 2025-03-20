@@ -349,7 +349,7 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile)
 		return;
 	}
 
-	// Call onUserLogin with an empty HashMap
+	// Call onUserLogin with the given profile
 	env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, profile);
 	if (JNIExceptionThrown(env, "onUserLogin()"))
 	{
@@ -396,41 +396,29 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const 
 	env->DeleteLocalRef(javaCleverTapId);
 }
 
-/** old stuff
-
-
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
+void PushProfile(JNIEnv* env, jobject cleverTapInstance, jobject profile)
 {
-	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::OnUserLogin()"));
-
-	// Get HashMap class and constructor
-	jclass hashMapClass = env->FindClass("java/util/HashMap");
-	jmethodID hashMapConstructor = env->GetMethodID(hashMapClass, "<init>", "()V");
-
-	// Create an empty HashMap instance
-	jobject emptyHashMap = env->NewObject(hashMapClass, hashMapConstructor);
-
-	// Get the OnUserLogin method
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushProfile()"));
 	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
 	if (!cleverTapAPIClass)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("CleverTapAPI not found in JNI!"));
 		return;
 	}
-	jmethodID onUserLoginMethod = env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
-
-	// Call onUserLogin with an empty HashMap
-	env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, emptyHashMap);
-
-	// Clean up local references
-	env->DeleteLocalRef(emptyHashMap);
-	env->DeleteLocalRef(hashMapClass);
+	// Get the pushProfile method
+	jmethodID pushProfileMethod = env->GetMethodID(cleverTapAPIClass, "pushProfile", "(Ljava/util/Map;)V");
 	env->DeleteLocalRef(cleverTapAPIClass);
+	if (JNIExceptionThrown(env, "GetMethodID pushProfile"))
+	{
+		return;
+	}
 
-	UE_LOG(LogCleverTap, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
+	// Call pushProfile with the given profile
+	env->CallVoidMethod(cleverTapInstance, pushProfileMethod, profile);
+	if (JNIExceptionThrown(env, "pushProfile()"))
+	{
+		return;
+	}
 }
-
-**/
 
 FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance)
 {
@@ -473,7 +461,6 @@ FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance)
 	//	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::GetCleverTapID() = '%s'"), *CleverTapID);
 	return CleverTapID;
 }
-
 
 jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile)
 {
@@ -580,7 +567,6 @@ jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile)
 
 	return JavaMap;
 }
-
 
 bool InitCleverTap()
 {
