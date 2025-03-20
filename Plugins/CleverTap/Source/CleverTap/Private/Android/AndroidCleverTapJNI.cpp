@@ -462,6 +462,79 @@ FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance)
 	return CleverTapID;
 }
 
+static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate& Date)
+{
+	// Find Java's Calendar class & methods we need
+	jclass CalendarClass = LoadJavaClass(Env, "java/util/Calendar");
+	if (!CalendarClass)
+	{
+		return nullptr;
+	}
+	jmethodID GetInstanceMethod = Env->GetStaticMethodID(CalendarClass, "getInstance", "()Ljava/util/Calendar;");
+	if (JNIExceptionThrown(Env, TEXT("GetStaticMethodID - Calendar getInstance")))
+	{
+		return nullptr;
+	}
+	jmethodID SetMethod = Env->GetMethodID(CalendarClass, "set", "(IIIIII)V");
+	if (JNIExceptionThrown(Env, TEXT("GetMethodID - Calendar set")))
+	{
+		return nullptr;
+	}
+	jmethodID GetTimeMethod = Env->GetMethodID(CalendarClass, "getTime", "()Ljava/util/Date;");
+	if (JNIExceptionThrown(Env, TEXT("GetMethodID - Calendar getTime")))
+	{
+		return nullptr;
+	}
+
+	// Create a Calendar instance
+	jobject JavaCalendar = Env->CallStaticObjectMethod(CalendarClass, GetInstanceMethod);
+	if (JNIExceptionThrown(Env, TEXT("Calendar GetInstanceMethod")) || !JavaCalendar)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to create Java Calendar instance"));
+		return nullptr;
+	}
+
+	// Set the date (year, month, day, hour=0, min=0, sec=0)
+	Env->CallVoidMethod(JavaCalendar, SetMethod, Date.Year, Date.Month - 1, Date.Day, 0, 0, 0);
+	if (JNIExceptionThrown(Env, TEXT("Calendar Set")))
+	{
+		return nullptr;
+	}
+
+	// Convert Calendar to Date
+	jobject JavaDate = Env->CallObjectMethod(JavaCalendar, GetTimeMethod);
+	if (JNIExceptionThrown(Env, TEXT("Calendar getTime")))
+	{
+		return nullptr;
+	}
+
+	return JavaDate;
+}
+
+static void DebugLogJavaMap(JNIEnv* Env, jobject JavaMap)
+{
+	if (!JavaMap || !Env)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("DebugLogJavaMap: JavaMap is null"));
+		return;
+	}
+
+	jclass MapClass = Env->FindClass("java/util/Map");
+	jmethodID ToStringMethod = Env->GetMethodID(MapClass, "toString", "()Ljava/lang/String;");
+	if (!ToStringMethod)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to find Map.toString() method"));
+		return;
+	}
+
+	jstring JavaString = (jstring)Env->CallObjectMethod(JavaMap, ToStringMethod);
+	const char* CStr = Env->GetStringUTFChars(JavaString, nullptr);
+	FString MapAsString(CStr);
+	UE_LOG(LogCleverTap, Log, TEXT("Java Profile HashMap: %s"), *MapAsString);
+	Env->ReleaseStringUTFChars(JavaString, CStr);
+	Env->DeleteLocalRef(JavaString);
+}
+
 jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile)
 {
 	// Create a new Java HashMap
@@ -524,13 +597,9 @@ jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile)
 		{
 			JavaValue = env->NewStringUTF(TCHAR_TO_UTF8(*Value.Get<FString>()));
 		}
-		else if (Value.IsType<FDateTime>())
+		else if (Value.IsType<FCleverTapDate>())
 		{
-			// Convert FDateTime -> Java Date (assuming FDateTime is a timestamp)
-			jclass DateClass = LoadJavaClass(env, "java/util/Date");
-			jmethodID DateConstructor = env->GetMethodID(DateClass, "<init>", "(J)V");
-			JavaValue = env->NewObject(
-				DateClass, DateConstructor, static_cast<jlong>(Value.Get<FDateTime>().ToUnixTimestamp()));
+			JavaValue = ConvertCleverTapDateToJavaDate(env, Value.Get<FCleverTapDate>());
 		}
 		else if (Value.IsType<TArray<FString>>())
 		{
@@ -564,6 +633,8 @@ jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile)
 	{
 		return nullptr;
 	}
+
+	// DebugLogJavaMap(env, JavaMap);
 
 	return JavaMap;
 }
