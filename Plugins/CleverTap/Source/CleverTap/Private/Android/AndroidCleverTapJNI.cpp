@@ -321,6 +321,72 @@ void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& tok
 	env->DeleteLocalRef(cleverTapAPIClass);
 }
 
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::OnUserLogin(profile)"));
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
+	if (!cleverTapAPIClass)
+	{
+		return;
+	}
+	// Get the OnUserLogin method
+	jmethodID onUserLoginMethod = env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
+	env->DeleteLocalRef(cleverTapAPIClass);
+	if (JNIExceptionThrown(env, "GetMethodID onUserLogin"))
+	{
+		return;
+	}
+
+	// Call onUserLogin with an empty HashMap
+	env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, profile);
+	if (JNIExceptionThrown(env, "onUserLogin()"))
+	{
+		return;
+	}
+}
+
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::OnUserLogin(profile, cleverTapID)"));
+
+	jclass cleverTapAPIClass = GetCleverTapAPIClass(env);
+	if (!cleverTapAPIClass)
+	{
+		return;
+	}
+
+	// Get the OnUserLogin method with the correct signature (Map + String)
+	jmethodID onUserLoginMethod =
+		env->GetMethodID(cleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;Ljava/lang/String;)V");
+	env->DeleteLocalRef(cleverTapAPIClass);
+	if (JNIExceptionThrown(env, "GetMethodID onUserLogin(profile, cleverTapID)"))
+	{
+		return;
+	}
+
+	// Convert FString to jstring for CleverTapID
+	jstring javaCleverTapId = env->NewStringUTF(TCHAR_TO_UTF8(*cleverTapID));
+	if (!javaCleverTapId)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("Failed to convert CleverTapID to jstring"));
+		return;
+	}
+
+	// Call onUserLogin with profile and CleverTapID
+	env->CallVoidMethod(cleverTapInstance, onUserLoginMethod, profile, javaCleverTapId);
+	if (JNIExceptionThrown(env, "onUserLogin(profile, cleverTapID)"))
+	{
+		env->DeleteLocalRef(javaCleverTapId);
+		return;
+	}
+
+	// Clean up JNI references
+	env->DeleteLocalRef(javaCleverTapId);
+}
+
+/** old stuff 
+
+
 void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::OnUserLogin()"));
@@ -351,6 +417,9 @@ void OnUserLogin(JNIEnv* env, jobject cleverTapInstance)
 
 	UE_LOG(LogCleverTap, Log, TEXT("Called CleverTap onUserLogin with an empty HashMap"));
 }
+
+**/
+
 
 FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance)
 {
@@ -413,7 +482,7 @@ bool InitCleverTap()
 	{
 		UE_LOG(LogCleverTap, Log, TEXT("CleverTap Initialized Successfully!"));
 
-		OnUserLogin(env, cleverTapInstance);
+		OnUserLogin(env, cleverTapInstance, nullptr );
 		return true;
 	}
 	else

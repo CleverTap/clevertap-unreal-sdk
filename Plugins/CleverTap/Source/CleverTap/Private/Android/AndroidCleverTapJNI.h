@@ -18,7 +18,8 @@ const char* CleverTapLogLevelName(ECleverTapLogLevel Level);
 bool SetDebugLevel(JNIEnv* env, const FString& logLevelName);
 void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& token, const FString& region);
 bool InitCleverTap();
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance);
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile );
+void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID );
 FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance);
 
 }}} // namespace CleverTapSDK::Android::JNI
