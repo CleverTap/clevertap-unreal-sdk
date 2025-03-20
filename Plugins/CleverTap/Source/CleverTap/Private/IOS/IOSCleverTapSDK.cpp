@@ -36,7 +36,7 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 			case ECleverTapLogLevel::Debug:
 				return CleverTapLogDebug;
 			case ECleverTapLogLevel::Verbose:
-				return CleverTapLogDebug;
+				return CleverTapLogVerbose;
 			default:
 			{
 				UE_LOG(LogCleverTap, Error,
