@@ -9,12 +9,126 @@
 
 namespace {
 
+NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
+{
+	NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
+
+	for (const FCleverTapProperties::ElementType& Entry : Properties)
+	{
+		NSString* Key = Entry.Key.GetNSString();
+		switch (Entry.Value.GetIndex())
+		{
+			// int64, float, double, bool, FString, FCleverTapDate, TArray<FString>
+			case FCleverTapPropertyValue::IndexOfType<int64>():
+			{
+				result[Key] = @(Entry.Value.Get<int64>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<float>():
+			{
+				result[Key] = @(Entry.Value.Get<float>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<double>():
+			{
+				result[Key] = @(Entry.Value.Get<double>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<bool>():
+			{
+				result[Key] = (Entry.Value.Get<bool>() ? @YES : @NO);
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<FString>():
+			{
+				result[Key] = Entry.Value.Get<FString>().GetNSString();
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<FCleverTapDate>():
+			{
+				const FCleverTapDate& Date = Entry.Value.Get<FCleverTapDate>();
+
+				NSDateComponents* ObjCDate = [[NSDateComponents alloc] init];
+				ObjCDate.day = Date.Day;
+				ObjCDate.month = Date.Month;
+				ObjCDate.year = Date.Year;
+				result[Key] = ObjCDate;
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<TArray<FString>>():
+			{
+				const TArray<FString>& Values = Entry.Value.Get<TArray<FString>>();
+				NSMutableArray* ObjCValues = [NSMutableArray arrayWithCapacity:Values.Num()];
+
+				for (const FString& StrValue : Values)
+				{
+					[ObjCValues addObject:StrValue.GetNSString()];
+				}
+
+				result[Key] = ObjCValues;
+			}
+			break;
+		}
+	}
+
+	return result;
+}
+
+NSArray* ConvertToNSArray(const TArray<FCleverTapProperties>& Items)
+{
+	NSMutableArray* result = [NSMutableArray arrayWithCapacity:Items.Num()];
+
+	for (const FCleverTapProperties& Properties : Items)
+	{
+		[result addObject:ConvertToNSDictionary(Properties)];
+	}
+
+	return result;
+}
+
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
 public:
 	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance) : NativeInstance{ InNativeInstance } {}
 
+	// <ICleverTapInstance>
 	FString GetCleverTapId() const override { return FString{ [NativeInstance profileGetCleverTapID] }; }
+
+	void OnUserLogin(const FCleverTapProperties& Profile) const override
+	{
+		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile)];
+	}
+
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override
+	{
+		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile) withCleverTapID:CleverTapId.GetNSString()];
+	}
+
+	void PushProfile(const FCleverTapProperties& Profile) const override
+	{
+		[NativeInstance profilePush:ConvertToNSDictionary(Profile)];
+	}
+
+	void PushEvent(const FString& EventName) const override { [NativeInstance recordEvent:EventName.GetNSString()]; }
+
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override
+	{
+		[NativeInstance recordEvent:EventName.GetNSString() withProps:ConvertToNSDictionary(Actions)];
+	}
+
+	void PushChargedEvent(
+		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override
+	{
+		[NativeInstance recordChargedEventWithDetails:ConvertToNSDictionary(ChargeDetails)
+											 andItems:ConvertToNSArray(Items)];
+	}
+	// </ICleverTapInstance>
 
 private:
 	CleverTap* NativeInstance{};
