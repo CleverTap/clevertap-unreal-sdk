@@ -11,7 +11,7 @@ namespace CleverTapSDK { namespace Android { namespace JNI {
 
 static bool s_bCatchJNIExceptions = true; // todo hook this somewhere better
 
-static bool JNIExceptionThrown(JNIEnv* Env, const FString& Context)
+static bool JNIExceptionThrown(JNIEnv* Env, const FString& Context = TEXT("CleverTapSDK"))
 {
 	if (!Env)
 	{
@@ -107,6 +107,21 @@ jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath)
 	}
 	return FoundClass;
 }
+
+/** todo: consider these utilities
+jmethodID GetMethodId( JNIEnv* Env, jclass Class, const char *Name, const char *Signature )  {
+	if( !Env ) {
+		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is null!"));
+		return nullptr;
+	}
+	jmethodID MethodId = Env->GetMethodID(Class, Name, Signature);
+	if (JNIExceptionThrown(Env))
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("GetMethodID %s %s %s failed"), *FString(ClassPath));
+		return nullptr;
+	}
+}
+*/
 
 jobject GetJavaApplication(JNIEnv* Env)
 {
@@ -468,29 +483,60 @@ static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate&
 	{
 		return nullptr;
 	}
+	// todo check for exceptions here, use utility functions
 	jmethodID GetInstanceMethod = Env->GetStaticMethodID(CalendarClass, "getInstance", "()Ljava/util/Calendar;");
-	if (JNIExceptionThrown(Env, TEXT("GetStaticMethodID - Calendar getInstance")))
-	{
-		return nullptr;
-	}
-	jmethodID SetMethod = Env->GetMethodID(CalendarClass, "set", "(IIIIII)V");
-	if (JNIExceptionThrown(Env, TEXT("GetMethodID - Calendar set")))
-	{
-		return nullptr;
-	}
 	jmethodID GetTimeMethod = Env->GetMethodID(CalendarClass, "getTime", "()Ljava/util/Date;");
-	if (JNIExceptionThrown(Env, TEXT("GetMethodID - Calendar getTime")))
+	jmethodID SetMethod = Env->GetMethodID(CalendarClass, "set", "(IIIIII)V");
+	jmethodID SetTimeZoneMethod = Env->GetMethodID(CalendarClass, "setTimeZone", "(Ljava/util/TimeZone;)V");
+
+	// Get TimeZone class & methods
+	jclass TimeZoneClass = LoadJavaClass(Env, "java/util/TimeZone");
+	jmethodID GetTimeZoneMethod =
+		Env->GetStaticMethodID(TimeZoneClass, "getTimeZone", "(Ljava/lang/String;)Ljava/util/TimeZone;");
+	if (JNIExceptionThrown(Env, TEXT("Getting TimeZone methods")))
+	{
+		return nullptr;
+	}
+	jmethodID GetDefaultTimeZoneMethod = Env->GetStaticMethodID(TimeZoneClass, "getDefault", "()Ljava/util/TimeZone;");
+	if (JNIExceptionThrown(Env, TEXT("Getting TimeZone methods")))
 	{
 		return nullptr;
 	}
 
+	/**	TODO
+		// Get UTC TimeZone instance
+		jstring UtcString = Env->NewStringUTF("UTC");
+		jobject UtcTimeZone = Env->CallStaticObjectMethod(TimeZoneClass, GetTimeZoneMethod, UtcString);
+		Env->DeleteLocalRef(UtcString);
+		if (JNIExceptionThrown(Env, TEXT("Getting TimeZone")) || !UtcTimeZone)
+		{
+			UE_LOG(LogCleverTap, Error, TEXT("Failed to get UTC timezone"));
+			return nullptr;
+		}
+
+		// Get Local TimeZone instance
+		jobject LocalTimeZone = Env->CallStaticObjectMethod(TimeZoneClass, GetDefaultTimeZoneMethod);
+		if (JNIExceptionThrown(Env, TEXT("TimeZoneClass getDefault")))
+		{
+			return nullptr;
+		}
+	**/
+
 	// Create a Calendar instance
 	jobject JavaCalendar = Env->CallStaticObjectMethod(CalendarClass, GetInstanceMethod);
-	if (JNIExceptionThrown(Env, TEXT("Calendar GetInstanceMethod")) || !JavaCalendar)
+	if (JNIExceptionThrown(Env, TEXT("Calendar getInstance")) || !JavaCalendar)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("Failed to create Java Calendar instance"));
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to create Calendar"));
 		return nullptr;
 	}
+
+	/**	TODO
+		Env->CallVoidMethod(JavaCalendar, SetTimeZoneMethod, LocalTimeZone);
+		if (JNIExceptionThrown(Env, TEXT("Calendar setTimeZone")))
+		{
+			return nullptr;
+		}
+	 **/
 
 	// Set the date (year, month, day, hour=0, min=0, sec=0)
 	Env->CallVoidMethod(JavaCalendar, SetMethod, Date.Year, Date.Month - 1, Date.Day, 0, 0, 0);
