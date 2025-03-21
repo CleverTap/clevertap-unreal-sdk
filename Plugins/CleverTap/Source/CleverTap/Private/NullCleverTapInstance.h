@@ -11,8 +11,8 @@ class FNullCleverTapInstance : public ICleverTapInstance
 public:
 	FString GetCleverTapId() const override;
 
-	void OnUserLogin(const FCleverTapProfile& profile) const override;
-	void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const override;
+	void OnUserLogin(const FCleverTapProperties& Profile) const override;
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override;
 
-	void PushProfile(const FCleverTapProfile& profile) const override;
+	void PushProfile(const FCleverTapProperties& Profile) const override;
 };

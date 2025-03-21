@@ -9,21 +9,21 @@
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
 JNIEnv* GetJNIEnv();
-jclass LoadJavaClass(JNIEnv* env, const char* classPath);
-jclass GetCleverTapAPIClass(JNIEnv* env);
-jobject GetJavaApplication(JNIEnv* env);
+jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath);
+jclass GetCleverTapAPIClass(JNIEnv* Env);
+jobject GetJavaApplication(JNIEnv* Env);
 
-void RegisterCleverTapLifecycleCallbacks(JNIEnv* env);
-jobject GetCleverTapInstance(JNIEnv* env);
+void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env);
+jobject GetCleverTapInstance(JNIEnv* Env);
 const char* CleverTapLogLevelName(ECleverTapLogLevel Level);
-bool SetDebugLevel(JNIEnv* env, const FString& logLevelName);
-void ChangeCredentials(JNIEnv* env, const FString& accountId, const FString& token, const FString& region);
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile);
-void OnUserLogin(JNIEnv* env, jobject cleverTapInstance, jobject profile, const FString& cleverTapID);
-void PushProfile(JNIEnv* env, jobject cleverTapInstance, jobject profile);
-FString GetCleverTapID(JNIEnv* env, jobject cleverTapInstance);
+bool SetDebugLevel(JNIEnv* Env, const FString& LogLevelName);
+void ChangeCredentials(JNIEnv* Env, const FString& AccountId, const FString& Token, const FString& Region);
+void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
+void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile, const FString& CleverTapID);
+void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
+FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
-jobject ConvertProfileToJavaMap(JNIEnv* env, const FCleverTapProfile& profile);
+jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
 
 bool InitCleverTap();
 

@@ -9,6 +9,7 @@
 #include "CleverTapLogLevel.h"
 #include "CleverTapPlatformSDK.h"
 #include "CleverTapProfile.h"
+#include "CleverTapProperties.h"
 #include "CleverTapUtilities.h"
 
 #include "Android/AndroidApplication.h"
@@ -26,46 +27,52 @@ public:
 		// todo store scoped intance here
 
 		// todo move/delete this, it's only testing code:
-		FCleverTapProfile profile = GetExampleCleverTapProfile();
-		OnUserLogin(profile);
-		PushProfile(profile);
+		FCleverTapProperties Profile = GetExampleCleverTapProfile();
+		OnUserLogin(Profile);
+		PushProfile(Profile);
 	}
 
 	FString GetCleverTapId() const override
 	{
-		auto* env = JNI::GetJNIEnv();
-		return JNI::GetCleverTapID(env, JNI::GetCleverTapInstance(env));
+		auto* Env = JNI::GetJNIEnv();
+		return JNI::GetCleverTapID(Env, JNI::GetCleverTapInstance(Env));
 	}
 
-	void OnUserLogin(const FCleverTapProfile& profile) const override
+	void OnUserLogin(const FCleverTapProperties& Profile) const override
 	{
-		auto* env = JNI::GetJNIEnv();
-		JNI::OnUserLogin(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile));
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
+		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
+		// todo release JavaProfile here or use scoped container
 	};
 
-	void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const override
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override
 	{
-		auto* env = JNI::GetJNIEnv();
-		JNI::OnUserLogin(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile), cleverTapId);
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
+		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile, CleverTapId);
+		// todo release JavaProfile here or use scoped container
 	}
 
-	void PushProfile(const FCleverTapProfile& profile) const override
+	void PushProfile(const FCleverTapProperties& Profile) const override
 	{
-		auto* env = JNI::GetJNIEnv();
-		JNI::PushProfile(env, JNI::GetCleverTapInstance(env), JNI::ConvertProfileToJavaMap(env, profile));
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
+		JNI::PushProfile(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
+		// todo release JavaProfile here or use scoped container
 	}
 };
 
 void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 {
-	JNIEnv* env = FAndroidApplication::GetJavaEnv();
-	if (env == nullptr)
+	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
+	if (Env == nullptr)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
 		return;
 	}
 
-	JNI::SetDebugLevel(env, JNI::CleverTapLogLevelName(Level));
+	JNI::SetDebugLevel(Env, JNI::CleverTapLogLevelName(Level));
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)

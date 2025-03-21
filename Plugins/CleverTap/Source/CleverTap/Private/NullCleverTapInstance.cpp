@@ -6,8 +6,8 @@ FString FNullCleverTapInstance::GetCleverTapId() const
 	return FString{};
 }
 
-void FNullCleverTapInstance::OnUserLogin(const FCleverTapProfile& profile) const {}
+void FNullCleverTapInstance::OnUserLogin(const FCleverTapProperties& Profile) const {}
 
-void FNullCleverTapInstance::OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const {}
+void FNullCleverTapInstance::OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const {}
 
-void FNullCleverTapInstance::PushProfile(const FCleverTapProfile& profile) const {}
+void FNullCleverTapInstance::PushProfile(const FCleverTapProperties& Profile) const {}

@@ -19,7 +19,7 @@ public:
 	 */
 	virtual FString GetCleverTapId() const = 0;
 
-	virtual void OnUserLogin(const FCleverTapProfile& profile) const = 0;
-	virtual void OnUserLogin(const FCleverTapProfile& profile, const FString& cleverTapId) const = 0;
-	virtual void PushProfile(const FCleverTapProfile& profile) const = 0;
+	virtual void OnUserLogin(const FCleverTapProperties& Profile) const = 0;
+	virtual void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const = 0;
+	virtual void PushProfile(const FCleverTapProperties& Profile) const = 0;
 };
