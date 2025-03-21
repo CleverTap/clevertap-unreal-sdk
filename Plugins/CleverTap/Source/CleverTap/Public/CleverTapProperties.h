@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Misc/TVariant.h"
 
 struct FCleverTapDate
 {
