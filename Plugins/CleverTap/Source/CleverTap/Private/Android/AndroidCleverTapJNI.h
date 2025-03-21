@@ -2,7 +2,7 @@
 #pragma once
 
 #include "CleverTapLogLevel.h"
-#include "CleverTapProfile.h"
+#include "CleverTapProperties.h"
 
 #include "Android/AndroidApplication.h"
 
