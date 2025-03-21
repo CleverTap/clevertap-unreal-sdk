@@ -15,4 +15,9 @@ public:
 	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override;
 
 	void PushProfile(const FCleverTapProperties& Profile) const override;
+
+	void PushEvent(const FString& EventName) const override;
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override;
+	void PushChargedEvent(
+		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override;
 };

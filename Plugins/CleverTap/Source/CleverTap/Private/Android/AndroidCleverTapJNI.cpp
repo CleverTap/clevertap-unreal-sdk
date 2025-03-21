@@ -434,6 +434,63 @@ void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile)
 	}
 }
 
+void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushEvent(%s)"), *EventName);
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	if (!CleverTapAPIClass)
+	{
+		return;
+	}
+	// Get the pushProfile method
+	jmethodID PushEventMethod = Env->GetMethodID(CleverTapAPIClass, "pushEvent", "(Ljava/lang/String;)V");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (JNIExceptionThrown(Env, "GetMethodID pushEvent"))
+	{
+		return;
+	}
+
+	// convert the eventName
+	jstring JavaEventName = Env->NewStringUTF(TCHAR_TO_UTF8(*EventName));
+
+	// Call pushEvent
+	Env->CallVoidMethod(CleverTapInstance, PushEventMethod, JavaEventName);
+	if (JNIExceptionThrown(Env, "pushEvent()"))
+	{
+		return;
+	}
+}
+
+void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName, jobject Actions)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushEvent(%s, Actions)"), *EventName);
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	if (!CleverTapAPIClass)
+	{
+		return;
+	}
+	// Get the pushProfile method
+	jmethodID PushEventMethod =
+		Env->GetMethodID(CleverTapAPIClass, "pushEvent", "(Ljava/lang/String;Ljava/util/Map;)V");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (JNIExceptionThrown(Env, "GetMethodID pushEvent(EventName,Actions)"))
+	{
+		return;
+	}
+
+	// convert the eventName
+	jstring JavaEventName = Env->NewStringUTF(TCHAR_TO_UTF8(*EventName));
+
+	// Call pushEvent
+	Env->CallVoidMethod(CleverTapInstance, PushEventMethod, JavaEventName, Actions);
+	if (JNIExceptionThrown(Env, "pushEvent()"))
+	{
+		Env->DeleteLocalRef(JavaEventName);
+		return;
+	}
+	Env->DeleteLocalRef(JavaEventName);
+}
+
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
@@ -627,6 +684,12 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 			jclass LongClass = LoadJavaClass(Env, "java/lang/Long");
 			jmethodID LongConstructor = Env->GetMethodID(LongClass, "<init>", "(J)V");
 			JavaValue = Env->NewObject(LongClass, LongConstructor, Value.Get<int64>());
+		}
+		else if (Value.IsType<double>())
+		{
+			jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
+			jmethodID DoubleConstructor = Env->GetMethodID(DoubleClass, "<init>", "(D)V");
+			JavaValue = Env->NewObject(DoubleClass, DoubleConstructor, Value.Get<double>());
 		}
 		else if (Value.IsType<float>())
 		{

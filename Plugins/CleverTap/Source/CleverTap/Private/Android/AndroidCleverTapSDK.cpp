@@ -30,6 +30,17 @@ public:
 		FCleverTapProperties Profile = GetExampleCleverTapProfile();
 		OnUserLogin(Profile);
 		PushProfile(Profile);
+
+		// event without properties
+		PushEvent(TEXT("Event No Props"));
+
+		// event with properties
+		FCleverTapProperties Actions;
+		Actions.Add("Product Name", "Casio Chronograph Watch");
+		Actions.Add("Category", "Mens Accessories");
+		Actions.Add("Price", 59.99);
+		// Actions.put("Date", FCleverTapDate::Today() ); TODO
+		PushEvent(TEXT("Product viewed"), Actions);
 	}
 
 	FString GetCleverTapId() const override
@@ -60,6 +71,26 @@ public:
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
 		JNI::PushProfile(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
 		// todo release JavaProfile here or use scoped container
+	}
+
+	void PushEvent(const FString& EventName) const override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		JNI::PushEvent(Env, JNI::GetCleverTapInstance(Env), EventName);
+	}
+
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaActions = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Actions);
+		JNI::PushEvent(Env, JNI::GetCleverTapInstance(Env), EventName, JavaActions);
+		// todo release JavaProfile here or use scoped container
+	}
+
+	void PushChargedEvent(
+		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override
+	{
+		// TODO
 	}
 };
 

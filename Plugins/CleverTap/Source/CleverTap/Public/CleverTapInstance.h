@@ -1,7 +1,7 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
-#include "CleverTapProfile.h"
+#include "CleverTapProperties.h"
 
 #include "CoreMinimal.h"
 
@@ -22,4 +22,9 @@ public:
 	virtual void OnUserLogin(const FCleverTapProperties& Profile) const = 0;
 	virtual void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const = 0;
 	virtual void PushProfile(const FCleverTapProperties& Profile) const = 0;
+
+	virtual void PushEvent(const FString& EventName) const = 0;
+	virtual void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const = 0;
+	virtual void PushChargedEvent(
+		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const = 0;
 };
