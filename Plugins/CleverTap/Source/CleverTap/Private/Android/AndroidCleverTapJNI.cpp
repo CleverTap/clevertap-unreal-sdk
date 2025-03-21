@@ -491,6 +491,32 @@ void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName,
 	Env->DeleteLocalRef(JavaEventName);
 }
 
+void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject ChargeDetails, jobject Items)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushChargedEvent()"));
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	if (!CleverTapAPIClass)
+	{
+		return;
+	}
+	// Get the pushProfile method
+	jmethodID PushChargedEventMethod =
+		Env->GetMethodID(CleverTapAPIClass, "pushChargedEvent", "(Ljava/util/HashMap;Ljava/util/ArrayList;)V");
+	if (JNIExceptionThrown(Env, "GetMethodID pushChargedEvent"))
+	{
+		Env->DeleteLocalRef(CleverTapAPIClass);
+		return;
+	}
+
+	Env->CallVoidMethod(CleverTapInstance, PushChargedEventMethod, ChargeDetails, Items);
+	if (JNIExceptionThrown(Env, "pushChargedEvent"))
+	{
+		Env->DeleteLocalRef(CleverTapAPIClass);
+		return;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+}
+
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
@@ -747,6 +773,48 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	// DebugLogJavaMap(Env, JavaMap);
 
 	return JavaMap;
+}
+
+jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array)
+{
+	jclass ArrayListClass = LoadJavaClass(Env, "java/util/ArrayList");
+	if (!ArrayListClass)
+	{
+		return nullptr;
+	}
+	jmethodID ArrayListCtor = Env->GetMethodID(ArrayListClass, "<init>", "()V");
+	if (JNIExceptionThrown(Env, "GetMethodID ArrayList constructor"))
+	{
+		return nullptr;
+	}
+	jmethodID AddMethod = Env->GetMethodID(ArrayListClass, "add", "(Ljava/lang/Object;)Z");
+	if (JNIExceptionThrown(Env, "GetMethodID ArrayList add"))
+	{
+		return nullptr;
+	}
+
+	jobject JavaArray = Env->NewObject(ArrayListClass, ArrayListCtor);
+	if (JNIExceptionThrown(Env, "Constructing ArrayList") || JavaArray == 0)
+	{
+		return nullptr;
+	}
+
+	for (const FCleverTapProperties& Item : Array)
+	{
+		jobject JavaItemMap = ConvertCleverTapPropertiesToJavaMap(Env, Item);
+		if (!JavaItemMap)
+		{
+			// already logged that we had a problem; keep going
+			continue;
+		}
+		Env->CallBooleanMethod(JavaArray, AddMethod, JavaItemMap);
+		if (JNIExceptionThrown(Env, "Adding Item"))
+		{
+			// already logged that we had a problem; keep going
+		}
+		Env->DeleteLocalRef(JavaItemMap);
+	}
+	return JavaArray;
 }
 
 bool InitCleverTap()

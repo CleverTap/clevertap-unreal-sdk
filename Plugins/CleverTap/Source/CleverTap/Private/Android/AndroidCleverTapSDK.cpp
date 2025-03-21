@@ -41,6 +41,34 @@ public:
 		Actions.Add("Price", 59.99);
 		// Actions.put("Date", FCleverTapDate::Today() ); TODO
 		PushEvent(TEXT("Product viewed"), Actions);
+
+		// charge event
+		FCleverTapProperties ChargeDetails;
+		ChargeDetails.Add("Amount", 300);
+		ChargeDetails.Add("Payment Mode", "Credit card");
+		ChargeDetails.Add("Charged ID", 24052014);
+
+		FCleverTapProperties Item1;
+		Item1.Add("Product category", "books");
+		Item1.Add("Book name", "The Millionaire next door");
+		Item1.Add("Quantity", 1);
+
+		FCleverTapProperties Item2;
+		Item2.Add("Product category", "books");
+		Item2.Add("Book name", "Achieving inner zen");
+		Item2.Add("Quantity", 1);
+
+		FCleverTapProperties Item3;
+		Item3.Add("Product category", "books");
+		Item3.Add("Book name", "Chuck it, let's do it");
+		Item3.Add("Quantity", 5);
+
+		TArray<FCleverTapProperties> Items;
+		Items.Add(Item1);
+		Items.Add(Item2);
+		Items.Add(Item3);
+
+		PushChargedEvent(ChargeDetails, Items);
 	}
 
 	FString GetCleverTapId() const override
@@ -54,7 +82,7 @@ public:
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
 		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
-		// todo release JavaProfile here or use scoped container
+		Env->DeleteLocalRef(JavaProfile);
 	};
 
 	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override
@@ -62,7 +90,7 @@ public:
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
 		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile, CleverTapId);
-		// todo release JavaProfile here or use scoped container
+		Env->DeleteLocalRef(JavaProfile);
 	}
 
 	void PushProfile(const FCleverTapProperties& Profile) const override
@@ -70,7 +98,7 @@ public:
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
 		JNI::PushProfile(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
-		// todo release JavaProfile here or use scoped container
+		Env->DeleteLocalRef(JavaProfile);
 	}
 
 	void PushEvent(const FString& EventName) const override
@@ -84,13 +112,18 @@ public:
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaActions = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Actions);
 		JNI::PushEvent(Env, JNI::GetCleverTapInstance(Env), EventName, JavaActions);
-		// todo release JavaProfile here or use scoped container
+		Env->DeleteLocalRef(JavaActions);
 	}
 
 	void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override
 	{
-		// TODO
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaDetails = JNI::ConvertCleverTapPropertiesToJavaMap(Env, ChargeDetails);
+		jobject JavaItems = JNI::ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(Env, Items);
+		JNI::PushChargedEvent(Env, JNI::GetCleverTapInstance(Env), JavaDetails, JavaItems);
+		Env->DeleteLocalRef(JavaDetails);
+		Env->DeleteLocalRef(JavaItems);
 	}
 };
 
@@ -112,5 +145,4 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	CleverTapSDK::Ignore(Config, CleverTapId);
 	return MakeUnique<FAndroidCleverTapInstance>();
 }
-
 }} // namespace CleverTapSDK::Android

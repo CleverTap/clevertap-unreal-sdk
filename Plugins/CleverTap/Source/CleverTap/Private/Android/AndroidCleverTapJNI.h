@@ -21,13 +21,14 @@ void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile, const FString& CleverTapID);
 void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
 
-void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString &EventName );
-void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString &EventName, jobject Actions );
-void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject Actions, jobject Items );
+void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName);
+void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName, jobject Actions);
+void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject Actions, jobject Items);
 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
+jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 
 bool InitCleverTap();
 
