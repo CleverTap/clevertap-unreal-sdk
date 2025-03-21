@@ -204,7 +204,7 @@ jobject GetCleverTapInstance(JNIEnv* Env)
 	return CleverTapInstance;
 }
 
-static jobject JavaLogLevelFromString(JNIEnv* Env, const FString& LogLevelName)
+static jobject JavaLogLevelFromString(JNIEnv* Env, const char* LogLevelName)
 {
 	jclass LogLevelClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
 	if (!LogLevelClass)
@@ -225,7 +225,7 @@ static jobject JavaLogLevelFromString(JNIEnv* Env, const FString& LogLevelName)
 	}
 	// Get the enum constant from the name
 	Context = TEXT("LogLevel.ValueOf(string)");
-	jstring JavaLogLevelName = Env->NewStringUTF(TCHAR_TO_UTF8(*LogLevelName));
+	jstring JavaLogLevelName = Env->NewStringUTF(LogLevelName);
 	jobject LogLevelEnumValue = Env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLogLevelName);
 	Env->DeleteLocalRef(JavaLogLevelName);
 	Env->DeleteLocalRef(LogLevelClass);
@@ -237,7 +237,7 @@ static jobject JavaLogLevelFromString(JNIEnv* Env, const FString& LogLevelName)
 	return LogLevelEnumValue;
 }
 
-const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
+static const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
 {
 	switch (Level)
 	{
@@ -258,9 +258,10 @@ const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
 	}
 }
 
-bool SetDebugLevel(JNIEnv* Env, const FString& LogLevelName)
+bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level)
 {
-	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::SetDebugLevel(%s)"), *LogLevelName);
+	const char* LevelName = CleverTapLogLevelName(Level);
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::SetDebugLevel(%hs)"), LevelName);
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	if (!CleverTapAPIClass)
 	{
@@ -274,7 +275,7 @@ bool SetDebugLevel(JNIEnv* Env, const FString& LogLevelName)
 		return false;
 	}
 
-	jobject JavaLogLevel = JavaLogLevelFromString(Env, LogLevelName);
+	jobject JavaLogLevel = JavaLogLevelFromString(Env, LevelName);
 	if (!JavaLogLevel)
 	{
 		Env->DeleteLocalRef(CleverTapAPIClass);
@@ -535,6 +536,8 @@ static void DebugLogJavaMap(JNIEnv* Env, jobject JavaMap)
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties)
 {
+	// todo rework this to be simpler & more robust
+
 	// Create a new Java HashMap
 	jclass HashMapClass = LoadJavaClass(Env, "java/util/HashMap");
 	if (!HashMapClass)

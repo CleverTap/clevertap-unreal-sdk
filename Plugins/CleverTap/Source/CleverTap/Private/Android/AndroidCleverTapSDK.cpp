@@ -65,14 +65,8 @@ public:
 
 void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 {
-	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
-	if (Env == nullptr)
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr"));
-		return;
-	}
-
-	JNI::SetDebugLevel(Env, JNI::CleverTapLogLevelName(Level));
+	JNIEnv* Env = JNI::GetJNIEnv();
+	JNI::SetDebugLevel(Env, Level);
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)

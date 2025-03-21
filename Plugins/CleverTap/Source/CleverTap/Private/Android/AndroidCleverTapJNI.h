@@ -15,8 +15,7 @@ jobject GetJavaApplication(JNIEnv* Env);
 
 void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env);
 jobject GetCleverTapInstance(JNIEnv* Env);
-const char* CleverTapLogLevelName(ECleverTapLogLevel Level);
-bool SetDebugLevel(JNIEnv* Env, const FString& LogLevelName);
+bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
 void ChangeCredentials(JNIEnv* Env, const FString& AccountId, const FString& Token, const FString& Region);
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile, const FString& CleverTapID);
