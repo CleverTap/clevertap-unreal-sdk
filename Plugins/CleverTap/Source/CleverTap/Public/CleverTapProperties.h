@@ -19,7 +19,7 @@ struct FCleverTapDate
 class FCleverTapPropertyValue
 {
 public:
-	using VariantType = TVariant<int64, float, bool, FString, FCleverTapDate, TArray<FString>>;
+	using VariantType = TVariant<int64, float, double, bool, FString, FCleverTapDate, TArray<FString>>;
 
 	// Default constructors
 	FCleverTapPropertyValue() = default;
@@ -27,6 +27,7 @@ public:
 	// Type-specific constructors
 	FCleverTapPropertyValue(int InValue) : Value(TInPlaceType<int64>(), int64(InValue)) {}
 	FCleverTapPropertyValue(int64 InValue) : Value(TInPlaceType<int64>(), InValue) {}
+	FCleverTapPropertyValue(double InValue) : Value(TInPlaceType<double>(), InValue) {}
 	FCleverTapPropertyValue(float InValue) : Value(TInPlaceType<float>(), InValue) {}
 	FCleverTapPropertyValue(bool InValue) : Value(TInPlaceType<bool>(), InValue) {}
 	FCleverTapPropertyValue(const char* InValue) : Value(TInPlaceType<FString>(), FString(InValue)) {}
