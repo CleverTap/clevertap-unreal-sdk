@@ -15,23 +15,24 @@ namespace CleverTapSDK { namespace Android {
 class FAndroidCleverTapInstance : public ICleverTapInstance
 {
 public:
-	FAndroidCleverTapInstance()
+	FScopedJavaObject<jobject> JavaCleverTapInstance;
+
+	FAndroidCleverTapInstance(JNIEnv* Env, jobject JavaCleverTapInstanceIn)
+		: JavaCleverTapInstance(Env, JavaCleverTapInstanceIn)
 	{
-		JNI::InitCleverTap();
-		// todo store scoped intance here
 	}
 
 	FString GetCleverTapId() const override
 	{
 		auto* Env = JNI::GetJNIEnv();
-		return JNI::GetCleverTapID(Env, JNI::GetCleverTapInstance(Env));
+		return JNI::GetCleverTapID(Env, *JavaCleverTapInstance);
 	}
 
 	void OnUserLogin(const FCleverTapProperties& Profile) const override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
-		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
+		JNI::OnUserLogin(Env, *JavaCleverTapInstance, JavaProfile);
 		Env->DeleteLocalRef(JavaProfile);
 	};
 
@@ -39,7 +40,7 @@ public:
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
-		JNI::OnUserLogin(Env, JNI::GetCleverTapInstance(Env), JavaProfile, CleverTapId);
+		JNI::OnUserLogin(Env, *JavaCleverTapInstance, JavaProfile, CleverTapId);
 		Env->DeleteLocalRef(JavaProfile);
 	}
 
@@ -47,21 +48,21 @@ public:
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
-		JNI::PushProfile(Env, JNI::GetCleverTapInstance(Env), JavaProfile);
+		JNI::PushProfile(Env, *JavaCleverTapInstance, JavaProfile);
 		Env->DeleteLocalRef(JavaProfile);
 	}
 
 	void PushEvent(const FString& EventName) const override
 	{
 		auto* Env = JNI::GetJNIEnv();
-		JNI::PushEvent(Env, JNI::GetCleverTapInstance(Env), EventName);
+		JNI::PushEvent(Env, *JavaCleverTapInstance, EventName);
 	}
 
 	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaActions = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Actions);
-		JNI::PushEvent(Env, JNI::GetCleverTapInstance(Env), EventName, JavaActions);
+		JNI::PushEvent(Env, *JavaCleverTapInstance, EventName, JavaActions);
 		Env->DeleteLocalRef(JavaActions);
 	}
 
@@ -71,7 +72,7 @@ public:
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaDetails = JNI::ConvertCleverTapPropertiesToJavaMap(Env, ChargeDetails);
 		jobject JavaItems = JNI::ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(Env, Items);
-		JNI::PushChargedEvent(Env, JNI::GetCleverTapInstance(Env), JavaDetails, JavaItems);
+		JNI::PushChargedEvent(Env, *JavaCleverTapInstance, JavaDetails, JavaItems);
 		Env->DeleteLocalRef(JavaDetails);
 		Env->DeleteLocalRef(JavaItems);
 	}
@@ -85,14 +86,27 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
-	CleverTapSDK::Ignore(Config);
-	return MakeUnique<FAndroidCleverTapInstance>();
+	JNIEnv* Env = JNI::GetJNIEnv();
+	JNI::SetDefaultConfig(Env, Config);
+	jobject Instance = JNI::GetDefaultInstance(Env);
+	if (!Env || !Instance)
+	{
+		return nullptr;
+	}
+	return MakeUnique<FAndroidCleverTapInstance>(Env, Instance);
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
-	CleverTapSDK::Ignore(Config, CleverTapId);
-	return MakeUnique<FAndroidCleverTapInstance>();
+	JNIEnv* Env = JNI::GetJNIEnv();
+	JNI::SetDefaultConfig(Env, Config);
+	jobject Instance = JNI::GetDefaultInstance(Env, CleverTapId);
+	if (!Env || !Instance)
+	{
+		return nullptr;
+	}
+	return MakeUnique<FAndroidCleverTapInstance>(Env, Instance);
 }
+
 }} // namespace CleverTapSDK::Android

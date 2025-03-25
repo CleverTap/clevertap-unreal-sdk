@@ -3,6 +3,7 @@
 
 #include "CleverTapLogLevel.h"
 #include "CleverTapProperties.h"
+#include "CleverTapInstanceConfig.h"
 
 #include "Android/AndroidApplication.h"
 
@@ -14,7 +15,17 @@ jclass GetCleverTapAPIClass(JNIEnv* Env);
 jobject GetJavaApplication(JNIEnv* Env);
 
 void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env);
-jobject GetCleverTapInstance(JNIEnv* Env);
+
+jobject CreateCleverTapInstanceConfig(
+	JNIEnv* Env, const FString& AccountId, const FString& AccountToken, const FString& AccountRegion);
+void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance);
+
+jobject CreateCleverTapInstanceConfig(const FCleverTapInstanceConfig& Config);
+void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
+
+jobject GetDefaultInstance(JNIEnv* Env);
+jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
+
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
 void ChangeCredentials(JNIEnv* Env, const FString& AccountId, const FString& Token, const FString& Region);
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
@@ -29,7 +40,5 @@ FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
-
-bool InitCleverTap();
 
 }}} // namespace CleverTapSDK::Android::JNI
