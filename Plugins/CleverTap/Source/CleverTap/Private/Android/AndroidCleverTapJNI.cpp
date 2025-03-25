@@ -192,7 +192,100 @@ jclass GetCleverTapAPIClass(JNIEnv* Env)
 	return LoadJavaClass(Env, "com.clevertap.android.sdk.CleverTapAPI");
 }
 
-jobject GetCleverTapInstance(JNIEnv* Env)
+jobject CreateCleverTapInstanceConfig(
+	JNIEnv* Env, const FString& AccountId, const FString& AccountToken, const FString& AccountRegion)
+{
+	// Find the CleverTapInstanceConfig class
+	jclass ConfigClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
+	if (!ConfigClass)
+	{
+		return nullptr;
+	}
+
+	// Get the static method ID for createInstance()
+	jmethodID CreateMethod = Env->GetStaticMethodID(ConfigClass, "createInstance",
+		"(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
+
+	if (JNIExceptionThrown(Env) || !CreateMethod)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to get method ID for CleverTapInstanceConfig.createInstance"));
+		Env->DeleteLocalRef(ConfigClass);
+		return nullptr;
+	}
+	jobject Context = FAndroidApplication::GetGameActivityThis();
+
+	// Convert FString parameters to Java Strings
+	jstring JAccountId = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountId));
+	jstring JAccountToken = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountToken));
+	jstring JAccountRegion = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountRegion));
+
+	// Call createInstance and get the resulting object
+	jobject ConfigInstance =
+		Env->CallStaticObjectMethod(ConfigClass, CreateMethod, Context, JAccountId, JAccountToken, JAccountRegion);
+
+	// Check for exceptions
+	if (JNIExceptionThrown(Env, "createInstance()") || !ConfigInstance)
+	{
+		// keep going
+	}
+
+	// Cleanup local refs
+	Env->DeleteLocalRef(ConfigClass);
+	Env->DeleteLocalRef(JAccountId);
+	Env->DeleteLocalRef(JAccountToken);
+	Env->DeleteLocalRef(JAccountRegion);
+
+	return ConfigInstance;
+}
+
+void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
+{
+	// Find the CleverTapAPI class
+	jclass CleverTapClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapAPI");
+	if (!CleverTapClass)
+	{
+		return;
+	}
+
+	// Get the field ID for defaultConfig (a static field)
+	jfieldID DefaultConfigField =
+		Env->GetStaticFieldID(CleverTapClass, "defaultConfig", "Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
+
+	if (JNIExceptionThrown(Env) || !DefaultConfigField)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed to get field ID for CleverTapAPI.defaultConfig"));
+		Env->DeleteLocalRef(CleverTapClass);
+		return;
+	}
+
+	// Set the static field CleverTapAPI.defaultConfig = ConfigInstance;
+	Env->SetStaticObjectField(CleverTapClass, DefaultConfigField, ConfigInstance);
+	if (JNIExceptionThrown(Env, TEXT("Setting CleverTapAPI.defaultConfig")))
+	{
+		// error logged; nothing else to do
+	}
+
+	// Cleanup
+	Env->DeleteLocalRef(CleverTapClass);
+}
+
+jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
+{
+	return CreateCleverTapInstanceConfig(Env, Config.ProjectId, Config.ProjectToken, Config.RegionCode);
+}
+
+void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
+{
+	jobject JavaConfig = CreateCleverTapInstanceConfig(Env, Config);
+	if (!JavaConfig)
+	{
+		return;
+	}
+	SetDefaultConfig(Env, JavaConfig);
+	Env->DeleteLocalRef(JavaConfig);
+}
+
+jobject GetDefaultInstance(JNIEnv* Env)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	if (!CleverTapAPIClass)
@@ -211,6 +304,35 @@ jobject GetCleverTapInstance(JNIEnv* Env)
 	Context = TEXT("getDefaultInstance()");
 	jobject Activity = FAndroidApplication::GetGameActivityThis();
 	jobject CleverTapInstance = Env->CallStaticObjectMethod(CleverTapAPIClass, GetInstanceMethod, Activity);
+	if (JNIExceptionThrown(Env, Context) || CleverTapInstance == nullptr)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("%s failed"), *Context);
+		return nullptr;
+	}
+	return CleverTapInstance;
+}
+
+jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	if (!CleverTapAPIClass)
+	{
+		return nullptr;
+	}
+	jmethodID GetInstanceMethod = Env->GetStaticMethodID(CleverTapAPIClass, "getDefaultInstance",
+		"(Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;");
+	FString Context = TEXT("GetStaticMethodID CleverTapAPI.getDefaultInstance(context,cleverTapId)");
+	if (JNIExceptionThrown(Env, Context) || !GetInstanceMethod)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("%s failed"), *Context);
+		return nullptr;
+	}
+	jstring JCleverTapId = Env->NewStringUTF(TCHAR_TO_UTF8(*CleverTapId));
+
+	Context = TEXT("getDefaultInstance()");
+	jobject Activity = FAndroidApplication::GetGameActivityThis();
+	jobject CleverTapInstance =
+		Env->CallStaticObjectMethod(CleverTapAPIClass, GetInstanceMethod, Activity, JCleverTapId);
 	if (JNIExceptionThrown(Env, Context) || CleverTapInstance == nullptr)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("%s failed"), *Context);
@@ -242,13 +364,15 @@ static jobject JavaLogLevelFromString(JNIEnv* Env, const char* LogLevelName)
 	Context = TEXT("LogLevel.ValueOf(string)");
 	jstring JavaLogLevelName = Env->NewStringUTF(LogLevelName);
 	jobject LogLevelEnumValue = Env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLogLevelName);
-	Env->DeleteLocalRef(JavaLogLevelName);
-	Env->DeleteLocalRef(LogLevelClass);
 	if (JNIExceptionThrown(Env, Context) || !LogLevelEnumValue)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Failed to get LogLevel enum for: %s"), *LogLevelName);
+		Env->DeleteLocalRef(LogLevelClass);
+		Env->DeleteLocalRef(JavaLogLevelName);
 		return nullptr;
 	}
+	Env->DeleteLocalRef(JavaLogLevelName);
+	Env->DeleteLocalRef(LogLevelClass);
 	return LogLevelEnumValue;
 }
 
@@ -815,33 +939,6 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 		Env->DeleteLocalRef(JavaItemMap);
 	}
 	return JavaArray;
-}
-
-bool InitCleverTap()
-{
-	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::InitCleverTap()"));
-
-	JNIEnv* Env = GetJNIEnv();
-	if (Env == nullptr)
-	{
-		return false;
-	}
-
-	// This happens too late for the Android CleverTapSDK to be happy:
-	//	RegisterCleverTapLifecycleCallbacks(Env);
-	//	ChangeCleverTapCredentials(Env, project_id, Token, Region ));
-
-	jobject CleverTapInstance = GetCleverTapInstance(Env);
-	if (CleverTapInstance)
-	{
-		UE_LOG(LogCleverTap, Log, TEXT("CleverTap Initialized Successfully!"));
-		return true;
-	}
-	else
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("CleverTap Instance is NULL!"));
-		return false;
-	}
 }
 
 }}} // namespace CleverTapSDK::Android::JNI

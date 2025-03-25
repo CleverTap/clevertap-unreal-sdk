@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root xmlns:android="http://schemas.android.com/apk/res/android">
     <init>
+		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
 		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
 		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
     </init>
    
     <androidManifestUpdates>
-        <setElement result="CLEVERTAP_ACCOUNT_ID" xml="&lt;meta-data/&gt;" />
-        <addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:name" value="CLEVERTAP_ACCOUNT_ID"/>
-        <addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:value" value="$S(CTProjectId)"/>
-        <addElement tag="application" name="CLEVERTAP_ACCOUNT_ID" />
+		<if condition="CTAutoInit">
+			<true>
+                <setElement result="CLEVERTAP_ACCOUNT_ID" xml="&lt;meta-data/&gt;" />
+                <addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:name" value="CLEVERTAP_ACCOUNT_ID"/>
+                <addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:value" value="$S(CTProjectId)"/>
+                <addElement tag="application" name="CLEVERTAP_ACCOUNT_ID" />
 
-        <setElement result="CLEVERTAP_TOKEN" xml="&lt;meta-data/&gt;" />
-        <addAttribute tag="$CLEVERTAP_TOKEN" name="android:name" value="CLEVERTAP_TOKEN"/>
-        <addAttribute tag="$CLEVERTAP_TOKEN" name="android:value" value="$S(CTProjectToken)"/>
-        <addElement tag="application" name="CLEVERTAP_TOKEN" />
+                <setElement result="CLEVERTAP_TOKEN" xml="&lt;meta-data/&gt;" />
+                <addAttribute tag="$CLEVERTAP_TOKEN" name="android:name" value="CLEVERTAP_TOKEN"/>
+                <addAttribute tag="$CLEVERTAP_TOKEN" name="android:value" value="$S(CTProjectToken)"/>
+                <addElement tag="application" name="CLEVERTAP_TOKEN" />
 
-        <setElement result="CLEVERTAP_REGION" xml="&lt;meta-data/&gt;" />
-        <addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION"/>
-        <addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)"/>
-        <addElement tag="application" name="CLEVERTAP_REGION" />
+                <setElement result="CLEVERTAP_REGION" xml="&lt;meta-data/&gt;" />
+                <addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION"/>
+                <addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)"/>
+                <addElement tag="application" name="CLEVERTAP_REGION" />
+			</true>
+        </if>
     </androidManifestUpdates>
 
     <buildGradleAdditions>
@@ -38,9 +43,13 @@
     </gameApplicationAttachBaseContextAdditions>
 
     <gameApplicationOnCreateAdditions>
-        <insert>
-            com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
-        </insert>
+		<if condition="CTAutoInit">
+			<true>
+                <insert>
+                    com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+                </insert>
+			</true>
+        </if>
     </gameApplicationOnCreateAdditions>
     
 </root>
