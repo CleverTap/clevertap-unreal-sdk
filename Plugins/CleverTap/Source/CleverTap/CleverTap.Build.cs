@@ -34,10 +34,13 @@ public class CleverTap : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Settings",
 			}
 		);
 		
+		if (Target.Type == TargetRules.TargetType.Editor)
+		{
+			PrivateDependencyModuleNames.Add("Settings");
+		}
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
