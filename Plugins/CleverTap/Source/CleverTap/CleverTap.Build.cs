@@ -34,7 +34,6 @@ public class CleverTap : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Settings",
 			}
 		);
 		
