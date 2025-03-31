@@ -4,46 +4,44 @@
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapProperties.h"
 #include "CleverTapInstance.h"
+#include "CleverTapSample.h"
 #include "CleverTapSubsystem.h"
 
 #include "Engine.h"
 
-static FCleverTapProperties GetExampleCleverTapProfile()
+namespace {
+
+FString FCleverTapSampleKeyValuePairArrayToString(const TArray<FCleverTapSampleKeyValuePair>& Params)
 {
-	FCleverTapProperties Profile;
-	Profile.Add("Name", "Jack Montana");			 // String
-	Profile.Add("Identity", 61026032);				 // String or number
-	Profile.Add("Email", "jack@gmail.com");			 // email
-	Profile.Add("Phone", "+14155551234");			 // Phone (with the country code, starting with +)
-	Profile.Add("Gender", "M");						 // Can be either M or F
-	Profile.Add("DOB", FCleverTapDate(1953, 3, 13)); // Date of Birth.
+	FString Result{ TEXT("{") };
 
-	// optional fields. controls whether the user will be sent email, push etc.
-	Profile.Add("MSG-email", false);   // Disable email notifications
-	Profile.Add("MSG-push", true);	   // Enable push notifications
-	Profile.Add("MSG-sms", false);	   // Disable SMS notifications
-	Profile.Add("MSG-whatsapp", true); // Enable WhatsApp notifications
+	const int32 NumParams = Params.Num();
+	if (NumParams > 0)
+	{
+		for (const FCleverTapSampleKeyValuePair& Param : Params)
+		{
+			Result.AppendChar(TCHAR{ '"' });
+			Result.Append(Param.Key);
+			Result.Append(TEXT("\": \""));
+			Result.Append(Param.Value);
+			Result.Append(TEXT("\", "));
+		}
 
-	TArray<FString> stuff;
-	stuff.Add("bag");
-	stuff.Add("shoes");
-	Profile.Add("MyStuff", stuff); // ArrayList of Strings
+		// Remove trailing ", "
+		Result.LeftChopInline(2);
+	}
 
-	TArray<FString> otherStuff = { "Jeans", "Perfume" };
-	Profile["MyStuff"] = otherStuff;
-	return Profile;
+	Result.AppendChar(TCHAR{ '}' });
+	return Result;
 }
+
+} // namespace
 
 static void SampleTestCode()
 {
 	auto CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 	CleverTapSys->SetLogLevel(ECleverTapLogLevel::Verbose);
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
-
-	// User Profile
-	FCleverTapProperties Profile = GetExampleCleverTapProfile();
-	CleverTap.OnUserLogin(Profile);
-	CleverTap.PushProfile(Profile);
 
 	// event without properties
 	CleverTap.PushEvent(TEXT("Event No Props"));
@@ -123,6 +121,94 @@ void USampleMainMenu::ExplicitlyInitializeSharedInstance(
 
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	PopulateUI();
+}
+
+void USampleMainMenu::OnUserLogin(const FString& Name, const FString& Email, const FString& Identity)
+{
+	OnUserLoginWithCleverTapId(Name, Email, Identity, /*CleverTapId=*/FString{});
+}
+
+void USampleMainMenu::OnUserLoginWithCleverTapId(
+	const FString& Name, const FString& Email, const FString& Identity, const FString& CleverTapId)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	FCleverTapProperties Profile;
+	if (!Name.IsEmpty())
+	{
+		Profile.Add("Name", Name);
+	}
+
+	if (!Email.IsEmpty())
+	{
+		Profile.Add("Email", Email);
+	}
+
+	if (!Identity.IsEmpty())
+	{
+		Profile.Add("Identity", Identity);
+	}
+
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	if (CleverTapId.IsEmpty())
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("Calling OnUserLogin with Name='%s', Email='%s', Identity='%s'"), *Name,
+			*Email, *Identity);
+		CleverTap.OnUserLogin(Profile);
+	}
+	else
+	{
+		UE_LOG(LogCleverTapSample, Log,
+			TEXT("Calling OnUserLogin with CleverTapId='%s', Name='%s', Email='%s', Identity='%s'"), *CleverTapId,
+			*Name, *Email, *Identity);
+		CleverTap.OnUserLogin(Profile, CleverTapId);
+	}
+}
+
+void USampleMainMenu::PushProfile(
+	const FString& Name, const FString& Email, const FString& Phone, const TArray<FCleverTapSampleKeyValuePair>& Params)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	FCleverTapProperties Profile;
+	if (!Name.IsEmpty())
+	{
+		Profile.Add("Name", Name);
+	}
+
+	if (!Email.IsEmpty())
+	{
+		Profile.Add("Email", Email);
+	}
+
+	if (!Phone.IsEmpty())
+	{
+		Profile.Add("Phone", Phone);
+	}
+
+	for (const FCleverTapSampleKeyValuePair& Param : Params)
+	{
+		FCleverTapPropertyValue* const ExistingValue = Profile.Find(Param.Key);
+		if (ExistingValue)
+		{
+			UE_LOG(LogCleverTapSample, Warning,
+				TEXT("PushProfile() parameter '%s' already exists. Value will be overwritten"));
+			ExistingValue->Emplace<FString>(Param.Value);
+		}
+		else
+		{
+			Profile.Add(Param.Key, Param.Value);
+		}
+	}
+
+	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushProfile with Name='%s', Email='%s', Phone='%s', Params=%s"),
+		*Name, *Email, *Phone, *FCleverTapSampleKeyValuePairArrayToString(Params));
+
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	CleverTap.PushProfile(Profile);
 }
 
 void USampleMainMenu::PopulateUI() const

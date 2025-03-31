@@ -37,6 +37,10 @@ public class CleverTap : ModuleRules
 			}
 		);
 		
+		if (Target.Type == TargetRules.TargetType.Editor)
+		{
+			PrivateDependencyModuleNames.Add("Settings");
+		}
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]

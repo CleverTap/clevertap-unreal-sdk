@@ -8,6 +8,18 @@
 
 class UCleverTapSubsystem;
 
+USTRUCT(BlueprintType)
+struct FCleverTapSampleKeyValuePair
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Key;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Value;
+};
+
 /**
  * Base class for the sample menu UI blueprint
  */
@@ -24,6 +36,17 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ExplicitlyInitializeSharedInstance(const FString& Id, const FString& Token, const FString& RegionCode);
+
+	UFUNCTION(BlueprintCallable)
+	void OnUserLogin(const FString& Name, const FString& Email, const FString& Identity);
+
+	UFUNCTION(BlueprintCallable)
+	void OnUserLoginWithCleverTapId(
+		const FString& Name, const FString& Email, const FString& Identity, const FString& CleverTapId);
+
+	UFUNCTION(BlueprintCallable)
+	void PushProfile(const FString& Name, const FString& Email, const FString& Phone,
+		const TArray<FCleverTapSampleKeyValuePair>& Params);
 
 private:
 	void PopulateUI() const;
