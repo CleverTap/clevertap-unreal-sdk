@@ -8,7 +8,7 @@
 
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
-static bool bCrashOnJNIException = true;
+static bool bCrashOnJNIException = false;
 
 void SetCrashOnJNIException(bool CrashOnException)
 {
