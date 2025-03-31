@@ -2,6 +2,7 @@
 #include "Android/AndroidCleverTapSDK.h"
 
 #include "Android/AndroidCleverTapJNI.h"
+#include "Android/AndroidJNIUtilities.h"
 
 #include "CleverTapInstance.h"
 #include "CleverTapLog.h"
