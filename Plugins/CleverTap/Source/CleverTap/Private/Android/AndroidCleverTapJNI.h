@@ -32,6 +32,12 @@ void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName)
 void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName, jobject Actions);
 void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject Actions, jobject Items);
 
+void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount);
+void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
+
+void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount);
+void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
+
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);

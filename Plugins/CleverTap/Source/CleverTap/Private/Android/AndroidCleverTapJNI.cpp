@@ -453,6 +453,139 @@ void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject ChargeDeta
 	}
 }
 
+static void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID DecrementMethod =
+		GetMethodID(Env, CleverTapAPIClass, "decrementValue", "(Ljava/lang/String;Ljava/lang/Number;)V");
+	if (!DecrementMethod)
+	{
+		return;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	Env->CallVoidMethod(CleverTapInstance, DecrementMethod, JavaKey, Amount);
+	if (!HandleException(Env, "decrementValue()"))
+	{
+		// fall through
+	}
+	Env->DeleteLocalRef(JavaKey);
+}
+
+void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::DecrementValue(%s,%d)"), *Key, Amount);
+	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
+	if (!IntegerClass)
+	{
+		return;
+	}
+	jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	if (!IntegerCtor)
+	{
+		return;
+	}
+	jobject NumberObj = Env->NewObject(IntegerClass, IntegerCtor, Amount);
+	if (!HandleExceptionOrError(Env, !NumberObj, "Constructing Integer"))
+	{
+		return;
+	}
+	DecrementValue(Env, CleverTapInstance, Key, NumberObj);
+	Env->DeleteLocalRef(NumberObj);
+	Env->DeleteLocalRef(IntegerClass);
+}
+
+void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::DecrementValue(%s,%f)"), *Key, Amount);
+
+	jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
+	if (!DoubleClass)
+	{
+		return;
+	}
+	jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
+	if (!DoubleCtor)
+	{
+		return;
+	}
+	jobject NumberObj = Env->NewObject(DoubleClass, DoubleCtor, Amount);
+	if (!HandleExceptionOrError(Env, !NumberObj, "Constructing Double"))
+	{
+		return;
+	}
+	DecrementValue(Env, CleverTapInstance, Key, NumberObj);
+	Env->DeleteLocalRef(NumberObj);
+	Env->DeleteLocalRef(DoubleClass);
+}
+
+static void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID DecrementMethod =
+		GetMethodID(Env, CleverTapAPIClass, "incrementValue", "(Ljava/lang/String;Ljava/lang/Number;)V");
+	if (!DecrementMethod)
+	{
+		return;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	Env->CallVoidMethod(CleverTapInstance, DecrementMethod, JavaKey, Amount);
+	if (!HandleException(Env, "incrementValue()"))
+	{
+		// fall through
+	}
+	Env->DeleteLocalRef(JavaKey);
+}
+
+void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::IncrementValue(%s,%d)"), *Key, Amount);
+	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
+	if (!IntegerClass)
+	{
+		return;
+	}
+	jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	if (!IntegerCtor)
+	{
+		return;
+	}
+	jobject NumberObj = Env->NewObject(IntegerClass, IntegerCtor, Amount);
+	if (!HandleExceptionOrError(Env, !NumberObj, "Constructing Integer"))
+	{
+		return;
+	}
+	IncrementValue(Env, CleverTapInstance, Key, NumberObj);
+	Env->DeleteLocalRef(NumberObj);
+	Env->DeleteLocalRef(IntegerClass);
+}
+
+void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::IncrementValue(%s,%f)"), *Key, Amount);
+	jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
+	if (!DoubleClass)
+	{
+		return;
+	}
+	jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
+	if (!DoubleCtor)
+	{
+		return;
+	}
+	jobject NumberObj = Env->NewObject(DoubleClass, DoubleCtor, Amount);
+	if (!HandleExceptionOrError(Env, !NumberObj, "Constructing Double"))
+	{
+		return;
+	}
+	IncrementValue(Env, CleverTapInstance, Key, NumberObj);
+	Env->DeleteLocalRef(NumberObj);
+	Env->DeleteLocalRef(DoubleClass);
+}
+
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);

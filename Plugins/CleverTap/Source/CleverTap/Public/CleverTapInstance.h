@@ -27,4 +27,11 @@ public:
 	virtual void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const = 0;
 	virtual void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const = 0;
+
+	virtual void DecrementValue(const FString& Key, int Amount ) const = 0;
+	virtual void DecrementValue(const FString& Key, double Amount ) const = 0;
+
+	virtual void IncrementValue(const FString& Key, int Amount ) const = 0;
+	virtual void IncrementValue(const FString& Key, double Amount ) const = 0;
+	
 };
