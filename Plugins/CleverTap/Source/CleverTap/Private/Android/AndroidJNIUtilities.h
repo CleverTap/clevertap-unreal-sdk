@@ -31,5 +31,6 @@ jfieldID GetStaticFieldID(JNIEnv* Env, jclass Class, const char* Name, const cha
 jobject GetJavaApplication(JNIEnv* Env);
 
 FString JavaObjectToString(JNIEnv* Env, jobject JavaObject);
+FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array);
 
 }}} // namespace CleverTapSDK::Android::JNI

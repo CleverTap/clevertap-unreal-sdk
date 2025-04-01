@@ -45,6 +45,17 @@ public:
 	FString RegionCode;
 
 	/**
+	 * Comma seperated list of user profile fields used to uniquely identify the user.
+	 *
+	 * Corresponds to CLEVERTAP_IDENTIFIER in the Android manifest,
+	 * CleverTapIdentifiers in the iOS plist.
+	 *
+	 * See CleverTapInstanceConfig setIdentityKeys().
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString IdentityKeys = TEXT("Identity,Email,Phone");
+
+	/**
 	 * The platform SDK log level to use for development builds
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)

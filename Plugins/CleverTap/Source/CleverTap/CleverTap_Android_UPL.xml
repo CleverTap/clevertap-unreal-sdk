@@ -5,6 +5,7 @@
 		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
 		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
+		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
 	</init>
    
 	<androidManifestUpdates>
@@ -24,6 +25,11 @@
 				<addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION"/>
 				<addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)"/>
 				<addElement tag="application" name="CLEVERTAP_REGION" />
+
+				<setElement result="CLEVERTAP_IDENTIFIER" xml="&lt;meta-data/&gt;" />
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER"/>
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)"/>
+				<addElement tag="application" name="CLEVERTAP_IDENTIFIER" />
 			</true>
 		</if>
 	</androidManifestUpdates>

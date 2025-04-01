@@ -13,11 +13,6 @@ jclass GetCleverTapAPIClass(JNIEnv* Env);
 
 void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env);
 
-jobject CreateCleverTapInstanceConfig(
-	JNIEnv* Env, const FString& AccountId, const FString& AccountToken, const FString& AccountRegion);
-void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance);
-
-jobject CreateCleverTapInstanceConfig(const FCleverTapInstanceConfig& Config);
 void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
 
 jobject GetDefaultInstance(JNIEnv* Env);
