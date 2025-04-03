@@ -56,6 +56,15 @@ public:
 	FString IdentityKeys = TEXT("Identity,Email,Phone");
 
 	/**
+	 * Must be set true in the .ini file if you will be providing a custom CleverTapId at runtime
+	 * via the OnUserLogin(Profile,CleverTapId) method.
+	 *
+	 * Leave false to use the automatically generated CleverTapId.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bUseCustomCleverTapId = false;
+
+	/**
 	 * The platform SDK log level to use for development builds
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
