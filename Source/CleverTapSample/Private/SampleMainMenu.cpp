@@ -11,7 +11,7 @@
 
 namespace {
 
-FString FCleverTapSampleKeyValuePairArrayToString(const TArray<FCleverTapSampleKeyValuePair>& Params)
+FString FCleverTapSampleKeyValuePairArrayToString(TArrayView<const FCleverTapSampleKeyValuePair> Params)
 {
 	FString Result{ TEXT("{") };
 
@@ -35,53 +35,53 @@ FString FCleverTapSampleKeyValuePairArrayToString(const TArray<FCleverTapSampleK
 	return Result;
 }
 
+FCleverTapProperties& PopulatePropertiesWith(
+	FCleverTapProperties& Properties, TArrayView<const FCleverTapSampleKeyValuePair> KeyValuePairs)
+{
+	Properties.Reserve(Properties.Num() + KeyValuePairs.Num());
+
+	for (const FCleverTapSampleKeyValuePair& Param : KeyValuePairs)
+	{
+		FCleverTapPropertyValue* const ExistingValue = Properties.Find(Param.Key);
+		if (ExistingValue)
+		{
+			UE_LOG(
+				LogCleverTapSample, Warning, TEXT("Property parameter '%s' already exists. Value will be overwritten"));
+			ExistingValue->Emplace<FString>(Param.Value);
+		}
+		else
+		{
+			Properties.Add(Param.Key, Param.Value);
+		}
+	}
+
+	return Properties;
+}
+
 } // namespace
 
-static void SampleTestCode()
+//===============================================
+// UCleverTapSampleProductList
+
+void UCleverTapSampleProductList::AddProduct(const TArray<FCleverTapSampleKeyValuePair>& Params)
 {
-	auto CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-	CleverTapSys->SetLogLevel(ECleverTapLogLevel::Verbose);
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
-
-	// event without properties
-	CleverTap.PushEvent(TEXT("Event No Props"));
-
-	// event with properties
-	FCleverTapProperties Actions;
-	Actions.Add("Product Name", "Casio Chronograph Watch");
-	Actions.Add("Category", "Mens Accessories");
-	Actions.Add("Price", 59.99);
-	// Actions.put("Date", FCleverTapDate::Today() ); TODO
-	CleverTap.PushEvent(TEXT("Product viewed"), Actions);
-
-	// charge event
-	FCleverTapProperties ChargeDetails;
-	ChargeDetails.Add("Amount", 300);
-	ChargeDetails.Add("Payment Mode", "Credit card");
-	ChargeDetails.Add("Charged ID", 24052014);
-
-	FCleverTapProperties Item1;
-	Item1.Add("Product category", "books");
-	Item1.Add("Book name", "The Millionaire next door");
-	Item1.Add("Quantity", 1);
-
-	FCleverTapProperties Item2;
-	Item2.Add("Product category", "books");
-	Item2.Add("Book name", "Achieving inner zen");
-	Item2.Add("Quantity", 1);
-
-	FCleverTapProperties Item3;
-	Item3.Add("Product category", "books");
-	Item3.Add("Book name", "Chuck it, let's do it");
-	Item3.Add("Quantity", 5);
-
-	TArray<FCleverTapProperties> Items;
-	Items.Add(Item1);
-	Items.Add(Item2);
-	Items.Add(Item3);
-
-	CleverTap.PushChargedEvent(ChargeDetails, Items);
+	ProductParameters.Add(Params);
 }
+
+int UCleverTapSampleProductList::ProductCount() const
+{
+	return ProductParameters.Num();
+}
+
+TArrayView<const FCleverTapSampleKeyValuePair> UCleverTapSampleProductList::GetProductParameters(int Index) const
+{
+	check(Index >= 0);
+	check(Index < ProductParameters.Num());
+	return TArrayView<const FCleverTapSampleKeyValuePair>(ProductParameters[Index]);
+}
+
+//===============================================
+// USampleMainMenu
 
 bool USampleMainMenu::Initialize()
 {
@@ -189,26 +189,61 @@ void USampleMainMenu::PushProfile(
 		Profile.Add("Phone", Phone);
 	}
 
-	for (const FCleverTapSampleKeyValuePair& Param : Params)
-	{
-		FCleverTapPropertyValue* const ExistingValue = Profile.Find(Param.Key);
-		if (ExistingValue)
-		{
-			UE_LOG(LogCleverTapSample, Warning,
-				TEXT("PushProfile() parameter '%s' already exists. Value will be overwritten"));
-			ExistingValue->Emplace<FString>(Param.Value);
-		}
-		else
-		{
-			Profile.Add(Param.Key, Param.Value);
-		}
-	}
+	PopulatePropertiesWith(Profile, Params);
 
 	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushProfile with Name='%s', Email='%s', Phone='%s', Params=%s"),
 		*Name, *Email, *Phone, *FCleverTapSampleKeyValuePairArrayToString(Params));
 
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushProfile(Profile);
+}
+
+void USampleMainMenu::RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	if (Params.Num() == 0)
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("Calling RecordEvent('%s')"), *EventName);
+		CleverTap.PushEvent(EventName);
+	}
+	else
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("Calling RecordEvent('%s', %s)"), *EventName,
+			*FCleverTapSampleKeyValuePairArrayToString(Params));
+		FCleverTapProperties Properties;
+		PopulatePropertiesWith(Properties, Params);
+		CleverTap.PushEvent(EventName, Properties);
+	}
+}
+
+void USampleMainMenu::RecordChargedEvent(
+	const TArray<FCleverTapSampleKeyValuePair>& Params, const UCleverTapSampleProductList* Products)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	if (Products == nullptr)
+	{
+		return;
+	}
+
+	FCleverTapProperties ChargeDetails{};
+	PopulatePropertiesWith(ChargeDetails, Params);
+
+	TArray<FCleverTapProperties> Items{};
+	Items.Reserve(Products->ProductCount());
+	for (int32 i = 0; i < Products->ProductCount(); ++i)
+	{
+		FCleverTapProperties& NewProduct = Items.AddDefaulted_GetRef();
+		PopulatePropertiesWith(NewProduct, Products->GetProductParameters(i));
+	}
+
+	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushChargedEvent with %d products"), Items.Num());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	CleverTap.PushChargedEvent(ChargeDetails, Items);
 }
 
 void USampleMainMenu::PopulateUI() const
@@ -230,6 +265,4 @@ void USampleMainMenu::PopulateUI() const
 				return Args;
 			}()));
 	}
-
-	SampleTestCode();
 }
