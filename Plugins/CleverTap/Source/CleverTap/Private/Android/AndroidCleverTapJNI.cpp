@@ -560,16 +560,16 @@ void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 static void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	jmethodID DecrementMethod =
+	jmethodID IncrementMethod =
 		GetMethodID(Env, CleverTapAPIClass, "incrementValue", "(Ljava/lang/String;Ljava/lang/Number;)V");
-	if (!DecrementMethod)
+	if (!IncrementMethod)
 	{
 		return;
 	}
 	Env->DeleteLocalRef(CleverTapAPIClass);
 
 	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
-	Env->CallVoidMethod(CleverTapInstance, DecrementMethod, JavaKey, Amount);
+	Env->CallVoidMethod(CleverTapInstance, IncrementMethod, JavaKey, Amount);
 	if (!HandleException(Env, "incrementValue()"))
 	{
 		// fall through
