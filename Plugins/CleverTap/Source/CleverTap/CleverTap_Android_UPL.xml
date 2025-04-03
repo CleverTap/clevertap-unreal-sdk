@@ -48,7 +48,7 @@
 		<if condition="CTRequestInternetPermissions">
 			<true>
 				<addPermission android:name="android.permission.INTERNET"/>
-        		<addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+				<addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 			</true>
 		</if>
 		<if condition="CTRequestGeoFencePermissions">
