@@ -11,6 +11,9 @@
 
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
 		<setBoolIsEqual result="CTRegionCodeIsEmpty" arg1="$S(CTRegionCode)" arg2=""/>
+
+		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
+		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
 	</init>
 
 	<iosPListUpdates>
@@ -39,6 +42,63 @@
 				<setElement result="RegionValue" value="string" text="$S(CTRegionCode)"/>
 				<addElement tag="dict" once="true" name="RegionValue"/>
 			</false>
+		</if>
+
+		<if condition="CTUseCustomId">
+			<true>
+				<setElement result="UseCustomIdKey" value="key" text="CleverTapUseCustomId"/>
+				<addElement tag="dict" once="true" name="UseCustomIdKey"/>
+				<setElement result="UseCustomIdValue" value="string" text="1"/>
+				<addElement tag="dict" once="true" name="UseCustomIdValue"/>
+			</true>
+		</if>
+
+		<setBool result="CTAddedPlistKeysArray" value="false"/>
+		<setBool result="CTContinueKeysParsing" value="true"/>
+		<while condition="CTContinueKeysParsing">
+			<setIntFindString result="CTSplitIdx" source="$S(CTIdentityKeys)" find=","/>
+			<setBoolIsEqual result="CTNoSplitIdx" arg1="$I(CTSplitIdx)" arg2="-1"/>
+			<if condition="CTNoSplitIdx">
+				<true>
+					<setString result="CTIdentityKey" value="$S(CTIdentityKeys)"/>
+					<setString result="CTIdentityKeys" value=""/>
+				</true>
+				<false>
+					<setStringSubstring result="CTIdentityKey" source="$S(CTIdentityKeys)" start="0" length="$I(CTSplitIdx)"/>
+
+					<setIntAdd result="CTRemStart" arg1="$I(CTSplitIdx)" arg2="1"/>
+					<!-- We use the full length as it gets capped to remainder -->
+					<setIntLength result="CTStrLen" source="$S(CTIdentityKeys)"/>
+					<setStringSubstring result="CTIdentityKeys" source="$S(CTIdentityKeys)" start="$I(CTRemStart)" length="$I(CTStrLen)"/>
+				</false>
+			</if>
+
+			<setBoolIsEqual result="CTKeyEmpty" arg1="$S(CTIdentityKey)" arg2=""/>
+			<if condition="CTKeyEmpty">
+				<false>
+					<if condition="CTAddedPlistKeysArray">
+						<false>
+							<setBool result="CTAddedPlistKeysArray" value="true"/>
+							<setElement result="KeysArrKey" value="key" text="CleverTapIdentifiers"/>
+							<addElement tag="dict" once="true" name="KeysArrKey"/>
+
+							<setElement result="KeysArrElem" value="array"/>
+						</false>
+					</if>
+
+					<setElement result="KeysArrEntry" value="string" text="$S(CTIdentityKey)"/>
+					<addElement tag="$KeysArrElem" name="KeysArrEntry"/>
+				</false>
+			</if>
+
+			<setBoolIsEqual result="CTContinueKeysParsing" arg1="$S(CTIdentityKeys)" arg2=""/>
+			<setBoolNot result="CTContinueKeysParsing" source="$B(CTContinueKeysParsing)"/>
+		</while>
+
+		<if condition="CTAddedPlistKeysArray">
+			<true>
+				<addElement tag="dict" once="true" name="KeysArrElem"/>
+			</true>
 		</if>
 	</iosPListUpdates>
 </root>

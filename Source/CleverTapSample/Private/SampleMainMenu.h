@@ -40,7 +40,7 @@ private:
  * Base class for the sample menu UI blueprint
  */
 UCLASS()
-class USampleMainMenu : public UUserWidget
+class USampleMainMenu : public UUserWidget, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -71,6 +71,12 @@ public:
 	void RecordChargedEvent(
 		const TArray<FCleverTapSampleKeyValuePair>& Params, const UCleverTapSampleProductList* Products);
 
+	// <FTickableGameObject>
+	void Tick(float DeltaTime) override;
+	TStatId GetStatId() const override;
+	ETickableTickType GetTickableTickType() const override { return ETickableTickType::Always; }
+	// </FTickableGameObject>
+
 private:
 	void PopulateUI() const;
 
@@ -80,4 +86,6 @@ private:
 
 	UPROPERTY()
 	UCleverTapSubsystem* CleverTapSys;
+
+	FString LastSeenCleverTapId;
 };

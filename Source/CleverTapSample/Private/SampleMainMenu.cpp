@@ -246,6 +246,26 @@ void USampleMainMenu::RecordChargedEvent(
 	CleverTap.PushChargedEvent(ChargeDetails, Items);
 }
 
+void USampleMainMenu::Tick(float DeltaTime)
+{
+	if (CleverTapSys == nullptr || !CleverTapSys->IsSharedInstanceInitialized())
+	{
+		return;
+	}
+
+	FString CleverTapId = CleverTapSys->SharedInstance().GetCleverTapId();
+	if (LastSeenCleverTapId != CleverTapSys->SharedInstance().GetCleverTapId())
+	{
+		PopulateUI();
+		LastSeenCleverTapId = MoveTemp(CleverTapId);
+	}
+}
+
+TStatId USampleMainMenu::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(USampleMainMenu, STATGROUP_Tickables);
+}
+
 void USampleMainMenu::PopulateUI() const
 {
 	if (CleverTapSys == nullptr || !CleverTapSys->IsSharedInstanceInitialized())
