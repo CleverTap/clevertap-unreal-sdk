@@ -45,6 +45,38 @@ public:
 	FString RegionCode;
 
 	/**
+	 * Comma seperated list of user profile fields used to uniquely identify the user.
+	 *
+	 * Corresponds to CLEVERTAP_IDENTIFIER in the Android manifest,
+	 * CleverTapIdentifiers in the iOS plist.
+	 *
+	 * See CleverTapInstanceConfig setIdentityKeys().
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString IdentityKeys = TEXT("Identity,Email,Phone");
+
+	/**
+	 * Must be set true in the .ini file if you will be providing a custom CleverTapId at runtime
+	 * via the OnUserLogin(Profile,CleverTapId) method.
+	 *
+	 * Leave false to use the automatically generated CleverTapId.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bUseCustomCleverTapId = false;
+
+	/** Request internet permissions in the application manifest.
+	 *  Required for CleverTap to work.
+	 *  Only set this to false if you are requesting the platform-specific permissions elsewhere.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bRequestInternetPermissions = true;
+
+	/** Request the permissions needed for the GeoFence module.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bRequestGeoFencePermissions = false;
+
+	/**
 	 * The platform SDK log level to use for development builds
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)

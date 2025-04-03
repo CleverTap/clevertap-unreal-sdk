@@ -54,8 +54,49 @@ void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env)
 	Env->DeleteLocalRef(LifecycleCallbackClass);
 }
 
-jobject CreateCleverTapInstanceConfig(
-	JNIEnv* Env, const FString& AccountId, const FString& AccountToken, const FString& AccountRegion)
+static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FString>& IdentityKeys)
+{
+	jclass StringClass = LoadJavaClass(Env, "java/lang/String");
+	if (!StringClass)
+	{
+		return;
+	}
+	jclass ConfigClass = Env->GetObjectClass(ConfigInstance);
+	if (HandleExceptionOrError(Env, !ConfigClass, TEXT("Getting CleverTapInstanceConfig class")))
+	{
+		return;
+	}
+	jmethodID SetKeysMethod = GetMethodID(Env, ConfigClass, "setIdentityKeys", "([Ljava/lang/String;)V");
+	if (!SetKeysMethod)
+	{
+		return;
+	}
+
+	jobjectArray KeyArray = Env->NewObjectArray(IdentityKeys.Num(), StringClass, nullptr);
+	if (HandleException(Env, TEXT("Creating String Array")))
+	{
+		return;
+	}
+	for (int32 i = 0; i < IdentityKeys.Num(); ++i)
+	{
+		jstring JKey = Env->NewStringUTF(TCHAR_TO_UTF8(*IdentityKeys[i]));
+		if (HandleException(Env, TEXT("Creating String")))
+		{
+			return;
+		}
+		Env->SetObjectArrayElement(KeyArray, i, JKey);
+		if (HandleException(Env, TEXT("Setting String array element")))
+		{
+			return;
+		}
+		Env->DeleteLocalRef(JKey);
+	}
+	Env->CallVoidMethod(ConfigInstance, SetKeysMethod, KeyArray);
+	HandleException(Env, TEXT("CleverTapInstanceConfig.setIdentityKeys()"));
+	Env->DeleteLocalRef(KeyArray);
+}
+
+static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
 {
 	// Find the CleverTapInstanceConfig class
 	jclass ConfigClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
@@ -75,9 +116,9 @@ jobject CreateCleverTapInstanceConfig(
 	jobject Context = FAndroidApplication::GetGameActivityThis();
 
 	// Convert FString parameters to Java Strings
-	jstring JAccountId = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountId));
-	jstring JAccountToken = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountToken));
-	jstring JAccountRegion = Env->NewStringUTF(TCHAR_TO_UTF8(*AccountRegion));
+	jstring JAccountId = Env->NewStringUTF(TCHAR_TO_UTF8(*Config.ProjectId));
+	jstring JAccountToken = Env->NewStringUTF(TCHAR_TO_UTF8(*Config.ProjectToken));
+	jstring JAccountRegion = Env->NewStringUTF(TCHAR_TO_UTF8(*Config.RegionCode));
 
 	// Call createInstance and get the resulting object
 	jobject ConfigInstance =
@@ -86,17 +127,18 @@ jobject CreateCleverTapInstanceConfig(
 	{
 		// keep going
 	}
-
-	// Cleanup local refs
 	Env->DeleteLocalRef(ConfigClass);
 	Env->DeleteLocalRef(JAccountId);
 	Env->DeleteLocalRef(JAccountToken);
 	Env->DeleteLocalRef(JAccountRegion);
 
+	// install the identity keys
+	SetIdentityKeys(Env, ConfigInstance,  Config.GetIdentityKeys() );
+
 	return ConfigInstance;
 }
 
-void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
+static void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
 {
 	// Find the CleverTapAPI class
 	jclass CleverTapClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapAPI");
@@ -123,11 +165,6 @@ void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
 
 	// Cleanup
 	Env->DeleteLocalRef(CleverTapClass);
-}
-
-jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
-{
-	return CreateCleverTapInstanceConfig(Env, Config.ProjectId, Config.ProjectToken, Config.RegionCode);
 }
 
 void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)

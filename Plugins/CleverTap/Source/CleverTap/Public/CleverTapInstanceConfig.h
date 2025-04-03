@@ -26,6 +26,21 @@ struct FCleverTapInstanceConfig
 	FString RegionCode;
 
 	/**
+	 * Comma seperated list of user profile fields used to uniquely identify the user.
+	 *
+	 * Corresponds to CLEVERTAP_IDENTIFIER in the Android manifest,
+	 * CleverTapIdentifiers in the iOS plist.
+	 *
+	 * See CleverTapInstanceConfig setIdentityKeys().
+	 */
+	FString IdentityKeys;
+
+	/**
+	 * Returns the IdentityKeys field as an array.
+	 */
+	TArray<FString> GetIdentityKeys() const;
+
+	/**
 	 * The platform SDK log level to use
 	 */
 	ECleverTapLogLevel LogLevel{ ECleverTapLogLevel::Info };

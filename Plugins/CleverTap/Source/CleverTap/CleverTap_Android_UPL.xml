@@ -5,6 +5,10 @@
 		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
 		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
+		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
+		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
+		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true"/>
+		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false"/>
 	</init>
    
 	<androidManifestUpdates>
@@ -24,8 +28,39 @@
 				<addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION"/>
 				<addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)"/>
 				<addElement tag="application" name="CLEVERTAP_REGION" />
+
+				<setElement result="CLEVERTAP_IDENTIFIER" xml="&lt;meta-data/&gt;" />
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER"/>
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)"/>
+				<addElement tag="application" name="CLEVERTAP_IDENTIFIER" />
 			</true>
 		</if>
+
+		<if condition="CTUseCustomId">
+			<true>
+				<setElement result="CLEVERTAP_USE_CUSTOM_ID" xml="&lt;meta-data/&gt;" />
+				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:name" value="CLEVERTAP_USE_CUSTOM_ID"/>
+				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:value" value="1"/>
+				<addElement tag="application" name="CLEVERTAP_USE_CUSTOM_ID" />
+			</true>
+		</if>
+
+		<if condition="CTRequestInternetPermissions">
+			<true>
+				<addPermission android:name="android.permission.INTERNET"/>
+				<addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+			</true>
+		</if>
+		<if condition="CTRequestGeoFencePermissions">
+			<true>
+				<addPermission android:name="android.permission.ACCESS_FINE_LOCATION" />
+				<addPermission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+				<addPermission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+				<addPermission android:name="android.permission.WAKE_LOCK" />
+				<addPermission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+			</true>
+		</if>
+
 	</androidManifestUpdates>
 
 	<buildGradleAdditions>

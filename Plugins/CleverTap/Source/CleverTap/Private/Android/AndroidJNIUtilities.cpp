@@ -289,4 +289,49 @@ FString JavaObjectToString(JNIEnv* Env, jobject JavaObject)
 	return Result;
 }
 
+FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array)
+{
+	// todo make this handle arrays of anything, not just strings, rename to JavaArrayToString
+
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is null!"));
+		return TEXT("<null env>");
+	}
+	jsize Length = Env->GetArrayLength(Array);
+	if (HandleException(Env, TEXT("GetArrayLength()")))
+	{
+		return TEXT("<error>");
+	}
+
+	FString Output = TEXT("[");
+
+	for (jsize i = 0; i < Length; ++i)
+	{
+		jstring JStr = (jstring)Env->GetObjectArrayElement(Array, i);
+		if (HandleException(Env, TEXT("GetObjectArrayElement()")))
+		{
+			return TEXT("<error>");
+		}
+
+		const char* UTF = Env->GetStringUTFChars(JStr, nullptr);
+		if (HandleException(Env, TEXT("GetStringUTFChars()")))
+		{
+			return TEXT("<error>");
+		}
+		FString Entry = UTF ? UTF8_TO_TCHAR(UTF) : TEXT("<null>");
+		Env->ReleaseStringUTFChars(JStr, UTF);
+		Env->DeleteLocalRef(JStr);
+
+		Output += Entry;
+		if (i < Length - 1)
+		{
+			Output += TEXT(", ");
+		}
+	}
+
+	Output += TEXT("]");
+	return Output;
+}
+
 }}} // namespace CleverTapSDK::Android::JNI
