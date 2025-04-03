@@ -20,3 +20,9 @@ void FNullCleverTapInstance::PushChargedEvent(
 	const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const
 {
 }
+
+void FNullCleverTapInstance::DecrementValue(const FString& Key, int Amount) const {}
+void FNullCleverTapInstance::DecrementValue(const FString& Key, double Amount) const {}
+
+void FNullCleverTapInstance::IncrementValue(const FString& Key, int Amount) const {}
+void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount) const {}

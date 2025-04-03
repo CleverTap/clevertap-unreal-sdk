@@ -2,6 +2,7 @@
 #include "Android/AndroidCleverTapSDK.h"
 
 #include "Android/AndroidCleverTapJNI.h"
+#include "Android/AndroidJNIUtilities.h"
 
 #include "CleverTapInstance.h"
 #include "CleverTapLog.h"
@@ -75,6 +76,26 @@ public:
 		JNI::PushChargedEvent(Env, *JavaCleverTapInstance, JavaDetails, JavaItems);
 		Env->DeleteLocalRef(JavaDetails);
 		Env->DeleteLocalRef(JavaItems);
+	}
+
+	void DecrementValue(const FString& Key, int Amount) const override
+	{
+		JNI::DecrementValue(JNI::GetJNIEnv(), *JavaCleverTapInstance, Key, Amount);
+	}
+
+	void DecrementValue(const FString& Key, double Amount) const override
+	{
+		JNI::DecrementValue(JNI::GetJNIEnv(), *JavaCleverTapInstance, Key, Amount);
+	}
+
+	void IncrementValue(const FString& Key, int Amount) const override
+	{
+		JNI::IncrementValue(JNI::GetJNIEnv(), *JavaCleverTapInstance, Key, Amount);
+	}
+
+	void IncrementValue(const FString& Key, double Amount) const override
+	{
+		JNI::IncrementValue(JNI::GetJNIEnv(), *JavaCleverTapInstance, Key, Amount);
 	}
 };
 

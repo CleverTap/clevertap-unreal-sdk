@@ -20,4 +20,10 @@ public:
 	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override;
 	void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override;
+
+	void DecrementValue(const FString& Key, int Amount) const override;
+	void DecrementValue(const FString& Key, double Amount) const override;
+
+	void IncrementValue(const FString& Key, int Amount) const override;
+	void IncrementValue(const FString& Key, double Amount) const override;
 };
