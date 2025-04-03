@@ -128,6 +128,26 @@ public:
 		[NativeInstance recordChargedEventWithDetails:ConvertToNSDictionary(ChargeDetails)
 											 andItems:ConvertToNSArray(Items)];
 	}
+
+	void DecrementValue(const FString& Key, int Amount) const override
+	{
+		[NativeInstance profileDecrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
+	}
+
+	void DecrementValue(const FString& Key, double Amount) const override
+	{
+		[NativeInstance profileDecrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
+	}
+
+	void IncrementValue(const FString& Key, int Amount) const override
+	{
+		[NativeInstance profileIncrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
+	}
+
+	void IncrementValue(const FString& Key, double Amount) const override
+	{
+		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
+	}
 	// </ICleverTapInstance>
 
 private:
