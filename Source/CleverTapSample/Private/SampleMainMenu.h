@@ -20,6 +20,22 @@ struct FCleverTapSampleKeyValuePair
 	FString Value;
 };
 
+UCLASS(BlueprintType)
+class UCleverTapSampleProductList : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void AddProduct(const TArray<FCleverTapSampleKeyValuePair>& Params);
+
+	int ProductCount() const;
+	TArrayView<const FCleverTapSampleKeyValuePair> GetProductParameters(int Index) const;
+
+private:
+	TArray<TArray<FCleverTapSampleKeyValuePair>> ProductParameters;
+};
+
 /**
  * Base class for the sample menu UI blueprint
  */
@@ -47,6 +63,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PushProfile(const FString& Name, const FString& Email, const FString& Phone,
 		const TArray<FCleverTapSampleKeyValuePair>& Params);
+
+	UFUNCTION(BlueprintCallable)
+	void RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params);
+
+	UFUNCTION(BlueprintCallable)
+	void RecordChargedEvent(
+		const TArray<FCleverTapSampleKeyValuePair>& Params, const UCleverTapSampleProductList* Products);
 
 private:
 	void PopulateUI() const;
