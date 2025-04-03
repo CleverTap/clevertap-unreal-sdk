@@ -7,6 +7,8 @@
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
 		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
 		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
+		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true"/>
+		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false"/>
 	</init>
    
 	<androidManifestUpdates>
@@ -42,6 +44,23 @@
 				<addElement tag="application" name="CLEVERTAP_USE_CUSTOM_ID" />
 			</true>
 		</if>
+
+		<if condition="CTRequestInternetPermissions">
+			<true>
+				<addPermission android:name="android.permission.INTERNET"/>
+        		<addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+			</true>
+		</if>
+		<if condition="CTRequestGeoFencePermissions">
+			<true>
+				<addPermission android:name="android.permission.ACCESS_FINE_LOCATION" />
+				<addPermission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+				<addPermission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+				<addPermission android:name="android.permission.WAKE_LOCK" />
+				<addPermission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+			</true>
+		</if>
+
 	</androidManifestUpdates>
 
 	<buildGradleAdditions>

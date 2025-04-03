@@ -64,6 +64,18 @@ public:
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
 	bool bUseCustomCleverTapId = false;
 
+	/** Request internet permissions in the application manifest.
+	 *  Required for CleverTap to work.
+	 *  Only set this to false if you are requesting the platform-specific permissions elsewhere.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bRequestInternetPermissions = true;
+
+	/** Request the permissions needed for the GeoFence module.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bRequestGeoFencePermissions = false;
+
 	/**
 	 * The platform SDK log level to use for development builds
 	 */
