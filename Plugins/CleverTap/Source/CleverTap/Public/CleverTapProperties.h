@@ -4,19 +4,44 @@
 #include "CoreMinimal.h"
 #include "Misc/TVariant.h"
 
+/**
+ * Represents a date for CleverTap profile properties.
+ */
 struct FCleverTapDate
 {
+	/**
+	 * Numeric year, such as 2025
+	 */
 	int32 Year;
+
+	/**
+	 * Numeric month between the values of [1, 12]
+	 */
 	int32 Month;
+
+	/**
+	 * Numeric day for a given month
+	 */
 	int32 Day;
 
 	FCleverTapDate() : Year(0), Month(0), Day(0) {}
 	FCleverTapDate(int32 InYear, int32 InMonth, int32 InDay) : Year(InYear), Month(InMonth), Day(InDay) {}
 	FCleverTapDate(const FCleverTapDate& Other) = default;
 
+	/**
+	 * Construct from the date part of an Unreal FDateTime struct. The time part is ignored.
+	 */
+	FCleverTapDate(const FDateTime& DateTime)
+		: Year(DateTime.GetYear()), Month(DateTime.GetMonth()), Day(DateTime.GetDay())
+	{
+	}
+
 	FString ToString() const { return FString::Printf(TEXT("%04d-%02d-%02d"), Year, Month, Day); }
 };
 
+/**
+ * Variant type for allowed property value types.
+ */
 class FCleverTapPropertyValue
 {
 public:
