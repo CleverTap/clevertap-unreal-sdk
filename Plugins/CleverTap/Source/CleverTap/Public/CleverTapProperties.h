@@ -51,12 +51,12 @@ public:
 	FCleverTapPropertyValue() = default;
 
 	// Type-specific constructors
-	FCleverTapPropertyValue(int InValue) : Value(TInPlaceType<int64>(), int64(InValue)) {}
+	FCleverTapPropertyValue(int32 InValue) : Value(TInPlaceType<int64>(), int64(InValue)) {}
 	FCleverTapPropertyValue(int64 InValue) : Value(TInPlaceType<int64>(), InValue) {}
 	FCleverTapPropertyValue(double InValue) : Value(TInPlaceType<double>(), InValue) {}
 	FCleverTapPropertyValue(float InValue) : Value(TInPlaceType<float>(), InValue) {}
 	FCleverTapPropertyValue(bool InValue) : Value(TInPlaceType<bool>(), InValue) {}
-	FCleverTapPropertyValue(const char* InValue) : Value(TInPlaceType<FString>(), FString(InValue)) {}
+	FCleverTapPropertyValue(const ANSICHAR* InValue) : Value(TInPlaceType<FString>(), FString(InValue)) {}
 	FCleverTapPropertyValue(const FString& InValue) : Value(TInPlaceType<FString>(), InValue) {}
 	FCleverTapPropertyValue(FString&& InValue) : Value(TInPlaceType<FString>(), MoveTemp(InValue)) {}
 	FCleverTapPropertyValue(const FCleverTapDate& InValue) : Value(TInPlaceType<FCleverTapDate>(), InValue) {}
