@@ -50,7 +50,8 @@ will automatically initialize the CleverTap SDK and the default shared instance.
 > Config.ProjectToken = /*Your project token*/;
 > Config.RegionCode = /*Region code*/;
 > Config.LogLevel = /*ECleverTapLogLevel enum specifying your desired CleverTap SDK log verbosity*/;
-> GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);```
+> GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
+> ```
 
 ## Event Recording
 ### User Events
