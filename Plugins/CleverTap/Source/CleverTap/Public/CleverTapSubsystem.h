@@ -11,7 +11,10 @@ struct FCleverTapInstanceConfig;
 class UCleverTapConfig;
 
 /**
- * A UEngineSubsystem for interaction with the CleverTap SDK
+ * A UEngineSubsystem for interaction with the CleverTap SDK.
+ *  Note: UCleverTapSubsystem must be initialized before a call to FPlatformMisc::RegisterForRemoteNotifications() is
+ *  made. If any of the ICleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
+ *  need to be called.
  */
 UCLASS(BlueprintType, ClassGroup = CleverTap)
 class CLEVERTAP_API UCleverTapSubsystem : public UEngineSubsystem
@@ -80,6 +83,10 @@ private:
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"))
 	void BlueprintInitializeSharedInstanceWithId(const UCleverTapConfig* Config, const FString& CleverTapId);
 
+	void AddRemoteNotificationTokenListener();
+	void OnRegisteredForRemoteNotifications(TArray<uint8> Token);
+
 private:
 	TUniquePtr<ICleverTapInstance> SharedInstanceImpl;
+	TArray<uint8> SavedRemoteNotificationToken;
 };

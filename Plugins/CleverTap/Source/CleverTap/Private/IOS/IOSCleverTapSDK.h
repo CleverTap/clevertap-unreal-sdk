@@ -11,6 +11,7 @@ struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
 		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
+	static void SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token);
 };
 
 }} // namespace CleverTapSDK::IOS

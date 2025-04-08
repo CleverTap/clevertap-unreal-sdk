@@ -6,6 +6,7 @@
 #include "CleverTapLog.h"
 #include "CleverTapPlatformSDK.h"
 #include "CleverTapUtilities.h"
+#include "Misc/CoreDelegates.h"
 #include "NullCleverTapInstance.h"
 #include "UObject/UObjectBase.h"
 
@@ -61,6 +62,13 @@ void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		InitializeSharedInstance(Config);
 	}
+
+	// If we didn't initialize the shared instance then we need to liten for the remote notification token just in case
+	//  that's done before the shared instance is initialized.
+	if (!IsSharedInstanceInitialized())
+	{
+		AddRemoteNotificationTokenListener();
+	}
 }
 
 ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverTapConfig* Config)
@@ -92,6 +100,12 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverT
 	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config);
 	UE_CLOG(
 		SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+
+	if (SavedRemoteNotificationToken.Num() > 0)
+	{
+		FCleverTapPlatformSDK::SetRemoteNotificationToken(*SharedInstanceImpl, SavedRemoteNotificationToken);
+	}
+
 	return *SharedInstanceImpl;
 }
 
@@ -144,6 +158,12 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config, CleverTapId);
 	UE_CLOG(
 		SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+
+	if (SavedRemoteNotificationToken.Num() > 0)
+	{
+		FCleverTapPlatformSDK::SetRemoteNotificationToken(*SharedInstanceImpl, SavedRemoteNotificationToken);
+	}
+
 	return *SharedInstanceImpl;
 }
 
@@ -182,4 +202,15 @@ void UCleverTapSubsystem::BlueprintInitializeSharedInstanceWithId(
 	{
 		InitializeSharedInstance(CleverTapId);
 	}
+}
+
+void UCleverTapSubsystem::AddRemoteNotificationTokenListener()
+{
+	FCoreDelegates::ApplicationRegisteredForRemoteNotificationsDelegate.AddUObject(
+		this, &UCleverTapSubsystem::OnRegisteredForRemoteNotifications);
+}
+
+void UCleverTapSubsystem::OnRegisteredForRemoteNotifications(TArray<uint8> Token)
+{
+	SavedRemoteNotificationToken = MoveTemp(Token);
 }

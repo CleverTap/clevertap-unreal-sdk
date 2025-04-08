@@ -25,4 +25,9 @@ TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
 	return MakeUnique<FNullCleverTapInstance>();
 }
 
+void FGenericPlatformSDK::SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token)
+{
+	CleverTapSDK::Ignore(Instance, Token);
+}
+
 }} // namespace CleverTapSDK::GenericPlatform
