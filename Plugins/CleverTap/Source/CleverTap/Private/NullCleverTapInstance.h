@@ -9,21 +9,21 @@
 class FNullCleverTapInstance : public ICleverTapInstance
 {
 public:
-	FString GetCleverTapId() const override;
+	FString GetCleverTapId() override;
 
-	void OnUserLogin(const FCleverTapProperties& Profile) const override;
-	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override;
+	void OnUserLogin(const FCleverTapProperties& Profile) override;
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) override;
 
-	void PushProfile(const FCleverTapProperties& Profile) const override;
+	void PushProfile(const FCleverTapProperties& Profile) override;
 
-	void PushEvent(const FString& EventName) const override;
-	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override;
+	void PushEvent(const FString& EventName) override;
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) override;
 	void PushChargedEvent(
-		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override;
+		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override;
 
-	void DecrementValue(const FString& Key, int Amount) const override;
-	void DecrementValue(const FString& Key, double Amount) const override;
+	void DecrementValue(const FString& Key, int Amount) override;
+	void DecrementValue(const FString& Key, double Amount) override;
 
-	void IncrementValue(const FString& Key, int Amount) const override;
-	void IncrementValue(const FString& Key, double Amount) const override;
+	void IncrementValue(const FString& Key, int Amount) override;
+	void IncrementValue(const FString& Key, double Amount) override;
 };
