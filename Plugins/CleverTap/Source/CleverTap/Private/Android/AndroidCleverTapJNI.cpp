@@ -133,7 +133,7 @@ static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstan
 	Env->DeleteLocalRef(JAccountRegion);
 
 	// install the identity keys
-	SetIdentityKeys(Env, ConfigInstance,  Config.GetIdentityKeys() );
+	SetIdentityKeys(Env, ConfigInstance, Config.GetIdentityKeys());
 
 	return ConfigInstance;
 }
@@ -955,6 +955,41 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 		Env->DeleteLocalRef(JavaItem);
 	}
 	return JavaArray;
+}
+
+bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID IsGrantedMethod = GetMethodID(Env, CleverTapAPIClass, "isPushPermissionGranted", "()Z");
+	if (!IsGrantedMethod)
+	{
+		return;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+
+	bool bGranted = Env->CallBooleanMethod(CleverTapInstance, PromptMethod, ShowFallbackSettings);
+	if (HandleException(Env, "isPushPermissionGranted()"))
+	{
+		bGranted = false;
+	}
+	return bGranted;
+}
+
+void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool ShowFallbackSettings)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID PromptMethod = GetMethodID(Env, CleverTapAPIClass, "promptForPushPermission", "(Z)V");
+	if (!PromptMethod)
+	{
+		return;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+
+	Env->CallVoidMethod(CleverTapInstance, PromptMethod, ShowFallbackSettings);
+	if (HandleException(Env, "promptForPushPermission()"))
+	{
+		// fall through
+	}
 }
 
 }}} // namespace CleverTapSDK::Android::JNI

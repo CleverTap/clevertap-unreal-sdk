@@ -26,3 +26,10 @@ void FNullCleverTapInstance::DecrementValue(const FString& Key, double Amount) c
 
 void FNullCleverTapInstance::IncrementValue(const FString& Key, int Amount) const {}
 void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount) const {}
+
+bool FNullCleverTapInstance::IsPushPermissionGranted() const
+{
+	return false;
+}
+
+void FNullCleverTapInstance::PromptForPushPermission(bool ShowFallbackSettings) {}

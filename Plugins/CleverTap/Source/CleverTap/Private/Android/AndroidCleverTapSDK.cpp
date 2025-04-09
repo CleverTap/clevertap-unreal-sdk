@@ -112,6 +112,16 @@ public:
 	{
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
+
+	void IsPushPermissionGranted() const override
+	{
+		return JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance);
+	}
+
+	void PromptForPushPermission(bool ShowFallbackSettings) const override
+	{
+		JNI::PromptForPushPermission(JNI::GetJNIEnv(), JavaCleverTapInstance, ShowFallbackSettings);
+	}
 };
 
 void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)

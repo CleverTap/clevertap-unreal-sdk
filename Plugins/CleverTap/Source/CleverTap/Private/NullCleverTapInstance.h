@@ -26,4 +26,7 @@ public:
 
 	void IncrementValue(const FString& Key, int Amount) const override;
 	void IncrementValue(const FString& Key, double Amount) const override;
+
+	bool IsPushPermissionGranted() const override;
+	void PromptForPushPermission(bool ShowFallbackSettings) override;
 };

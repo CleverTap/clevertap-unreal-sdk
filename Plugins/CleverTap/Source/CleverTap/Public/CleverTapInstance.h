@@ -28,10 +28,13 @@ public:
 	virtual void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const = 0;
 
-	virtual void DecrementValue(const FString& Key, int Amount ) const = 0;
-	virtual void DecrementValue(const FString& Key, double Amount ) const = 0;
+	virtual void DecrementValue(const FString& Key, int Amount) const = 0;
+	virtual void DecrementValue(const FString& Key, double Amount) const = 0;
 
-	virtual void IncrementValue(const FString& Key, int Amount ) const = 0;
-	virtual void IncrementValue(const FString& Key, double Amount ) const = 0;
-	
+	virtual void IncrementValue(const FString& Key, int Amount) const = 0;
+	virtual void IncrementValue(const FString& Key, double Amount) const = 0;
+
+	virtual bool IsPushPermissionGranted() const = 0;
+	virtual void PromptForPushPermission(bool ShowFallbackSettings) = 0;
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPushPermissionResponse, ICleverTapInstance*, bool Accepted);
 };
