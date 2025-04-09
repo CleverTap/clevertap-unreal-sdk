@@ -53,6 +53,61 @@ will automatically initialize the CleverTap SDK and the default shared instance.
 > GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
 > ```
 
+## User Profiles
+### On User Login
+The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the
+initial "Anonymous" user profile with additional properties such as name, age, and email. See [Updating the User Profile](https://developer.clevertap.com/docs/concepts-user-profiles#updating-the-user-profile) for a list of predefined properties.
+```cpp
+FCleverTapProperties Profile;
+Profile.Add(TEXT("Name"), TEXT("Jack Montana"));    // String
+Profile.Add(TEXT("Identity"), 61026032);            // String or Number
+Profile.Add(TEXT("Email"), TEXT("jack@gmail.com")); // Email string
+Profile.Add(TEXT("Phone"), TEXT("+14155551234"));   // with country code, starting with +
+Profile.Add(TEXT("Gender"), TEXT("M"));             // Can be either M or F
+Profile.Add(TEXT("DOB"), FCleverTapDate(1953, 3, 13));
+
+Profile.Add(TEXT("MSG-email"), false);   // Disable email notifications
+Profile.Add(TEXT("MSG-push"), true);     // Enable push notifications
+Profile.Add(TEXT("MSG-sms"), false);     // Disable SMS notifications
+Profile.Add(TEXT("MSG-whatsapp"), true); // Enable WhatsApp notifications
+
+TArray<FString> Stuff;
+Stuff.Add(TEXT("bag"));
+Stuff.Add(TEXT("shoes"));
+Profile.Add(TEXT("MyStuff"), Stuff); // Multi-Value array of string support
+
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.OnUserLogin(Profile);
+```
+
+### Updating a User Profile with PushProfile()
+The user's profile can be enriched with additional properties at any time using the `PushProfile()` method. This
+supports arbitrary single value and multi-value properties like `OnUserLogin()`.
+```cpp
+FCleverTapProperties Profile;
+// Update an existing property
+Profile.Add(TEXT("MSG-push"), false);
+
+// Add new properties
+Profile.Add(TEXT("Tz"), TEXT("Asia/Kolkata"));
+Profile.Add(TEXT("Plan Type"), TEXT("Silver"));
+Profile.Add(TEXT("Score"), 100);
+
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.PushProfile(Profile);
+```
+
+### Increment or Decrement Scalar Properties
+If a given profile property is a `int32`, `int64`, `float`, or `double` then it can be incremented or decremented by an
+arbitrary positive value.
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.IncrementValue(TEXT("Score"), 50);
+CleverTap.DecrementValue(TEXT("Score"), 100);
+CleverTap.IncrementValue(TEXT("Score"), 5.5);
+CleverTap.DecrementValue(TEXT("Score"), 3.14);
+```
+
 ## Event Recording
 ### User Events
 User Events can be recorded any time after initialization.
