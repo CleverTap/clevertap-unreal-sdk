@@ -122,6 +122,8 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+	
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDefaultConfig(Env, Config);
 	jobject Instance = JNI::GetDefaultInstance(Env);
@@ -135,6 +137,8 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCle
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+	
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDefaultConfig(Env, Config);
 	jobject Instance = JNI::GetDefaultInstance(Env, CleverTapId);
