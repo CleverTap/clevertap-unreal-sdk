@@ -57,7 +57,7 @@ NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 				ObjCDate.day = Date.Day;
 				ObjCDate.month = Date.Month;
 				ObjCDate.year = Date.Year;
-				result[Key] = ObjCDate;
+				result[Key] = [[NSCalendar currentCalendar] dateFromComponents:ObjCDate];
 			}
 			break;
 
