@@ -780,6 +780,14 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 		return nullptr;
 	}
 
+	// Integer support
+	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
+	jmethodID IntegerConstructor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	if (!IntegerConstructor)
+	{
+		return nullptr;
+	}
+
 	// Long support
 	jclass LongClass = LoadJavaClass(Env, "java/lang/Long");
 	jmethodID LongConstructor = GetMethodID(Env, LongClass, "<init>", "(J)V");
@@ -832,7 +840,7 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	// Iterate through Unreal's profile Map
 	for (const auto& Property : Properties)
 	{
-		FString Key = Property.Key;
+		const FString& Key = Property.Key;
 		const FCleverTapPropertyValue& Value = Property.Value;
 
 		// Convert FString Key -> Java String
@@ -840,7 +848,11 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 		jobject JavaValue = nullptr;
 
 		// Handle different value types
-		if (Value.IsType<int64>())
+		if (Value.IsType<int32>())
+		{
+			JavaValue = Env->NewObject(IntegerClass, IntegerConstructor, Value.Get<int32>());
+		}
+		else if (Value.IsType<int64>())
 		{
 			JavaValue = Env->NewObject(LongClass, LongConstructor, Value.Get<int64>());
 		}
@@ -864,15 +876,108 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 		{
 			JavaValue = ConvertCleverTapDateToJavaDate(Env, Value.Get<FCleverTapDate>(), ETimeZone::UTC);
 		}
+		else if (Value.IsType<TArray<int32>>())
+		{
+			// Convert TArray<int32> -> Java ArrayList<String>
+			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+			{
+				for (int32 Item : Value.Get<TArray<int32>>())
+				{
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%d"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
+					{
+						// failed but logged; keep going
+					}
+					Env->DeleteLocalRef(JavaItem);
+				}
+				JavaValue = JavaArrayList;
+			}
+		}
+		else if (Value.IsType<TArray<int64>>())
+		{
+			// Convert TArray<int64> -> Java ArrayList<String>
+			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+			{
+				for (int64 Item : Value.Get<TArray<int64>>())
+				{
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%lld"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
+					{
+						// failed but logged; keep going
+					}
+					Env->DeleteLocalRef(JavaItem);
+				}
+				JavaValue = JavaArrayList;
+			}
+		}
+		else if (Value.IsType<TArray<float>>())
+		{
+			// Convert TArray<float> -> Java ArrayList<String>
+			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+			{
+				for (float Item : Value.Get<TArray<float>>())
+				{
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%.7g"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
+					{
+						// failed but logged; keep going
+					}
+					Env->DeleteLocalRef(JavaItem);
+				}
+				JavaValue = JavaArrayList;
+			}
+		}
+		else if (Value.IsType<TArray<double>>())
+		{
+			// Convert TArray<double> -> Java ArrayList<String>
+			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+			{
+				for (float Item : Value.Get<TArray<double>>())
+				{
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%.15g"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
+					{
+						// failed but logged; keep going
+					}
+					Env->DeleteLocalRef(JavaItem);
+				}
+				JavaValue = JavaArrayList;
+			}
+		}
+		else if (Value.IsType<TArray<bool>>())
+		{
+			// Convert TArray<bool> -> Java ArrayList<String>
+			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+			{
+				jstring JavaFalseString = Env->NewStringUTF("false");
+				jstring JavaTrueString = Env->NewStringUTF("true");
+				for (bool Item : Value.Get<TArray<bool>>())
+				{
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, Item ? JavaTrueString : JavaFalseString);
+					if (HandleException(Env, "Adding to ArrayList"))
+					{
+						// failed but logged; keep going
+					}
+				}
+				Env->DeleteLocalRef(JavaFalseString);
+				Env->DeleteLocalRef(JavaTrueString);
+				JavaValue = JavaArrayList;
+			}
+		}
 		else if (Value.IsType<TArray<FString>>())
 		{
 			// Convert TArray<FString> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
-			if (HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
-			{
-				JavaArrayList = nullptr;
-			}
-			else
+			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
 				for (const FString& Item : Value.Get<TArray<FString>>())
 				{
@@ -884,13 +989,13 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 					}
 					Env->DeleteLocalRef(JavaItem);
 				}
+				JavaValue = JavaArrayList;
 			}
-
-			JavaValue = JavaArrayList;
 		}
 		else
 		{
-			UE_LOG(LogCleverTap, Error, TEXT("Unsupported FCleverTapPropertyValue type for key %s"), *Key);
+			UE_LOG(LogCleverTap, Error, TEXT("Unsupported FCleverTapPropertyValue type for key %s (type index %d)"),
+				*Key, Value.GetIndex());
 		}
 
 		// catch exceptions & errors from any of the creation methods above
@@ -910,6 +1015,7 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	}
 
 	Env->DeleteLocalRef(HashMapClass);
+	Env->DeleteLocalRef(IntegerClass);
 	Env->DeleteLocalRef(LongClass);
 	Env->DeleteLocalRef(DoubleClass);
 	Env->DeleteLocalRef(FloatClass);

@@ -57,7 +57,7 @@ NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 				ObjCDate.day = Date.Day;
 				ObjCDate.month = Date.Month;
 				ObjCDate.year = Date.Year;
-				result[Key] = ObjCDate;
+				result[Key] = [[NSCalendar currentCalendar] dateFromComponents:ObjCDate];
 			}
 			break;
 
@@ -98,53 +98,52 @@ public:
 	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance) : NativeInstance{ InNativeInstance } {}
 
 	// <ICleverTapInstance>
-	FString GetCleverTapId() const override { return FString{ [NativeInstance profileGetCleverTapID] }; }
+	FString GetCleverTapId() override { return FString{ [NativeInstance profileGetCleverTapID] }; }
 
-	void OnUserLogin(const FCleverTapProperties& Profile) const override
+	void OnUserLogin(const FCleverTapProperties& Profile) override
 	{
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile)];
 	}
 
-	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) override
 	{
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile) withCleverTapID:CleverTapId.GetNSString()];
 	}
 
-	void PushProfile(const FCleverTapProperties& Profile) const override
+	void PushProfile(const FCleverTapProperties& Profile) override
 	{
 		[NativeInstance profilePush:ConvertToNSDictionary(Profile)];
 	}
 
-	void PushEvent(const FString& EventName) const override { [NativeInstance recordEvent:EventName.GetNSString()]; }
+	void PushEvent(const FString& EventName) override { [NativeInstance recordEvent:EventName.GetNSString()]; }
 
-	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) override
 	{
 		[NativeInstance recordEvent:EventName.GetNSString() withProps:ConvertToNSDictionary(Actions)];
 	}
 
-	void PushChargedEvent(
-		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override
+	void PushChargedEvent(const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override
 	{
 		[NativeInstance recordChargedEventWithDetails:ConvertToNSDictionary(ChargeDetails)
 											 andItems:ConvertToNSArray(Items)];
 	}
 
-	void DecrementValue(const FString& Key, int Amount) const override
+	void DecrementValue(const FString& Key, int Amount) override
 	{
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
-	void DecrementValue(const FString& Key, double Amount) const override
+	void DecrementValue(const FString& Key, double Amount) override
 	{
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
-	void IncrementValue(const FString& Key, int Amount) const override
+	void IncrementValue(const FString& Key, int Amount) override
 	{
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
-	void IncrementValue(const FString& Key, double Amount) const override
+	void IncrementValue(const FString& Key, double Amount) override
 	{
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}

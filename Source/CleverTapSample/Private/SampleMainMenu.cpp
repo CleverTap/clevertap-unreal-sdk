@@ -198,6 +198,34 @@ void USampleMainMenu::PushProfile(
 	CleverTap.PushProfile(Profile);
 }
 
+void USampleMainMenu::PushProfileDataTypeTest()
+{
+	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushProfile with all the datatypes"));
+
+	FCleverTapProperties Profile;
+	Profile.Add("Test_String", "Jack Fish");
+	Profile.Add("Test_Int", int32(1332));
+	Profile.Add("Test_Long", int64(13320000123456789));
+	Profile.Add("Test_Float", 1.36f);
+	Profile.Add("Test_Double", 3.141592653589);
+	Profile.Add("Test_Bool", true);
+	Profile.Add("Test_Date", FCleverTapDate(1953, 3, 13));
+
+	Profile.Add("Test_StringArray", TArray<FString>{ "one", "two", "three" });
+
+	// these get converted to arrays of strings:
+	Profile.Add("Test_IntArray", TArray<int32>{ 1, 2, 3 });
+	Profile.Add("Test_LongArray", TArray<int64>{ 1, 2, 3 });
+	Profile.Add("Test_DoubleArray", TArray<double>{ 1.1, 2.2, 3.3 });
+	Profile.Add("Test_FloatArray", TArray<float>{ 1.1f, 2.2f, 3.3f });
+	Profile.Add("Test_BoolArray", TArray<bool>{ true, false, true });
+
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	CleverTap.PushProfile(Profile);
+}
+
 void USampleMainMenu::RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params)
 {
 	check(CleverTapSys != nullptr);

@@ -10,5 +10,8 @@ public class CleverTapSampleTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.AddRange( new string[] { "CleverTapSample" } );
+
+		BuildEnvironment = TargetBuildEnvironment.Unique;
+		bUseLoggingInShipping = true;
 	}
 }

@@ -38,13 +38,13 @@ public:
 		}
 	}
 
-	FString GetCleverTapId() const override
+	FString GetCleverTapId() override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		return JNI::GetCleverTapID(Env, JavaCleverTapInstance);
 	}
 
-	void OnUserLogin(const FCleverTapProperties& Profile) const override
+	void OnUserLogin(const FCleverTapProperties& Profile) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
@@ -52,7 +52,7 @@ public:
 		Env->DeleteLocalRef(JavaProfile);
 	};
 
-	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) const override
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
@@ -60,7 +60,7 @@ public:
 		Env->DeleteLocalRef(JavaProfile);
 	}
 
-	void PushProfile(const FCleverTapProperties& Profile) const override
+	void PushProfile(const FCleverTapProperties& Profile) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaProfile = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Profile);
@@ -68,13 +68,13 @@ public:
 		Env->DeleteLocalRef(JavaProfile);
 	}
 
-	void PushEvent(const FString& EventName) const override
+	void PushEvent(const FString& EventName) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		JNI::PushEvent(Env, JavaCleverTapInstance, EventName);
 	}
 
-	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) const override
+	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaActions = JNI::ConvertCleverTapPropertiesToJavaMap(Env, Actions);
@@ -82,8 +82,7 @@ public:
 		Env->DeleteLocalRef(JavaActions);
 	}
 
-	void PushChargedEvent(
-		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) const override
+	void PushChargedEvent(const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override
 	{
 		auto* Env = JNI::GetJNIEnv();
 		jobject JavaDetails = JNI::ConvertCleverTapPropertiesToJavaMap(Env, ChargeDetails);
@@ -93,22 +92,22 @@ public:
 		Env->DeleteLocalRef(JavaItems);
 	}
 
-	void DecrementValue(const FString& Key, int Amount) const override
+	void DecrementValue(const FString& Key, int Amount) override
 	{
 		JNI::DecrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
-	void DecrementValue(const FString& Key, double Amount) const override
+	void DecrementValue(const FString& Key, double Amount) override
 	{
 		JNI::DecrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
-	void IncrementValue(const FString& Key, int Amount) const override
+	void IncrementValue(const FString& Key, int Amount) override
 	{
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
-	void IncrementValue(const FString& Key, double Amount) const override
+	void IncrementValue(const FString& Key, double Amount) override
 	{
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
@@ -132,6 +131,8 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDefaultConfig(Env, Config);
 	jobject Instance = JNI::GetDefaultInstance(Env);
@@ -145,6 +146,8 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCle
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
+	FPlatformSDK::SetLogLevel(Config.LogLevel);
+
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDefaultConfig(Env, Config);
 	jobject Instance = JNI::GetDefaultInstance(Env, CleverTapId);
