@@ -85,7 +85,16 @@ public:
 	 */
 	virtual void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) = 0;
-	virtual bool IsPushPermissionGranted() const = 0;
+
+	/** todo
+	 */
+	virtual bool IsPushPermissionGranted() = 0;
+
+	/** todo
+	 */
 	virtual void PromptForPushPermission(bool ShowFallbackSettings) = 0;
+
+	/** todo
+	 */
 	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPushPermissionResponse, ICleverTapInstance*, bool Accepted);
 };

@@ -112,12 +112,12 @@ public:
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
-	void IsPushPermissionGranted() const override
+	bool IsPushPermissionGranted() override
 	{
 		return JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance);
 	}
 
-	void PromptForPushPermission(bool ShowFallbackSettings) const override
+	void PromptForPushPermission(bool ShowFallbackSettings) override
 	{
 		JNI::PromptForPushPermission(JNI::GetJNIEnv(), JavaCleverTapInstance, ShowFallbackSettings);
 	}

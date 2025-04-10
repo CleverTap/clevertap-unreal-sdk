@@ -1069,11 +1069,11 @@ bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
 	jmethodID IsGrantedMethod = GetMethodID(Env, CleverTapAPIClass, "isPushPermissionGranted", "()Z");
 	if (!IsGrantedMethod)
 	{
-		return;
+		return false;
 	}
 	Env->DeleteLocalRef(CleverTapAPIClass);
 
-	bool bGranted = Env->CallBooleanMethod(CleverTapInstance, PromptMethod, ShowFallbackSettings);
+	bool bGranted = Env->CallBooleanMethod(CleverTapInstance, IsGrantedMethod);
 	if (HandleException(Env, "isPushPermissionGranted()"))
 	{
 		bGranted = false;
