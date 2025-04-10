@@ -878,111 +878,98 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 		}
 		else if (Value.IsType<TArray<int32>>())
 		{
-			// Convert TArray<int32> -> Java ArrayList<Integer>
+			// Convert TArray<int32> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
 			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
 				for (int32 Item : Value.Get<TArray<int32>>())
 				{
-					jobject JavaItem = Env->NewObject(IntegerClass, IntegerConstructor, Item);
-					if (!HandleExceptionOrError(Env, !JavaItem, "Constructing Integer"))
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%d"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
 					{
-						Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
-						if (HandleException(Env, "Adding to ArrayList"))
-						{
-							// failed but logged; keep going
-						}
-						Env->DeleteLocalRef(JavaItem);
+						// failed but logged; keep going
 					}
+					Env->DeleteLocalRef(JavaItem);
 				}
 				JavaValue = JavaArrayList;
 			}
 		}
 		else if (Value.IsType<TArray<int64>>())
 		{
-			// Convert TArray<int64> -> Java ArrayList<Long>
+			// Convert TArray<int64> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
 			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
 				for (int64 Item : Value.Get<TArray<int64>>())
 				{
-					jobject JavaItem = Env->NewObject(LongClass, LongConstructor, Item);
-					if (!HandleExceptionOrError(Env, !JavaItem, "Constructing Long"))
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%lld"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
 					{
-						Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
-						if (HandleException(Env, "Adding to ArrayList"))
-						{
-							// failed but logged; keep going
-						}
-						Env->DeleteLocalRef(JavaItem);
+						// failed but logged; keep going
 					}
+					Env->DeleteLocalRef(JavaItem);
 				}
 				JavaValue = JavaArrayList;
 			}
 		}
 		else if (Value.IsType<TArray<float>>())
 		{
-			// Convert TArray<float> -> Java ArrayList<Float>
+			// Convert TArray<float> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
 			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
 				for (float Item : Value.Get<TArray<float>>())
 				{
-					jobject JavaItem = Env->NewObject(FloatClass, FloatConstructor, Item);
-					if (!HandleExceptionOrError(Env, !JavaItem, "Constructing Float"))
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%.7g"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
 					{
-						Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
-						if (HandleException(Env, "Adding to ArrayList"))
-						{
-							// failed but logged; keep going
-						}
-						Env->DeleteLocalRef(JavaItem);
+						// failed but logged; keep going
 					}
+					Env->DeleteLocalRef(JavaItem);
 				}
 				JavaValue = JavaArrayList;
 			}
 		}
 		else if (Value.IsType<TArray<double>>())
 		{
-			// Convert TArray<double> -> Java ArrayList<Double>
+			// Convert TArray<double> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
 			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
 				for (float Item : Value.Get<TArray<double>>())
 				{
-					jobject JavaItem = Env->NewObject(DoubleClass, DoubleConstructor, Item);
-					if (!HandleExceptionOrError(Env, !JavaItem, "Constructing Double"))
+					jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*FString::Printf(TEXT("%.15g"), Item)));
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
+					if (HandleException(Env, "Adding to ArrayList"))
 					{
-						Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
-						if (HandleException(Env, "Adding to ArrayList"))
-						{
-							// failed but logged; keep going
-						}
-						Env->DeleteLocalRef(JavaItem);
+						// failed but logged; keep going
 					}
+					Env->DeleteLocalRef(JavaItem);
 				}
 				JavaValue = JavaArrayList;
 			}
 		}
 		else if (Value.IsType<TArray<bool>>())
 		{
-			// Convert TArray<bool> -> Java ArrayList<Boolean>
+			// Convert TArray<bool> -> Java ArrayList<String>
 			jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
 			if (!HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
 			{
+				jstring JavaFalseString = Env->NewStringUTF("false");
+				jstring JavaTrueString = Env->NewStringUTF("true");
 				for (bool Item : Value.Get<TArray<bool>>())
 				{
-					jobject JavaItem = Env->NewObject(BooleanClass, BooleanConstructor, Item);
-					if (!HandleExceptionOrError(Env, !JavaItem, "Constructing Boolean"))
+					Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, Item ? JavaTrueString : JavaFalseString);
+					if (HandleException(Env, "Adding to ArrayList"))
 					{
-						Env->CallBooleanMethod(JavaArrayList, ArrayListAdd, JavaItem);
-						if (HandleException(Env, "Adding to ArrayList"))
-						{
-							// failed but logged; keep going
-						}
-						Env->DeleteLocalRef(JavaItem);
+						// failed but logged; keep going
 					}
 				}
+				Env->DeleteLocalRef(JavaFalseString);
+				Env->DeleteLocalRef(JavaTrueString);
 				JavaValue = JavaArrayList;
 			}
 		}
@@ -1002,7 +989,6 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 					}
 					Env->DeleteLocalRef(JavaItem);
 				}
-
 				JavaValue = JavaArrayList;
 			}
 		}
