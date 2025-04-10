@@ -45,13 +45,14 @@ struct FCleverTapDate
 class FCleverTapPropertyValue
 {
 public:
-	using VariantType = TVariant<int64, float, double, bool, FString, FCleverTapDate, TArray<FString>>;
+	using VariantType = TVariant<int32, int64, float, double, bool, FString, FCleverTapDate, TArray<int32>,
+		TArray<int64>, TArray<float>, TArray<double>, TArray<bool>, TArray<FString>>;
 
 	// Default constructors
 	FCleverTapPropertyValue() = default;
 
 	// Type-specific constructors
-	FCleverTapPropertyValue(int32 InValue) : Value(TInPlaceType<int64>(), int64(InValue)) {}
+	FCleverTapPropertyValue(int32 InValue) : Value(TInPlaceType<int32>(), InValue) {}
 	FCleverTapPropertyValue(int64 InValue) : Value(TInPlaceType<int64>(), InValue) {}
 	FCleverTapPropertyValue(double InValue) : Value(TInPlaceType<double>(), InValue) {}
 	FCleverTapPropertyValue(float InValue) : Value(TInPlaceType<float>(), InValue) {}
@@ -60,6 +61,16 @@ public:
 	FCleverTapPropertyValue(const FString& InValue) : Value(TInPlaceType<FString>(), InValue) {}
 	FCleverTapPropertyValue(FString&& InValue) : Value(TInPlaceType<FString>(), MoveTemp(InValue)) {}
 	FCleverTapPropertyValue(const FCleverTapDate& InValue) : Value(TInPlaceType<FCleverTapDate>(), InValue) {}
+	FCleverTapPropertyValue(const TArray<int32>& InValue) : Value(TInPlaceType<TArray<int32>>(), InValue) {}
+	FCleverTapPropertyValue(TArray<int32>&& InValue) : Value(TInPlaceType<TArray<int32>>(), MoveTemp(InValue)) {}
+	FCleverTapPropertyValue(const TArray<int64>& InValue) : Value(TInPlaceType<TArray<int64>>(), InValue) {}
+	FCleverTapPropertyValue(TArray<int64>&& InValue) : Value(TInPlaceType<TArray<int64>>(), MoveTemp(InValue)) {}
+	FCleverTapPropertyValue(const TArray<float>& InValue) : Value(TInPlaceType<TArray<float>>(), InValue) {}
+	FCleverTapPropertyValue(TArray<float>&& InValue) : Value(TInPlaceType<TArray<float>>(), MoveTemp(InValue)) {}
+	FCleverTapPropertyValue(const TArray<double>& InValue) : Value(TInPlaceType<TArray<double>>(), InValue) {}
+	FCleverTapPropertyValue(TArray<double>&& InValue) : Value(TInPlaceType<TArray<double>>(), MoveTemp(InValue)) {}
+	FCleverTapPropertyValue(const TArray<bool>& InValue) : Value(TInPlaceType<TArray<bool>>(), InValue) {}
+	FCleverTapPropertyValue(TArray<bool>&& InValue) : Value(TInPlaceType<TArray<bool>>(), MoveTemp(InValue)) {}
 	FCleverTapPropertyValue(const TArray<FString>& InValue) : Value(TInPlaceType<TArray<FString>>(), InValue) {}
 	FCleverTapPropertyValue(TArray<FString>&& InValue) : Value(TInPlaceType<TArray<FString>>(), MoveTemp(InValue)) {}
 
