@@ -9,6 +9,35 @@
 
 namespace {
 
+template <typename T>
+auto ConvertToNSValue(T Value)
+{
+	return @(Value);
+}
+
+auto ConvertToNSValue(bool Value)
+{
+	return Value ? @YES : @NO;
+}
+
+NSString* ConvertToNSValue(const FString& Value)
+{
+	return Value.GetNSString();
+}
+
+template <typename T>
+NSArray* ConvertToNSArray(const TArray<T>& Values)
+{
+	NSMutableArray* ObjCValues = [NSMutableArray arrayWithCapacity:Values.Num()];
+
+	for (const T& Value : Values)
+	{
+		[ObjCValues addObject:ConvertToNSValue(Value)];
+	}
+
+	return ObjCValues;
+}
+
 NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 {
 	NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
@@ -18,34 +47,40 @@ NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 		NSString* Key = Entry.Key.GetNSString();
 		switch (Entry.Value.GetIndex())
 		{
-			// int64, float, double, bool, FString, FCleverTapDate, TArray<FString>
+			// int32, int64, float, double, bool, FString, FCleverTapDate, TArray<FString>
+			case FCleverTapPropertyValue::IndexOfType<int32>():
+			{
+				result[Key] = ConvertToNSValue(Entry.Value.Get<int32>());
+			}
+			break;
+
 			case FCleverTapPropertyValue::IndexOfType<int64>():
 			{
-				result[Key] = @(Entry.Value.Get<int64>());
+				result[Key] = ConvertToNSValue(Entry.Value.Get<int64>());
 			}
 			break;
 
 			case FCleverTapPropertyValue::IndexOfType<float>():
 			{
-				result[Key] = @(Entry.Value.Get<float>());
+				result[Key] = ConvertToNSValue(Entry.Value.Get<float>());
 			}
 			break;
 
 			case FCleverTapPropertyValue::IndexOfType<double>():
 			{
-				result[Key] = @(Entry.Value.Get<double>());
+				result[Key] = ConvertToNSValue(Entry.Value.Get<double>());
 			}
 			break;
 
 			case FCleverTapPropertyValue::IndexOfType<bool>():
 			{
-				result[Key] = (Entry.Value.Get<bool>() ? @YES : @NO);
+				result[Key] = ConvertToNSValue(Entry.Value.Get<bool>());
 			}
 			break;
 
 			case FCleverTapPropertyValue::IndexOfType<FString>():
 			{
-				result[Key] = Entry.Value.Get<FString>().GetNSString();
+				result[Key] = ConvertToNSValue(Entry.Value.Get<FString>());
 			}
 			break;
 
@@ -61,17 +96,39 @@ NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 			}
 			break;
 
+			case FCleverTapPropertyValue::IndexOfType<TArray<int32>>():
+			{
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<int32>>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<TArray<int64>>():
+			{
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<int64>>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<TArray<float>>():
+			{
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<float>>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<TArray<double>>():
+			{
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<double>>());
+			}
+			break;
+
+			case FCleverTapPropertyValue::IndexOfType<TArray<bool>>():
+			{
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<bool>>());
+			}
+			break;
+
 			case FCleverTapPropertyValue::IndexOfType<TArray<FString>>():
 			{
-				const TArray<FString>& Values = Entry.Value.Get<TArray<FString>>();
-				NSMutableArray* ObjCValues = [NSMutableArray arrayWithCapacity:Values.Num()];
-
-				for (const FString& StrValue : Values)
-				{
-					[ObjCValues addObject:StrValue.GetNSString()];
-				}
-
-				result[Key] = ObjCValues;
+				result[Key] = ConvertToNSArray(Entry.Value.Get<TArray<FString>>());
 			}
 			break;
 		}

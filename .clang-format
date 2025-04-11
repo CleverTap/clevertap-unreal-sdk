@@ -12,6 +12,7 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortLambdasOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
