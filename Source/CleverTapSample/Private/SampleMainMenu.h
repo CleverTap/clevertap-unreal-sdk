@@ -65,6 +65,9 @@ public:
 		const TArray<FCleverTapSampleKeyValuePair>& Params);
 
 	UFUNCTION(BlueprintCallable)
+	void PushProfileDataTypeTest();
+
+	UFUNCTION(BlueprintCallable)
 	void RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params);
 
 	UFUNCTION(BlueprintCallable)
