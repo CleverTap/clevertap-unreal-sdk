@@ -41,6 +41,6 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
-void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool ShowFallbackSettings);
+void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bShowFallbackSettings);
 
 }}} // namespace CleverTapSDK::Android::JNI
