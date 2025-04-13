@@ -1063,6 +1063,52 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 	return JavaArray;
 }
 
+static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassName, void* NativeInstance)
+{
+	FString ListenerClassName = TEXT("com/clevertap/android/unreal/UECleverTapListeners$") + FString(ClassName);
+	jclass ListenerClass = LoadJavaClass(Env, TCHAR_TO_ANSI(*ListenerClassName));
+	jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
+	if (!ListenerConstructor)
+	{
+		return nullptr;
+	}
+	jobject Listener = Env->NewObject(ListenerClass, ListenerConstructor, jlong(NativeInstance));
+	if (HandleExceptionOrError(Env, !Listener, "Creating Listener"))
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed creating listener of class \"%hs\""), ClassName);
+		Listener = nullptr;
+	}
+	Env->DeleteLocalRef(ListenerClass);
+	return Listener;
+}
+
+bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID RegisterListenerMethod =
+		GetMethodID(Env, CleverTapAPIClass, "registerPushPermissionNotificationResponseListener",
+			"(Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V");
+	if (!RegisterListenerMethod)
+	{
+		return false;
+	}
+	Env->DeleteLocalRef(CleverTapAPIClass);
+
+	jobject Listener = JNI::CreateUECleverTapListener(Env, "PushPermissionListener", NativeInstance);
+	if (!Listener)
+	{
+		return false;
+	}
+
+	Env->CallVoidMethod(CleverTapInstance, RegisterListenerMethod, Listener);
+	if (HandleException(Env, "registerPushPermissionNotificationResponseListener()"))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
@@ -1081,7 +1127,7 @@ bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
 	return bGranted;
 }
 
-void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool ShowFallbackSettings)
+void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bShowFallbackSettings)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	jmethodID PromptMethod = GetMethodID(Env, CleverTapAPIClass, "promptForPushPermission", "(Z)V");
@@ -1091,7 +1137,7 @@ void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool ShowFa
 	}
 	Env->DeleteLocalRef(CleverTapAPIClass);
 
-	Env->CallVoidMethod(CleverTapInstance, PromptMethod, ShowFallbackSettings);
+	Env->CallVoidMethod(CleverTapInstance, PromptMethod, bShowFallbackSettings);
 	if (HandleException(Env, "promptForPushPermission()"))
 	{
 		// fall through

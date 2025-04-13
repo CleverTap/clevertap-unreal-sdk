@@ -6,6 +6,11 @@
 #include "CoreMinimal.h"
 
 /**
+ * Delegate type that broadcasts the eventual user response to PromptForPushPermission()
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
+
+/**
  * A CleverTap API instance
  */
 class CLEVERTAP_API ICleverTapInstance
@@ -86,15 +91,21 @@ public:
 	virtual void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) = 0;
 
-	/** todo
+	/**
+	 * Returns true if the permission to receive push notifications has been granted by the user.
 	 */
 	virtual bool IsPushPermissionGranted() = 0;
 
-	/** todo
+	/**
+	 * Prompts the user to grant push permissions, if they've not already been granted or denied.
+	 *
+	 *\param bShowFallbackSettings - If `bShowFallbackSettings` is true and permissions were previously denied,
+	 *                               then we show a alert dialog which routes to app's notification settings page.
 	 */
-	virtual void PromptForPushPermission(bool ShowFallbackSettings) = 0;
+	virtual void PromptForPushPermission(bool bShowFallbackSettings) = 0;
 
-	/** todo
+	/**
+	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()
 	 */
-	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPushPermissionResponse, ICleverTapInstance*, bool Accepted);
+	FOnPushPermissionResponse OnPushPermissionResponse;
 };

@@ -10,7 +10,11 @@
 		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true"/>
 		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false"/>
 	</init>
-   
+
+	<prebuildCopies>
+		<copyDir src="$S(PluginDir)/Private/Android/Java/src" dst="$S(BuildDir)/src" />
+	</prebuildCopies>
+
 	<androidManifestUpdates>
 		<if condition="CTAutoInit">
 			<true>
@@ -86,5 +90,4 @@
 			</true>
 		</if>
 	</gameApplicationOnCreateAdditions>
-	
 </root>
