@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CleverTapProperties.h"
+#include "CleverTapPushPrimerConfig.h"
 
 #include "CoreMinimal.h"
 
@@ -99,10 +100,31 @@ public:
 	/**
 	 * Prompts the user to grant push permissions, if they've not already been granted or denied.
 	 *
-	 *\param bShowFallbackSettings - If `bShowFallbackSettings` is true and permissions were previously denied,
-	 *                               then we show a alert dialog which routes to app's notification settings page.
+	 *\param bFallbackToSettings - when this is true and permissions were previously denied, then show an alert dialog
+	 *                             which routes to app's notification settings page.
 	 */
-	virtual void PromptForPushPermission(bool bShowFallbackSettings) = 0;
+	virtual void PromptForPushPermission(bool bFallbackToSettings) = 0;
+
+	/**
+	 * Prompts the user to grant push permissions using a push primer alert, if they've not already been granted or
+	 * denied.
+	 *
+	 * A Push Primer explains the need for push notifications to your users and helps to improve your engagement rates.
+	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
+	 * notification permission.
+	 */
+	virtual void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) = 0;
+
+	/**
+	 * Prompts the user to grant push permissions using a push primer half-interstitial, if they've not already been
+	 * granted or denied.
+	 *
+	 * A Push Primer explains the need for push notifications to your users and helps to improve your engagement rates.
+	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
+	 * notification permission.
+	 */
+	virtual void PromptForPushPermission(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) = 0;
 
 	/**
 	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()

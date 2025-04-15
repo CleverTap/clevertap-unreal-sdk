@@ -32,4 +32,9 @@ bool FNullCleverTapInstance::IsPushPermissionGranted()
 	return false;
 }
 
-void FNullCleverTapInstance::PromptForPushPermission(bool ShowFallbackSettings) {}
+void FNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings) {}
+void FNullCleverTapInstance::PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) {}
+void FNullCleverTapInstance::PromptForPushPermission(
+	const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
+{
+}

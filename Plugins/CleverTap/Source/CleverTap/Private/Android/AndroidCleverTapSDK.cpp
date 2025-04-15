@@ -126,9 +126,30 @@ public:
 		return JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance);
 	}
 
-	void PromptForPushPermission(bool ShowFallbackSettings) override
+	void PromptForPushPermission(bool bFallbackToSettings) override
 	{
-		JNI::PromptForPushPermission(JNI::GetJNIEnv(), JavaCleverTapInstance, ShowFallbackSettings);
+		JNI::PromptForPushPermission(JNI::GetJNIEnv(), JavaCleverTapInstance, bFallbackToSettings);
+	}
+	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject PrimerConfig = JNI::CreatePushPrimerConfigJSON(Env, PushPrimerAlertConfig);
+		if (PrimerConfig)
+		{
+			JNI::PromptPushPrimer(Env, JavaCleverTapInstance, PrimerConfig);
+			Env->DeleteLocalRef(PrimerConfig);
+		}
+	}
+	void PromptForPushPermission(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject PrimerConfig = JNI::CreatePushPrimerConfigJSON(Env, PushPrimerHalfInterstitialConfig);
+		if (PrimerConfig)
+		{
+			JNI::PromptPushPrimer(Env, JavaCleverTapInstance, PrimerConfig);
+			Env->DeleteLocalRef(PrimerConfig);
+		}
 	}
 };
 
@@ -138,6 +159,8 @@ void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 {
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDebugLevel(Env, Level);
+
+	// todo there's a per-instance SetDebugLevel we should call
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)

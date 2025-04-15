@@ -80,6 +80,18 @@ TArrayView<const FCleverTapSampleKeyValuePair> UCleverTapSampleProductList::GetP
 	return TArrayView<const FCleverTapSampleKeyValuePair>(ProductParameters[Index]);
 }
 
+//
+
+static FText FormatPushPermissionGrantedText(bool bGranted)
+{
+	return FText::Format(
+		NSLOCTEXT("CleverTapSample", "SampleMainMenuPushPermGrantedText", "Push Permission Granted: {Granted}"), [&] {
+			FFormatNamedArguments Args;
+			Args.Add("Granted", FText::FromString(bGranted ? TEXT("TRUE") : TEXT("FALSE")));
+			return Args;
+		}());
+}
+
 //===============================================
 // USampleMainMenu
 
@@ -93,6 +105,7 @@ bool USampleMainMenu::Initialize()
 	CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 	check(CleverTapSys != nullptr);
 
+	ConfigureSharedInstance();
 	PopulateUI();
 	return true;
 }
@@ -102,8 +115,9 @@ void USampleMainMenu::InitializeSharedInstanceFromConfig()
 	check(CleverTapSys != nullptr);
 
 	CleverTapSys->InitializeSharedInstance();
-
 	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	ConfigureSharedInstance();
 	PopulateUI();
 }
 
@@ -118,9 +132,28 @@ void USampleMainMenu::ExplicitlyInitializeSharedInstance(
 	Config.RegionCode = RegionCode;
 	Config.LogLevel = ECleverTapLogLevel::Verbose;
 	CleverTapSys->InitializeSharedInstance(Config);
-
 	check(CleverTapSys->IsSharedInstanceInitialized());
+
+	ConfigureSharedInstance();
 	PopulateUI();
+}
+
+void USampleMainMenu::ConfigureSharedInstance()
+{
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	// simple test of the OnPushPermissionResponse notification
+	CleverTap.OnPushPermissionResponse.AddLambda([this](bool bGranted) {
+		UE_LOG(LogCleverTapSample, Log, TEXT("CleverTap.OnPushPermissionResponse(bGranted=%s)"),
+			bGranted ? TEXT("TRUE") : TEXT("FALSE"));
+
+		auto StatusTextControl = this->PushPermissionGrantedText;
+		if (StatusTextControl)
+		{
+			StatusTextControl->SetText(FormatPushPermissionGrantedText(bGranted));
+		}
+	});
 }
 
 void USampleMainMenu::OnUserLogin(const FString& Name, const FString& Email, const FString& Identity)
@@ -165,6 +198,56 @@ void USampleMainMenu::OnUserLoginWithCleverTapId(
 			*Name, *Email, *Identity);
 		CleverTap.OnUserLogin(Profile, CleverTapId);
 	}
+}
+
+void USampleMainMenu::PromptForPushPermissionWithoutPrimer()
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	bool bFallbackToSettings = true;
+	CleverTap.PromptForPushPermission(bFallbackToSettings);
+}
+
+void USampleMainMenu::PromptForPushPermissionWithAlertPrimer()
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	FCleverTapPushPrimerAlertConfig PrimerConfig;
+	PrimerConfig.TitleText = TEXT("Alert Title");
+	PrimerConfig.MessageText = TEXT("Alert Message");
+	PrimerConfig.PositiveButtonText = TEXT("Positive");
+	PrimerConfig.NegativeButtonText = TEXT("Negative");
+	PrimerConfig.bFallbackToSettings = true;
+	CleverTap.PromptForPushPermission(PrimerConfig);
+}
+
+void USampleMainMenu::PromptForPushPermissionWithHalfInterstitialPrimer()
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	FCleverTapPushPrimerHalfInterstitialConfig PrimerConfig;
+	PrimerConfig.TitleText = TEXT("Primer Title");
+	PrimerConfig.MessageText = TEXT("Primer Message");
+	PrimerConfig.PositiveButtonText = TEXT("Positive");
+	PrimerConfig.NegativeButtonText = TEXT("Negative");
+	PrimerConfig.bFallbackToSettings = true;
+
+	PrimerConfig.ImageURL = TEXT("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png");
+	PrimerConfig.BackgroundColor = FColor::White;
+	PrimerConfig.TitleTextColor = FColor::Blue;
+	PrimerConfig.MessageTextColor = FColor::Red;
+	PrimerConfig.ButtonBorderColor = FColor::Blue;
+	PrimerConfig.ButtonTextColor = FColor::Black;
+	PrimerConfig.ButtonBackgroundColor = FColor::Silver;
+	PrimerConfig.ButtonBorderRadius = TEXT("10"); //? todo do we really want a string here?
+
+	CleverTap.PromptForPushPermission(PrimerConfig);
 }
 
 void USampleMainMenu::PushProfile(
@@ -301,16 +384,21 @@ void USampleMainMenu::PopulateUI() const
 		return;
 	}
 
-	ICleverTapInstance& SharedInst = CleverTapSys->SharedInstance();
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	if (CleverTapIdText)
 	{
-		const FString CleverTapId = SharedInst.GetCleverTapId();
+		const FString CleverTapId = CleverTap.GetCleverTapId();
 		CleverTapIdText->SetText(
 			FText::Format(NSLOCTEXT("CleverTapSample", "SampleMainMenuIdText", "CleverTap Id: {Id}"), [&] {
 				FFormatNamedArguments Args;
 				Args.Add("Id", FText::FromString(CleverTapId));
 				return Args;
 			}()));
+	}
+
+	if (PushPermissionGrantedText)
+	{
+		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(CleverTap.IsPushPermissionGranted()));
 	}
 }

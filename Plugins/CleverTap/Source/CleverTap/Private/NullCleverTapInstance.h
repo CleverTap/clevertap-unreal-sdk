@@ -28,5 +28,8 @@ public:
 	void IncrementValue(const FString& Key, double Amount) override;
 
 	bool IsPushPermissionGranted() override;
-	void PromptForPushPermission(bool ShowFallbackSettings) override;
+	void PromptForPushPermission(bool bFallbackToSettings) override;
+	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override;
+	void PromptForPushPermission(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override;
 };

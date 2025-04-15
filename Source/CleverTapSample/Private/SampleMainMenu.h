@@ -68,6 +68,15 @@ public:
 	void PushProfileDataTypeTest();
 
 	UFUNCTION(BlueprintCallable)
+	void PromptForPushPermissionWithoutPrimer();
+
+	UFUNCTION(BlueprintCallable)
+	void PromptForPushPermissionWithAlertPrimer();
+
+	UFUNCTION(BlueprintCallable)
+	void PromptForPushPermissionWithHalfInterstitialPrimer();
+
+	UFUNCTION(BlueprintCallable)
 	void RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params);
 
 	UFUNCTION(BlueprintCallable)
@@ -82,6 +91,7 @@ public:
 
 private:
 	void PopulateUI() const;
+	void ConfigureSharedInstance();
 
 private:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
@@ -91,4 +101,7 @@ private:
 	UCleverTapSubsystem* CleverTapSys;
 
 	FString LastSeenCleverTapId;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* PushPermissionGrantedText;
 };
