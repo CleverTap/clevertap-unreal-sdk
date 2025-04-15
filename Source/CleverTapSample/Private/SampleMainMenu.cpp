@@ -144,16 +144,18 @@ void USampleMainMenu::ConfigureSharedInstance()
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	// simple test of the OnPushPermissionResponse notification
-	CleverTap.OnPushPermissionResponse.AddLambda([this](bool bGranted) {
-		UE_LOG(LogCleverTapSample, Log, TEXT("CleverTap.OnPushPermissionResponse(bGranted=%s)"),
-			bGranted ? TEXT("TRUE") : TEXT("FALSE"));
+	CleverTap.OnPushPermissionResponse.AddUObject(this, &USampleMainMenu::OnPushPermissionResponse);
+}
 
-		auto StatusTextControl = this->PushPermissionGrantedText;
-		if (StatusTextControl)
-		{
-			StatusTextControl->SetText(FormatPushPermissionGrantedText(bGranted));
-		}
-	});
+void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
+{
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushPermissionResponse(bGranted=%s)"),
+		bGranted ? TEXT("TRUE") : TEXT("FALSE"));
+
+	if (PushPermissionGrantedText)
+	{
+		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
+	}
 }
 
 void USampleMainMenu::OnUserLogin(const FString& Name, const FString& Email, const FString& Identity)
@@ -399,6 +401,7 @@ void USampleMainMenu::PopulateUI() const
 
 	if (PushPermissionGrantedText)
 	{
-		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(CleverTap.IsPushPermissionGranted()));
+		bool bGranted = CleverTap.IsPushPermissionGranted();
+		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
 	}
 }

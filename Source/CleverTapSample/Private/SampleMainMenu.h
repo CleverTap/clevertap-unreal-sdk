@@ -92,6 +92,7 @@ public:
 private:
 	void PopulateUI() const;
 	void ConfigureSharedInstance();
+	void OnPushPermissionResponse(bool bGranted);
 
 private:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
