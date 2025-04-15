@@ -53,6 +53,30 @@ will automatically initialize the CleverTap SDK and the default shared instance.
 > GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
 > ```
 
+## Push Notification Configuration
+CleverTap allows you to send push notifications to your applications from our dashboard. 
+Each platform requires slightly different setup.
+
+### Android - Configuring Firebase Messaging
+To use the default CleverTap notification implementation with Firebase Messaging: 
+
+1. Follow [these instructions](https://developer.clevertap.com/docs/android-push) to create your `google-services.json` and register the firebase credentials in the CleverTap dashboard.
+
+2. Copy the `google-services.json` to your project directory.
+
+3. In your project's `Config\DefaultEngine.ini` ensure `bAndroidIntegrateFirebase` is `True`
+and `AndroidGoogleServicesJsonPath` gives the project-relative path to where you copied ` google-services.json` 
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+bAndroidIntegrateFirebase=True
+AndroidGoogleServicesJsonPath=Config/google-services.json
+```
+
+#### Custom Android Notification Handling
+[Custom Android Push Notification Handling](https://developer.clevertap.com/docs/android-push#custom-android-push-notification-handling) 
+can be achieved by setting `bAndroidIntegrateFirebase` to `False` and using `UPL` to implement your own custom scheme.
+
 ## User Profiles
 ### On User Login
 The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the
