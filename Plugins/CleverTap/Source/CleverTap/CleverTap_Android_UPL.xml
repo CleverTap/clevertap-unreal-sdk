@@ -96,9 +96,13 @@
 
 
 	<buildscriptGradleAdditions>
-		<insert>
-			dependencies { classpath "com.google.gms:google-services:4.4.2" }
-		</insert>
+		<if condition="CTIntegrateFirebase">
+			<true>
+				<insert>
+					dependencies { classpath "com.google.gms:google-services:4.4.2" }
+				</insert>
+			</true>
+		</if>
 	</buildscriptGradleAdditions>
 
 	<buildGradleAdditions>
@@ -109,11 +113,18 @@
 			implementation "com.clevertap.android:clevertap-android-sdk:7.3.1"
 
 			implementation "androidx.core:core:1.13.0"
-			implementation "com.google.firebase:firebase-messaging:24.0.0"
 			// implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
 			}
-			apply plugin: 'com.google.gms.google-services'
 		</insert>
+
+		<if condition="CTIntegrateFirebase">
+			<true>
+				<insert>
+					dependencies { implementation "com.google.firebase:firebase-messaging:24.0.0" }
+					apply plugin: 'com.google.gms.google-services'
+				</insert>
+			</true>
+		</if>
 	</buildGradleAdditions>
 
 	<gameApplicationAttachBaseContextAdditions>
