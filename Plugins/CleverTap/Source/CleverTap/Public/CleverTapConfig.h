@@ -87,4 +87,21 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
 	ECleverTapLogLevel ShippingLogLevel = ECleverTapLogLevel::Off;
+
+	/**
+	 * Android Only: When true, automatically integrate Google Firebase Messaging.
+	 * Requires a valid AndroidGoogleServicesJsonPath.
+	 *
+	 * When false, Push Messaging will not function unless Firebase is
+	 * being configured into the Android build elsewhere in the build process.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bAndroidIntegrateFirebase = true;
+
+	/**
+	 * Android Only: Project relative path to the google-services.json
+	 * file needed to configure Google Firebase Messaging / FCM.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString AndroidGoogleServicesJsonPath = TEXT("Config/google-services.json");
 };

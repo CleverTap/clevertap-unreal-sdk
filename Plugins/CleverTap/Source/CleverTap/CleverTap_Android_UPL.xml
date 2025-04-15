@@ -2,40 +2,54 @@
 <root xmlns:android="http://schemas.android.com/apk/res/android">
 	<init>
 		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
-		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default=""/>
-		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default=""/>
-		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default=""/>
-		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
-		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
-		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true"/>
-		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false"/>
+		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default="" />
+		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default="" />
+		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default="" />
+		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone" />
+		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false" />
+		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true" />
+		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false" />
+
+		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
+		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 	</init>
 
 	<prebuildCopies>
-		<copyDir src="$S(PluginDir)/Private/Android/Java/src" dst="$S(BuildDir)/src" />
+		<copyDir src="$S(PluginDir)/Private/Android/Java/src" dst="$S(BuildDir)/src/" />
+
+		<if condition="CTIntegrateFirebase">
+			<true>
+				<log text="CleverTap: including google-services.json from ini setting: $S(CTAndroidGoogleServicesJsonPath)" />
+				<copyFile src="$S(PluginDir)/../../../../$S(CTAndroidGoogleServicesJsonPath)"
+					dst="$S(BuildDir)/gradle/app/google-services.json" />
+			</true>
+			<false>
+				<log text="CleverTap: NOT including google-services.json or integrating firebase" />
+			</false>
+		</if>
 	</prebuildCopies>
 
 	<androidManifestUpdates>
 		<if condition="CTAutoInit">
 			<true>
 				<setElement result="CLEVERTAP_ACCOUNT_ID" xml="&lt;meta-data/&gt;" />
-				<addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:name" value="CLEVERTAP_ACCOUNT_ID"/>
-				<addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:value" value="$S(CTProjectId)"/>
+				<addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:name" value="CLEVERTAP_ACCOUNT_ID" />
+				<addAttribute tag="$CLEVERTAP_ACCOUNT_ID" name="android:value" value="$S(CTProjectId)" />
 				<addElement tag="application" name="CLEVERTAP_ACCOUNT_ID" />
 
 				<setElement result="CLEVERTAP_TOKEN" xml="&lt;meta-data/&gt;" />
-				<addAttribute tag="$CLEVERTAP_TOKEN" name="android:name" value="CLEVERTAP_TOKEN"/>
-				<addAttribute tag="$CLEVERTAP_TOKEN" name="android:value" value="$S(CTProjectToken)"/>
+				<addAttribute tag="$CLEVERTAP_TOKEN" name="android:name" value="CLEVERTAP_TOKEN" />
+				<addAttribute tag="$CLEVERTAP_TOKEN" name="android:value" value="$S(CTProjectToken)" />
 				<addElement tag="application" name="CLEVERTAP_TOKEN" />
 
 				<setElement result="CLEVERTAP_REGION" xml="&lt;meta-data/&gt;" />
-				<addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION"/>
-				<addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)"/>
+				<addAttribute tag="$CLEVERTAP_REGION" name="android:name" value="CLEVERTAP_REGION" />
+				<addAttribute tag="$CLEVERTAP_REGION" name="android:value" value="$S(CTRegionCode)" />
 				<addElement tag="application" name="CLEVERTAP_REGION" />
 
 				<setElement result="CLEVERTAP_IDENTIFIER" xml="&lt;meta-data/&gt;" />
-				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER"/>
-				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)"/>
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER" />
+				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)" />
 				<addElement tag="application" name="CLEVERTAP_IDENTIFIER" />
 			</true>
 		</if>
@@ -43,16 +57,16 @@
 		<if condition="CTUseCustomId">
 			<true>
 				<setElement result="CLEVERTAP_USE_CUSTOM_ID" xml="&lt;meta-data/&gt;" />
-				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:name" value="CLEVERTAP_USE_CUSTOM_ID"/>
-				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:value" value="1"/>
+				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:name" value="CLEVERTAP_USE_CUSTOM_ID" />
+				<addAttribute tag="$CLEVERTAP_USE_CUSTOM_ID" name="android:value" value="1" />
 				<addElement tag="application" name="CLEVERTAP_USE_CUSTOM_ID" />
 			</true>
 		</if>
 
 		<if condition="CTRequestInternetPermissions">
 			<true>
-				<addPermission android:name="android.permission.INTERNET"/>
-				<addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+				<addPermission android:name="android.permission.INTERNET" />
+				<addPermission android:name="android.permission.ACCESS_NETWORK_STATE" />
 			</true>
 		</if>
 		<if condition="CTRequestGeoFencePermissions">
@@ -65,13 +79,40 @@
 			</true>
 		</if>
 
+		<if condition="CTIntegrateFirebase">
+			<true>
+				<addElements tag="application">
+					<service
+						android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
+						android:exported="true">
+						<intent-filter>
+							<action android:name="com.google.firebase.MESSAGING_EVENT" />
+						</intent-filter>
+					</service>
+				</addElements>
+			</true>
+		</if>
 	</androidManifestUpdates>
+
+
+	<buildscriptGradleAdditions>
+		<insert>
+			dependencies { classpath "com.google.gms:google-services:4.4.2" }
+		</insert>
+	</buildscriptGradleAdditions>
 
 	<buildGradleAdditions>
 		<insert>
 			dependencies {
-				implementation 'com.clevertap.android:clevertap-android-sdk:7.2.2' // checkout the latest sdk version at https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
+			// checkout the latest sdk version at
+			// https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
+			implementation "com.clevertap.android:clevertap-android-sdk:7.3.1"
+
+			implementation "androidx.core:core:1.13.0"
+			implementation "com.google.firebase:firebase-messaging:24.0.0"
+			// implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
 			}
+			apply plugin: 'com.google.gms.google-services'
 		</insert>
 	</buildGradleAdditions>
 
