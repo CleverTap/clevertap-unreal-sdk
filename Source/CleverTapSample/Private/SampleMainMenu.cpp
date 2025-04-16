@@ -219,10 +219,10 @@ void USampleMainMenu::PromptForPushPermissionWithAlertPrimer()
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerAlertConfig PrimerConfig;
-	PrimerConfig.TitleText = TEXT("Alert Title");
-	PrimerConfig.MessageText = TEXT("Alert Message");
-	PrimerConfig.PositiveButtonText = TEXT("Positive");
-	PrimerConfig.NegativeButtonText = TEXT("Negative");
+	PrimerConfig.TitleText = FText::FromString(TEXT("Alert Title"));
+	PrimerConfig.MessageText = FText::FromString(TEXT("Alert Message"));
+	PrimerConfig.PositiveButtonText = FText::FromString(TEXT("Positive"));
+	PrimerConfig.NegativeButtonText = FText::FromString(TEXT("Negative"));
 	PrimerConfig.bFallbackToSettings = true;
 	CleverTap.PromptForPushPermission(PrimerConfig);
 }
@@ -234,10 +234,10 @@ void USampleMainMenu::PromptForPushPermissionWithHalfInterstitialPrimer()
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerHalfInterstitialConfig PrimerConfig;
-	PrimerConfig.TitleText = TEXT("Primer Title");
-	PrimerConfig.MessageText = TEXT("Primer Message");
-	PrimerConfig.PositiveButtonText = TEXT("Positive");
-	PrimerConfig.NegativeButtonText = TEXT("Negative");
+	PrimerConfig.TitleText = FText::FromString(TEXT("Primer Title"));
+	PrimerConfig.MessageText = FText::FromString(TEXT("Primer Message"));
+	PrimerConfig.PositiveButtonText = FText::FromString(TEXT("Positive"));
+	PrimerConfig.NegativeButtonText = FText::FromString(TEXT("Negative"));
 	PrimerConfig.bFallbackToSettings = true;
 
 	PrimerConfig.ImageURL = TEXT("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png");

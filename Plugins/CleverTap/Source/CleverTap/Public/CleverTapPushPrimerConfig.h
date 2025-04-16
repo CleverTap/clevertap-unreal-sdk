@@ -20,19 +20,19 @@ struct FCleverTapPushPrimerAlertConfig
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString TitleText;
+	FText TitleText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString MessageText;
+	FText MessageText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText PositiveButtonText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText NegativeButtonText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bFollowDeviceOrientation = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString PositiveButtonText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString NegativeButtonText;
 
 	/**
 	 * When true and permissions were previously denied, then show an alert dialog which routes to app's notification
@@ -57,19 +57,16 @@ struct FCleverTapPushPrimerHalfInterstitialConfig
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString TitleText;
+	FText TitleText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString MessageText;
+	FText MessageText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bFollowDeviceOrientation = true;
+	FText PositiveButtonText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString PositiveButtonText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString NegativeButtonText;
+	FText NegativeButtonText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ImageURL;
@@ -94,6 +91,9 @@ struct FCleverTapPushPrimerHalfInterstitialConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ButtonBorderRadius; // todo is a string really what we want here
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bFollowDeviceOrientation = true;
 
 	/**
 	 * When true and permissions were previously denied, then show an alert dialog which routes to app's notification

@@ -1155,11 +1155,11 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 	}
 
 	FCleverTapProperties ConfigProperties;
-	ConfigProperties.Add("TitleText", PrimerConfig.TitleText);
-	ConfigProperties.Add("MessageText", PrimerConfig.MessageText);
+	ConfigProperties.Add("TitleText", PrimerConfig.TitleText.ToString());
+	ConfigProperties.Add("MessageText", PrimerConfig.MessageText.ToString());
+	ConfigProperties.Add("PositiveButtonText", PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Add("NegativeButtonText", PrimerConfig.NegativeButtonText.ToString());
 	ConfigProperties.Add("FollowDeviceOrientation", PrimerConfig.bFollowDeviceOrientation);
-	ConfigProperties.Add("PositiveButtonText", PrimerConfig.PositiveButtonText);
-	ConfigProperties.Add("NegativeButtonText", PrimerConfig.NegativeButtonText);
 	ConfigProperties.Add("FallbackToSettings", PrimerConfig.bFallbackToSettings);
 	jobject JavaMap = ConvertCleverTapPropertiesToJavaMap(Env, ConfigProperties);
 	if (!JavaMap)
@@ -1194,11 +1194,11 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfIn
 	}
 
 	FCleverTapProperties ConfigProperties;
-	ConfigProperties.Add("TitleText", PrimerConfig.TitleText);
-	ConfigProperties.Add("MessageText", PrimerConfig.MessageText);
+	ConfigProperties.Add("TitleText", PrimerConfig.TitleText.ToString());
+	ConfigProperties.Add("MessageText", PrimerConfig.MessageText.ToString());
+	ConfigProperties.Add("PositiveButtonText", PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Add("NegativeButtonText", PrimerConfig.NegativeButtonText.ToString());
 	ConfigProperties.Add("FollowDeviceOrientation", PrimerConfig.bFollowDeviceOrientation);
-	ConfigProperties.Add("PositiveButtonText", PrimerConfig.PositiveButtonText);
-	ConfigProperties.Add("NegativeButtonText", PrimerConfig.NegativeButtonText);
 	ConfigProperties.Add("FallbackToSettings", PrimerConfig.bFallbackToSettings);
 	if (PrimerConfig.ImageURL.IsEmpty() == false)
 	{
