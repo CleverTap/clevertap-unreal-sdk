@@ -101,8 +101,6 @@ will automatically initialize the CleverTap SDK and the default shared instance.
 > GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
 > ```
 
-
-
 ## User Profiles
 ### On User Login
 The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the
