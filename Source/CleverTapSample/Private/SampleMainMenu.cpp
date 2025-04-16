@@ -105,7 +105,11 @@ bool USampleMainMenu::Initialize()
 	CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 	check(CleverTapSys != nullptr);
 
-	ConfigureSharedInstance();
+	if (CleverTapSys->IsSharedInstanceInitialized())
+	{
+		ConfigureSharedInstance();
+	}
+
 	PopulateUI();
 	return true;
 }
