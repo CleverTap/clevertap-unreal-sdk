@@ -34,6 +34,54 @@ RegionCode= ;Reference https://developer.clevertap.com/docs/idc#ios to determine
 ```
 Alternatively you can edit the Plugin's settings in the UE4Editor.
 
+## Push Notification Configuration
+CleverTap allows you to send push notifications to your applications from our dashboard, once the user has granted permission in response to a call to `PromptForPushPermission()`. 
+
+Each platform requires slightly different setup.
+
+### Android - Configuring Firebase Cloud Messaging (FCM)
+To use the default CleverTap notification implementation with Firebase:
+
+1. Follow [these instructions](https://developer.clevertap.com/docs/android-push) to create and register your firebase credentials in the CleverTap dashboard.
+
+2. Copy the generated `google-services.json` to somewhere in your project directory (e.g. `Config`).
+
+3. In your project's `Config/DefaultEngine.ini` ensure `bAndroidIntegrateFirebase` is `True` and `AndroidGoogleServicesJsonPath` is the project-relative path to where you copied `google-services.json`. 
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+bAndroidIntegrateFirebase=True
+AndroidGoogleServicesJsonPath=Config/google-services.json
+```
+
+#### Custom Android Notification Handling
+Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
+
+If you’re already using another Firebase plugin and also require CleverTap push features, you’ll need to disable the CleverTap Firebase integration with `bAndroidIntegrateFirebase=False`, and replace the other plug-in’s FCM service with a custom multiplexer implemented in Java.
+
+For example:
+```java
+public class UnifiedMessagingService extends SomeOtherPluginMessagingService {
+    @Override
+    public void onMessageReceived(RemoteMessage message) {
+        if (isCleverTapMessage(message)) {
+            new CTFcmMessageHandler().createNotification(getApplicationContext(), message);
+        } else {
+            // Let the base class handle it
+            super.onMessageReceived(message);
+        }
+    }
+
+    private boolean isCleverTapMessage(RemoteMessage message) {
+        Map<String, String> data = message.getData();
+        return data != null && data.containsKey("wzrk_pn"); // CleverTap magic key
+    }
+}
+```
+
+For more information, see [Custom Android Push Notification Handling](https://developer.clevertap.com/docs/android-push#custom-android-push-notification-handling) 
+
+
 ## Initialization
 By default, with `bAutoInitializeSharedInstance` set to `true` in `Config\DefaultEngine.ini`, the `UCleverTapSubsystem`
 will automatically initialize the CleverTap SDK and the default shared instance.

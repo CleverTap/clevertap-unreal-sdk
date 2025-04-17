@@ -1063,4 +1063,186 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 	return JavaArray;
 }
 
+static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassPath, void* NativeInstance)
+{
+	jclass ListenerClass = LoadJavaClass(Env, ClassPath);
+	jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
+	if (!ListenerConstructor)
+	{
+		return nullptr;
+	}
+	jobject Listener = Env->NewObject(ListenerClass, ListenerConstructor, jlong(NativeInstance));
+	if (HandleExceptionOrError(Env, !Listener, "Creating Listener"))
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("Failed creating listener of class \"%hs\""), ClassPath);
+		Listener = nullptr;
+	}
+	Env->DeleteLocalRef(ListenerClass);
+	return Listener;
+}
+
+bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID RegisterListenerMethod =
+		GetMethodID(Env, CleverTapAPIClass, "registerPushPermissionNotificationResponseListener",
+			"(Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (!RegisterListenerMethod)
+	{
+		return false;
+	}
+
+	jobject Listener = JNI::CreateUECleverTapListener(
+		Env, "com/clevertap/android/unreal/UECleverTapListeners$PushPermissionListener", NativeInstance);
+	if (!Listener)
+	{
+		return false;
+	}
+
+	Env->CallVoidMethod(CleverTapInstance, RegisterListenerMethod, Listener);
+	if (HandleException(Env, "registerPushPermissionNotificationResponseListener()"))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID IsGrantedMethod = GetMethodID(Env, CleverTapAPIClass, "isPushPermissionGranted", "()Z");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (!IsGrantedMethod)
+	{
+		return false;
+	}
+
+	bool bGranted = Env->CallBooleanMethod(CleverTapInstance, IsGrantedMethod);
+	if (HandleException(Env, "isPushPermissionGranted()"))
+	{
+		bGranted = false;
+	}
+	return bGranted;
+}
+
+void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID PromptMethod = GetMethodID(Env, CleverTapAPIClass, "promptForPushPermission", "(Z)V");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (!PromptMethod)
+	{
+		return;
+	}
+
+	Env->CallVoidMethod(CleverTapInstance, PromptMethod, bFallbackToSettings);
+	if (HandleException(Env, "promptForPushPermission()"))
+	{
+		// fall through
+	}
+}
+
+jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertConfig& PrimerConfig)
+{
+	jclass BridgeClass = LoadJavaClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	jmethodID BuildMethod =
+		GetStaticMethodID(Env, BridgeClass, "buildPushPrimerAlertConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
+	if (!BuildMethod)
+	{
+		return nullptr;
+	}
+
+	FCleverTapProperties ConfigProperties;
+	ConfigProperties.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
+	ConfigProperties.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
+	ConfigProperties.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
+	ConfigProperties.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
+	ConfigProperties.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
+	jobject JavaMap = ConvertCleverTapPropertiesToJavaMap(Env, ConfigProperties);
+	if (!JavaMap)
+	{
+		return nullptr;
+	}
+
+	jobject ResultJson = Env->CallStaticObjectMethod(BridgeClass, BuildMethod, JavaMap);
+	if (HandleExceptionOrError(Env, !ResultJson, "buildPushPrimerAlertConfig()"))
+	{
+		ResultJson = nullptr;
+	}
+	Env->DeleteLocalRef(BridgeClass);
+	Env->DeleteLocalRef(JavaMap);
+
+	return ResultJson;
+}
+
+static FString ColorToHexString(const FColor& Color)
+{
+	return FString::Printf(TEXT("#%02X%02X%02X"), Color.R, Color.G, Color.B);
+}
+
+jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PrimerConfig)
+{
+	jclass BridgeClass = LoadJavaClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	jmethodID BuildMethod = GetStaticMethodID(
+		Env, BridgeClass, "buildPushPrimerHalfInterstitialConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
+	if (!BuildMethod)
+	{
+		return nullptr;
+	}
+
+	FCleverTapProperties ConfigProperties;
+	ConfigProperties.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
+	ConfigProperties.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
+	ConfigProperties.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
+	ConfigProperties.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
+	ConfigProperties.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
+	if (PrimerConfig.ImageURL.IsEmpty() == false)
+	{
+		ConfigProperties.Add(TEXT("ImageURL"), PrimerConfig.ImageURL);
+	}
+	ConfigProperties.Add(TEXT("BackgroundColor"), ColorToHexString(PrimerConfig.BackgroundColor));
+	ConfigProperties.Add(TEXT("ButtonBorderColor"), ColorToHexString(PrimerConfig.ButtonBorderColor));
+	ConfigProperties.Add(TEXT("TitleTextColor"), ColorToHexString(PrimerConfig.TitleTextColor));
+	ConfigProperties.Add(TEXT("MessageTextColor"), ColorToHexString(PrimerConfig.MessageTextColor));
+	ConfigProperties.Add(TEXT("ButtonTextColor"), ColorToHexString(PrimerConfig.ButtonTextColor));
+	ConfigProperties.Add(TEXT("ButtonBackgroundColor"), ColorToHexString(PrimerConfig.ButtonBackgroundColor));
+	ConfigProperties.Add(TEXT("ButtonBorderRadius"), PrimerConfig.ButtonBorderRadius);
+
+	jobject JavaMap = ConvertCleverTapPropertiesToJavaMap(Env, ConfigProperties);
+	if (!JavaMap)
+	{
+		return nullptr;
+	}
+
+	jobject ResultJson = Env->CallStaticObjectMethod(BridgeClass, BuildMethod, JavaMap);
+	if (HandleExceptionOrError(Env, !ResultJson, "buildPushPrimerHalfInterstitialConfig()"))
+	{
+		ResultJson = nullptr;
+	}
+	Env->DeleteLocalRef(BridgeClass);
+	Env->DeleteLocalRef(JavaMap);
+
+	return ResultJson;
+}
+
+void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConfigJSON)
+{
+	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	jmethodID PromptMethod = GetMethodID(Env, CleverTapAPIClass, "promptPushPrimer", "(Lorg/json/JSONObject;)V");
+	Env->DeleteLocalRef(CleverTapAPIClass);
+	if (!PromptMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, PromptMethod, PrimerConfigJSON);
+	if (HandleException(Env, "promptPushPrimer()"))
+	{
+		// fall through
+	}
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

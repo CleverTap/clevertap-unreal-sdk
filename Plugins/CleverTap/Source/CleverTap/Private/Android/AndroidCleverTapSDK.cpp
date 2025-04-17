@@ -15,20 +15,27 @@ namespace CleverTapSDK { namespace Android {
 
 class FAndroidCleverTapInstance : public ICleverTapInstance
 {
+private:
+	static TSet<FAndroidCleverTapInstance*> Instances;
+
 public:
+	static bool IsValid(const FAndroidCleverTapInstance* Instance) { return Instances.Contains(Instance); }
+
 	jobject JavaCleverTapInstance;
 
 	FAndroidCleverTapInstance(JNIEnv* Env, jobject JavaCleverTapInstanceIn)
 	{
-		if (Env && JavaCleverTapInstanceIn)
-		{
-			JavaCleverTapInstance = Env->NewGlobalRef(JavaCleverTapInstanceIn);
-		}
-		else
+		Instances.Add(this);
+		if (!Env || !JavaCleverTapInstanceIn)
 		{
 			JavaCleverTapInstance = nullptr;
+			return;
 		}
+
+		JavaCleverTapInstance = Env->NewGlobalRef(JavaCleverTapInstanceIn);
+		JNI::RegisterPushPermissionResponseListener(Env, JavaCleverTapInstance, this);
 	}
+
 	~FAndroidCleverTapInstance()
 	{
 		auto* Env = JNI::GetJNIEnv();
@@ -36,6 +43,8 @@ public:
 		{
 			Env->DeleteGlobalRef(JavaCleverTapInstance);
 		}
+
+		Instances.Remove(this);
 	}
 
 	FString GetCleverTapId() override
@@ -111,12 +120,47 @@ public:
 	{
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
+
+	bool IsPushPermissionGranted() override
+	{
+		return JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance);
+	}
+
+	void PromptForPushPermission(bool bFallbackToSettings) override
+	{
+		JNI::PromptForPushPermission(JNI::GetJNIEnv(), JavaCleverTapInstance, bFallbackToSettings);
+	}
+	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject PrimerConfig = JNI::CreatePushPrimerConfigJSON(Env, PushPrimerAlertConfig);
+		if (PrimerConfig)
+		{
+			JNI::PromptPushPrimer(Env, JavaCleverTapInstance, PrimerConfig);
+			Env->DeleteLocalRef(PrimerConfig);
+		}
+	}
+	void PromptForPushPermission(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject PrimerConfig = JNI::CreatePushPrimerConfigJSON(Env, PushPrimerHalfInterstitialConfig);
+		if (PrimerConfig)
+		{
+			JNI::PromptPushPrimer(Env, JavaCleverTapInstance, PrimerConfig);
+			Env->DeleteLocalRef(PrimerConfig);
+		}
+	}
 };
+
+TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;
 
 void FPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 {
 	JNIEnv* Env = JNI::GetJNIEnv();
 	JNI::SetDebugLevel(Env, Level);
+
+	// todo there's a per-instance SetDebugLevel we should call
 }
 
 TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
@@ -149,3 +193,27 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 }
 
 }} // namespace CleverTapSDK::Android
+
+//
+// JNI Callbacks
+//
+extern "C" JNIEXPORT void JNICALL
+Java_com_clevertap_android_unreal_UECleverTapListeners_00024PushPermissionListener_nativeOnPushPermissionResponse__JZ(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jboolean bGranted)
+{
+	// the java callbacks can come from any thread; to keep things simple we queue all work to the main game thread
+	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr, bGranted]() {
+		UE_LOG(LogCleverTap, Log, TEXT("OnPushPermissionResponse(NativeInstance=%lx, bGranted=%s)"), NativeInstancePtr,
+			bGranted ? TEXT("TRUE") : TEXT("FALSE"));
+		using namespace CleverTapSDK::Android;
+		auto* Instance = reinterpret_cast<FAndroidCleverTapInstance*>(NativeInstancePtr);
+		if (FAndroidCleverTapInstance::IsValid(Instance))
+		{
+			Instance->OnPushPermissionResponse.Broadcast(bGranted);
+		}
+		else
+		{
+			UE_LOG(LogCleverTap, Error, TEXT("Invalid native instance!"));
+		}
+	});
+}

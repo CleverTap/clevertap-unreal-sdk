@@ -1,9 +1,10 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapInstanceConfig.h"
 #include "CleverTapLogLevel.h"
 #include "CleverTapProperties.h"
-#include "CleverTapInstanceConfig.h"
+#include "CleverTapPushPrimerConfig.h"
 
 #include "Android/AndroidApplication.h"
 
@@ -37,5 +38,15 @@ FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
+
+bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
+
+bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
+void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings);
+
+jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig);
+jobject CreatePushPrimerConfigJSON(
+	JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig);
+void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConfigJSON);
 
 }}} // namespace CleverTapSDK::Android::JNI

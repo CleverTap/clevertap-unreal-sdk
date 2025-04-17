@@ -26,3 +26,15 @@ void FNullCleverTapInstance::DecrementValue(const FString& Key, double Amount) {
 
 void FNullCleverTapInstance::IncrementValue(const FString& Key, int Amount) {}
 void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount) {}
+
+bool FNullCleverTapInstance::IsPushPermissionGranted()
+{
+	return false;
+}
+
+void FNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings) {}
+void FNullCleverTapInstance::PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) {}
+void FNullCleverTapInstance::PromptForPushPermission(
+	const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
+{
+}
