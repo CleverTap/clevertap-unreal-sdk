@@ -85,11 +85,10 @@ TArrayView<const FCleverTapSampleKeyValuePair> UCleverTapSampleProductList::GetP
 static FText FormatPushPermissionGrantedText(bool bGranted)
 {
 	return FText::Format(
-		NSLOCTEXT("CleverTapSample", "SampleMainMenuPushPermGrantedText", "Push Permission Granted: {Granted}"), [&] {
-			FFormatNamedArguments Args;
-			Args.Add("Granted", FText::FromString(bGranted ? TEXT("TRUE") : TEXT("FALSE")));
-			return Args;
-		}());
+		NSLOCTEXT("CleverTapSample", "SampleMainMenuPushPermGrantedText", "Push Permission Granted: {Granted}"),
+		FFormatNamedArguments{ { "Granted",
+			bGranted ? NSLOCTEXT("CleverTapSample", "PushPermissionGranted_True", "TRUE")
+					 : NSLOCTEXT("CleverTapSample", "PushPermissionGranted_False", "FALSE") } });
 }
 
 //===============================================
@@ -223,10 +222,10 @@ void USampleMainMenu::PromptForPushPermissionWithAlertPrimer()
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerAlertConfig PrimerConfig;
-	PrimerConfig.TitleText = FText::FromString(TEXT("Alert Title"));
-	PrimerConfig.MessageText = FText::FromString(TEXT("Alert Message"));
-	PrimerConfig.PositiveButtonText = FText::FromString(TEXT("Positive"));
-	PrimerConfig.NegativeButtonText = FText::FromString(TEXT("Negative"));
+	PrimerConfig.TitleText = NSLOCTEXT("CleverTapSample", "PushPrimerAlertTitle", "Alert Title Text");
+	PrimerConfig.MessageText = NSLOCTEXT("CleverTapSample", "PushPrimerAlertMessage", "Alert Message Text");
+	PrimerConfig.PositiveButtonText = NSLOCTEXT("CleverTapSample", "PushPrimerAlertPositiveButton", "Positive");
+	PrimerConfig.NegativeButtonText = NSLOCTEXT("CleverTapSample", "PushPrimerAlertNegativeButton", "Negative");
 	PrimerConfig.bFallbackToSettings = true;
 	CleverTap.PromptForPushPermission(PrimerConfig);
 }
@@ -238,10 +237,13 @@ void USampleMainMenu::PromptForPushPermissionWithHalfInterstitialPrimer()
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerHalfInterstitialConfig PrimerConfig;
-	PrimerConfig.TitleText = FText::FromString(TEXT("Primer Title"));
-	PrimerConfig.MessageText = FText::FromString(TEXT("Primer Message"));
-	PrimerConfig.PositiveButtonText = FText::FromString(TEXT("Positive"));
-	PrimerConfig.NegativeButtonText = FText::FromString(TEXT("Negative"));
+	PrimerConfig.TitleText = NSLOCTEXT("CleverTapSample", "PushPrimerHalfInterstitialTitle", "Push Primer Title Text");
+	PrimerConfig.MessageText =
+		NSLOCTEXT("CleverTapSample", "HalfInterstitialPushPrimerMessage", "Half-Interstitial Push Primer Message Text");
+	PrimerConfig.PositiveButtonText =
+		NSLOCTEXT("CleverTapSample", "HalfInterstitialPushPrimerPositiveButton", "Positive");
+	PrimerConfig.NegativeButtonText =
+		NSLOCTEXT("CleverTapSample", "HalfInterstitialPushPrimerNegativeButton", "Negative");
 	PrimerConfig.bFallbackToSettings = true;
 
 	PrimerConfig.ImageURL = TEXT("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png");
