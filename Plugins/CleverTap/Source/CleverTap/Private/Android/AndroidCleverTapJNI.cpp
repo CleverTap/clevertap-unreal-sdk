@@ -1063,10 +1063,9 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 	return JavaArray;
 }
 
-static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassName, void* NativeInstance)
+static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassPath, void* NativeInstance)
 {
-	FString ListenerClassName = TEXT("com/clevertap/android/unreal/UECleverTapListeners$") + FString(ClassName);
-	jclass ListenerClass = LoadJavaClass(Env, TCHAR_TO_ANSI(*ListenerClassName));
+	jclass ListenerClass = LoadJavaClass(Env, ClassPath);
 	jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
 	if (!ListenerConstructor)
 	{
@@ -1075,7 +1074,7 @@ static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassName, voi
 	jobject Listener = Env->NewObject(ListenerClass, ListenerConstructor, jlong(NativeInstance));
 	if (HandleExceptionOrError(Env, !Listener, "Creating Listener"))
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("Failed creating listener of class \"%hs\""), ClassName);
+		UE_LOG(LogCleverTap, Error, TEXT("Failed creating listener of class \"%hs\""), ClassPath);
 		Listener = nullptr;
 	}
 	Env->DeleteLocalRef(ListenerClass);
@@ -1094,7 +1093,8 @@ bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstan
 		return false;
 	}
 
-	jobject Listener = JNI::CreateUECleverTapListener(Env, "PushPermissionListener", NativeInstance);
+	jobject Listener = JNI::CreateUECleverTapListener(
+		Env, "com/clevertap/android/unreal/UECleverTapListeners$PushPermissionListener", NativeInstance);
 	if (!Listener)
 	{
 		return false;
