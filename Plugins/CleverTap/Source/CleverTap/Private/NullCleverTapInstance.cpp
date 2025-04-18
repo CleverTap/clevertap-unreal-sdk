@@ -38,3 +38,5 @@ void FNullCleverTapInstance::PromptForPushPermission(
 	const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
 {
 }
+
+void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}

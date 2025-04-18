@@ -37,9 +37,12 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
+FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap);
+
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 
 bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
+bool RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
 void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings);

@@ -148,6 +148,14 @@ void USampleMainMenu::ConfigureSharedInstance()
 
 	// simple test of the OnPushPermissionResponse notification
 	CleverTap.OnPushPermissionResponse.AddUObject(this, &USampleMainMenu::OnPushPermissionResponse);
+
+	// simple test of the OnPushNotificationClicked notification
+	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
+
+	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
+	// if we were launched in response to clicking on a notification, this will generate a
+	// call to the OnPushNotificationClicked() we just registered
+	CleverTap.EnableOnPushNotificationClicked();
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
@@ -159,6 +167,12 @@ void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
 	{
 		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
 	}
+}
+
+void USampleMainMenu::OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload)
+{
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushNotificationClicked()"));
+	// todo something here!
 }
 
 void USampleMainMenu::OnUserLogin(const FString& Name, const FString& Email, const FString& Identity)

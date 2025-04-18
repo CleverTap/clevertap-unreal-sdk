@@ -12,6 +12,9 @@
 
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
+
+		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default="" />
+
 	</init>
 
 	<prebuildCopies>
@@ -134,6 +137,8 @@
 	</gameApplicationAttachBaseContextAdditions>
 
 	<gameApplicationOnCreateAdditions>
+		<insertValue value="$S(CTNotificationChannelSlot1)" />
+
 		<if condition="CTAutoInit">
 			<true>
 				<insert>
