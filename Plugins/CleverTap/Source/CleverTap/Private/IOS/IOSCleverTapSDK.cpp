@@ -4,8 +4,19 @@
 #include "CleverTapInstance.h"
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
+#include "CleverTapUtilities.h"
 
 #import <CleverTapSDK/CleverTap.h>
+#import <CleverTapSDK/CTLocalInApp.h>
+
+namespace {
+class FIOSCleverTapInstance;
+}
+
+// TODO: Not exposed
+@interface CleverTapSDKListener : NSObject // <CleverTapPushPermissionDelegate>
+- (instancetype)initWithCppInstance:(FIOSCleverTapInstance*)Instance;
+@end
 
 namespace {
 
@@ -23,6 +34,11 @@ auto ConvertToNSValue(bool Value)
 NSString* ConvertToNSValue(const FString& Value)
 {
 	return Value.GetNSString();
+}
+
+NSString* ConvertToNSValue(const FText& Value)
+{
+	return ConvertToNSValue(Value.ToString());
 }
 
 template <typename T>
@@ -152,7 +168,17 @@ NSArray* ConvertToNSArray(const TArray<FCleverTapProperties>& Items)
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
 public:
-	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance) : NativeInstance{ InNativeInstance } {}
+	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance)
+		: NativeInstance{ InNativeInstance }, SDKListener{ [[CleverTapSDKListener alloc] initWithCppInstance:this] }
+	{
+		if (NativeInstance != nil)
+		{
+			// TODO: Not exposed
+			// [NativeInstance setPushPermissionDelegate:SDKListener];
+		}
+	}
+
+	~FIOSCleverTapInstance() { [SDKListener release]; }
 
 	// <ICleverTapInstance>
 	FString GetCleverTapId() override { return FString{ [NativeInstance profileGetCleverTapID] }; }
@@ -204,13 +230,104 @@ public:
 	{
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
+
+	void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) override
+	{
+		// TODO: Not exposed
+		// [NativeInstance getNotificationPermissionStatusWithCompletionHandler:^(UNAuthorizationStatus Status) {
+		//   const bool bIsGranted =
+		// 	  (Status != UNAuthorizationStatusNotDetermined && Status != UNAuthorizationStatusDenied);
+		//   Callback(bIsGranted);
+		// }];
+		Callback(false);
+	}
+
+	void PromptForPushPermission(bool bFallbackToSettings) override
+	{
+		// TODO: Not exposed
+		// [NativeInstance promptForPushPermission:ConvertToNSValue(bFallbackToSettings)];
+	}
+
+	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override
+	{
+		CTLocalInApp* localInAppBuilder =
+			[[CTLocalInApp alloc] initWithInAppType:ALERT
+										  titleText:ConvertToNSValue(PushPrimerAlertConfig.TitleText)
+										messageText:ConvertToNSValue(PushPrimerAlertConfig.MessageText)
+							followDeviceOrientation:ConvertToNSValue(PushPrimerAlertConfig.bFollowDeviceOrientation)
+									positiveBtnText:ConvertToNSValue(PushPrimerAlertConfig.PositiveButtonText)
+									negativeBtnText:ConvertToNSValue(PushPrimerAlertConfig.NegativeButtonText)];
+
+		[localInAppBuilder setFallbackToSettings:ConvertToNSValue(PushPrimerAlertConfig.bFallbackToSettings)];
+
+		// TODO: Not exposed
+		// [NativeInstance promptPushPrimer:localInAppBuilder.getLocalInAppSettings]
+	}
+
+	void PromptForPushPermission(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override
+	{
+		CTLocalInApp* localInAppBuilder = [[CTLocalInApp alloc]
+				  initWithInAppType:HALF_INTERSTITIAL
+						  titleText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.TitleText)
+						messageText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.MessageText)
+			followDeviceOrientation:ConvertToNSValue(PushPrimerHalfInterstitialConfig.bFollowDeviceOrientation)
+					positiveBtnText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.PositiveButtonText)
+					negativeBtnText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.NegativeButtonText)];
+
+		if (!PushPrimerHalfInterstitialConfig.ImageURL.IsEmpty())
+		{
+			[localInAppBuilder setImageUrl:ConvertToNSValue(PushPrimerHalfInterstitialConfig.ImageURL)];
+		}
+
+		[localInAppBuilder setBtnBorderRadius:ConvertToNSValue(PushPrimerHalfInterstitialConfig.ButtonBorderRadius)];
+		[localInAppBuilder
+			setFallbackToSettings:ConvertToNSValue(PushPrimerHalfInterstitialConfig.bFallbackToSettings)];
+
+		using CleverTapSDK::ColorToHexString;
+
+		[localInAppBuilder
+			setBackgroundColor:ConvertToNSValue(ColorToHexString(PushPrimerHalfInterstitialConfig.BackgroundColor))];
+		[localInAppBuilder
+			setBtnBorderColor:ConvertToNSValue(ColorToHexString(PushPrimerHalfInterstitialConfig.ButtonBorderColor))];
+		[localInAppBuilder
+			setTitleTextColor:ConvertToNSValue(ColorToHexString(PushPrimerHalfInterstitialConfig.TitleTextColor))];
+		[localInAppBuilder
+			setMessageTextColor:ConvertToNSValue(ColorToHexString(PushPrimerHalfInterstitialConfig.MessageTextColor))];
+		[localInAppBuilder
+			setBtnTextColor:ConvertToNSValue(ColorToHexString(PushPrimerHalfInterstitialConfig.ButtonTextColor))];
+		[localInAppBuilder setBtnBackgroundColor:ConvertToNSValue(ColorToHexString(
+													 PushPrimerHalfInterstitialConfig.ButtonBackgroundColor))];
+
+		// TODO: Not exposed
+		// [NativeInstance promptPushPrimer:localInAppBuilder.getLocalInAppSettings]
+	}
 	// </ICleverTapInstance>
 
 private:
 	CleverTap* NativeInstance{};
+	CleverTapSDKListener* SDKListener{};
 };
 
 } // namespace
+
+@implementation CleverTapSDKListener
+{
+	FIOSCleverTapInstance* CppInstance;
+}
+
+- (instancetype)initWithCppInstance:(FIOSCleverTapInstance*)Instance
+{
+	CppInstance = Instance;
+	return self;
+}
+
+- (void)onPushPermissionResponse:(BOOL)Accepted
+{
+	CppInstance->OnPushPermissionResponse.Broadcast(Accepted ? true : false);
+}
+
+@end
 
 namespace CleverTapSDK { namespace IOS {
 

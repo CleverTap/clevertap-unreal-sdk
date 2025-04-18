@@ -121,9 +121,9 @@ public:
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
-	bool IsPushPermissionGranted() override
+	void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) override
 	{
-		return JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance);
+		Callback(JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance));
 	}
 
 	void PromptForPushPermission(bool bFallbackToSettings) override

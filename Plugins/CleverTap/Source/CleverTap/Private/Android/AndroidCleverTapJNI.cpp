@@ -1178,11 +1178,6 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 	return ResultJson;
 }
 
-static FString ColorToHexString(const FColor& Color)
-{
-	return FString::Printf(TEXT("#%02X%02X%02X"), Color.R, Color.G, Color.B);
-}
-
 jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PrimerConfig)
 {
 	jclass BridgeClass = LoadJavaClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");

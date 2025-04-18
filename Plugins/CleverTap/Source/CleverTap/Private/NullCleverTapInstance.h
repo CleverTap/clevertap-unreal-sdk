@@ -27,7 +27,7 @@ public:
 	void IncrementValue(const FString& Key, int Amount) override;
 	void IncrementValue(const FString& Key, double Amount) override;
 
-	bool IsPushPermissionGranted() override;
+	void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) override;
 	void PromptForPushPermission(bool bFallbackToSettings) override;
 	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override;
 	void PromptForPushPermission(

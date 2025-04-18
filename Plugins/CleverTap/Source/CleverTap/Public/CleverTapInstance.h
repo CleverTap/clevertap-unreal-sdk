@@ -93,9 +93,10 @@ public:
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) = 0;
 
 	/**
-	 * Returns true if the permission to receive push notifications has been granted by the user.
+	 * Asynchronously gets the push permission status. The callback receives a value of true if push notification
+	 *  permission has been granted by the user.
 	 */
-	virtual bool IsPushPermissionGranted() = 0;
+	virtual void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) = 0;
 
 	/**
 	 * Prompts the user to grant push permissions, if they've not already been granted or denied.

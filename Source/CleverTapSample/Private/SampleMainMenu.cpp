@@ -407,7 +407,12 @@ void USampleMainMenu::PopulateUI() const
 
 	if (PushPermissionGrantedText)
 	{
-		bool bGranted = CleverTap.IsPushPermissionGranted();
-		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
+		CleverTap.IsPushPermissionGrantedAsync(
+			[WeakThis = TWeakObjectPtr<const USampleMainMenu>{ this }](bool bGranted) {
+				if (const USampleMainMenu* const Self = WeakThis.Get())
+				{
+					Self->PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
+				}
+			});
 	}
 }
