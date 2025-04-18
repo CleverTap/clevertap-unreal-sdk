@@ -79,3 +79,5 @@ void FNullCleverTapInstance::PromptForPushPermission(
 {
 	CleverTapSDK::Ignore(PushPrimerHalfInterstitialConfig);
 }
+
+void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}

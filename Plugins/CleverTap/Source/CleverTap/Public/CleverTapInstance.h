@@ -12,6 +12,11 @@
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
 
 /**
+ * Delegate type used to broadcast notifications when the user taps on a Push Notification.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
+
+/**
  * A CleverTap API instance
  */
 class CLEVERTAP_API ICleverTapInstance
@@ -130,4 +135,20 @@ public:
 	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()
 	 */
 	FOnPushPermissionResponse OnPushPermissionResponse;
+
+	/** Called when the user taps a push notification.
+	 *
+	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
+	 * ready.
+	 */
+	FOnPushNotificationClicked OnPushNotificationClicked;
+
+	/**
+	 * Enables delivery of push notification click events.
+	 *
+	 * Call this after binding to OnPushNotificationClicked and your systems are ready to handle incoming events.
+	 * If the game was launched by clicking on a push notification, it will be delivered immediately after this
+	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
+	 */
+	virtual void EnableOnPushNotificationClicked() = 0;
 };

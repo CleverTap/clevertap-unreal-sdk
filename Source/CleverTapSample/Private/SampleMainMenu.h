@@ -1,6 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapProperties.h"
+
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
@@ -93,6 +95,7 @@ private:
 	void PopulateUI() const;
 	void ConfigureSharedInstance();
 	void OnPushPermissionResponse(bool bGranted);
+	void OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload);
 
 private:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))

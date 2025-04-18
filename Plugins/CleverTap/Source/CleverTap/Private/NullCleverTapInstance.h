@@ -32,4 +32,6 @@ public:
 	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override;
 	void PromptForPushPermission(
 		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override;
+
+	void EnableOnPushNotificationClicked() override;
 };
