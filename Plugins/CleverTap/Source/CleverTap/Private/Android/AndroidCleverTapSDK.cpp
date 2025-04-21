@@ -35,8 +35,10 @@ public:
 		}
 
 		JavaCleverTapInstance = Env->NewGlobalRef(JavaCleverTapInstanceIn);
-		JNI::RegisterPushPermissionResponseListener(Env, JavaCleverTapInstance, this);
-		JNI::RegisterPushNotificationClickedListener(Env, JavaCleverTapInstance, this);
+
+		jobject ListenerInstance = JNI::CreateUECleverTapListener(Env, JavaCleverTapInstance, this);
+		JNI::RegisterPushPermissionResponseListener(Env, JavaCleverTapInstance, ListenerInstance);
+		JNI::RegisterPushNotificationClickedListener(Env, JavaCleverTapInstance, ListenerInstance);
 	}
 
 	~FAndroidCleverTapInstance()
@@ -247,7 +249,7 @@ static CleverTapSDK::Android::FAndroidCleverTapInstance* CheckedInstancePtr(jlon
 // the java callbacks can come from any thread; to keep things simple we queue all work to the main game thread
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_clevertap_android_unreal_UECleverTapListeners_00024PushPermissionListener_nativeOnPushPermissionResponse__JZ(
+Java_com_clevertap_android_unreal_UECleverTapListener_nativeOnPushPermissionResponse__JZ(
 	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jboolean bGranted)
 {
 	if (!Env)
@@ -271,7 +273,7 @@ Java_com_clevertap_android_unreal_UECleverTapListeners_00024PushPermissionListen
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_clevertap_android_unreal_UECleverTapListeners_00024PushNotificationListener_nativeOnNotificationClicked__JLjava_lang_Object_2(
+Java_com_clevertap_android_unreal_UECleverTapListener_nativeOnNotificationClicked__JLjava_lang_Object_2(
 	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jobject NotificationPayload)
 {
 	if (!Env)

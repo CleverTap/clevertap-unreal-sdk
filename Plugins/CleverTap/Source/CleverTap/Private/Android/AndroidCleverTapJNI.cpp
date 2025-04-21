@@ -1070,8 +1070,9 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 	return JavaArray;
 }
 
-static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassPath, void* NativeInstance)
+jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
 {
+	const char* ClassPath = "com/clevertap/android/unreal/UECleverTapListener";
 	jclass ListenerClass = LoadJavaClass(Env, ClassPath);
 	jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
 	if (!ListenerConstructor)
@@ -1088,7 +1089,7 @@ static jobject CreateUECleverTapListener(JNIEnv* Env, const char* ClassPath, voi
 	return Listener;
 }
 
-bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
+void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	jmethodID RegisterListenerMethod =
@@ -1097,26 +1098,14 @@ bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstan
 	Env->DeleteLocalRef(CleverTapAPIClass);
 	if (!RegisterListenerMethod)
 	{
-		return false;
+		return;
 	}
 
-	jobject Listener = JNI::CreateUECleverTapListener(
-		Env, "com/clevertap/android/unreal/UECleverTapListeners$PushPermissionListener", NativeInstance);
-	if (!Listener)
-	{
-		return false;
-	}
-
-	Env->CallVoidMethod(CleverTapInstance, RegisterListenerMethod, Listener);
-	if (HandleException(Env, "registerPushPermissionNotificationResponseListener()"))
-	{
-		return false;
-	}
-
-	return true;
+	Env->CallVoidMethod(CleverTapInstance, RegisterListenerMethod, ListenerInstance);
+	HandleException(Env, "registerPushPermissionNotificationResponseListener()");
 }
 
-bool RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
+void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
 {
 	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	jmethodID SetListenerMethod = GetMethodID(Env, CleverTapAPIClass, "setCTPushNotificationListener",
@@ -1124,23 +1113,11 @@ bool RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInsta
 	Env->DeleteLocalRef(CleverTapAPIClass);
 	if (!SetListenerMethod)
 	{
-		return false;
+		return;
 	}
 
-	jobject Listener = JNI::CreateUECleverTapListener(
-		Env, "com/clevertap/android/unreal/UECleverTapListeners$PushNotificationListener", NativeInstance);
-	if (!Listener)
-	{
-		return false;
-	}
-
-	Env->CallVoidMethod(CleverTapInstance, SetListenerMethod, Listener);
-	if (HandleException(Env, "setCTPushNotificationListener()"))
-	{
-		return false;
-	}
-
-	return true;
+	Env->CallVoidMethod(CleverTapInstance, SetListenerMethod, ListenerInstance);
+	HandleException(Env, "setCTPushNotificationListener()");
 }
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)

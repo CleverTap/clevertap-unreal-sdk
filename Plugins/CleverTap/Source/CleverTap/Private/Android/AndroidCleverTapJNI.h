@@ -41,8 +41,9 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 
-bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
-bool RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
+jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
+void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
 void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings);
