@@ -18,6 +18,10 @@
 		<setStringFromProperty result="CTNotificationChannelSlot3" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot3" default="" />
 		<setStringFromProperty result="CTNotificationChannelSlot4" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot4" default="" />
 		<setStringFromProperty result="CTNotificationChannelSlot5" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot5" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot6" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot6" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot7" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot7" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot8" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot8" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot9" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot9" default="" />
 	</init>
 
 	<prebuildCopies>
@@ -140,7 +144,7 @@
 	</gameApplicationAttachBaseContextAdditions>
 
 	<gameApplicationOnCreateAdditions>
-		<setString result="SetNotificationChannelDefaults" value='Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
+		<setString result="SetNotificationChannelDefaults" value='ID=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
 		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, bShowBadge );' />
 		<insert>
 			{
@@ -158,51 +162,23 @@
 			int Importance = IMPORTANCE_DEFAULT;
 			boolean bShowBadge = true;
 		</insert>
-		<setBoolIsEqual result="Slot1IsEmpty" arg1="$S(CTNotificationChannelSlot1)" arg2="" />
-		<setBoolIsEqual result="Slot2IsEmpty" arg1="$S(CTNotificationChannelSlot2)" arg2="" />
-		<setBoolIsEqual result="Slot3IsEmpty" arg1="$S(CTNotificationChannelSlot3)" arg2="" />
-		<setBoolIsEqual result="Slot4IsEmpty" arg1="$S(CTNotificationChannelSlot4)" arg2="" />
-		<setBoolIsEqual result="Slot5IsEmpty" arg1="$S(CTNotificationChannelSlot5)" arg2="" />
-		<if condition="Slot1IsEmpty">
-			<false>
-				<insertValue value="$S(SetNotificationChannelDefaults)" />
-				<setStringReplace result="ConfigureSlot1" source="$S(CTNotificationChannelSlot1)" find="|" with=";" />
-				<insertValue value="$S(ConfigureSlot1);" />
-				<insertValue value="$S(CreateNotificationChannel)" />
-			</false>
-		</if>
-		<if condition="Slot2IsEmpty">
-			<false>
-				<insertValue value="$S(SetNotificationChannelDefaults)" />
-				<setStringReplace result="ConfigureSlot2" source="$S(CTNotificationChannelSlot2)" find="|" with=";" />
-				<insertValue value="$S(ConfigureSlot2);" />
-				<insertValue value="$S(CreateNotificationChannel)" />
-			</false>
-		</if>
-		<if condition="Slot3IsEmpty">
-			<false>
-				<insertValue value="$S(SetNotificationChannelDefaults)" />
-				<setStringReplace result="ConfigureSlot3" source="$S(CTNotificationChannelSlot3)" find="|" with=";" />
-				<insertValue value="$S(ConfigureSlot3);" />
-				<insertValue value="$S(CreateNotificationChannel)" />
-			</false>
-		</if>
-		<if condition="Slot4IsEmpty">
-			<false>
-				<insertValue value="$S(SetNotificationChannelDefaults)" />
-				<setStringReplace result="ConfigureSlot4" source="$S(CTNotificationChannelSlot4)" find="|" with=";" />
-				<insertValue value="$S(ConfigureSlot4);" />
-				<insertValue value="$S(CreateNotificationChannel)" />
-			</false>
-		</if>
-		<if condition="Slot5IsEmpty">
-			<false>
-				<insertValue value="$S(SetNotificationChannelDefaults)" />
-				<setStringReplace result="ConfigureSlot5" source="$S(CTNotificationChannelSlot5)" find="|" with=";" />
-				<insertValue value="$S(ConfigureSlot5);" />
-				<insertValue value="$S(CreateNotificationChannel)" />
-			</false>
-		</if>
+
+		<setInt result="index" value="1" />
+		<setBool result="loopRun" value="true" />
+		<while condition="loopRun">
+			<setBoolIsEqual result="Slot_$I(index)_IsEmpty" arg1="$S(CTNotificationChannelSlot$I(index))" arg2="" />
+			<if condition="Slot_$I(index)_IsEmpty">
+				<false>
+					<insertValue value="$S(SetNotificationChannelDefaults)" />
+					<setStringReplace result="ConfigureSlot$I(index)" source="$S(CTNotificationChannelSlot$I(index))" find="|" with=";" />
+					<insertValue value="$S(ConfigureSlot$I(index));" />
+					<insertValue value="$S(CreateNotificationChannel)" />
+				</false>
+			</if>
+			<setIntAdd result="index" arg1="$I(index)" arg2="1" />
+			<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="9" />
+		</while>
+
 		<insert>
 			}
 		</insert>
