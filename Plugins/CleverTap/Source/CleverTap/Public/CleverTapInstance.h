@@ -17,6 +17,21 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
 
 /**
+ * Status of if the user has granted permission to send push notifications.
+ */
+enum class ECleverTapPushPermissionStatus : uint8
+{
+	// The permission status is currently unknown
+	Unknown,
+
+	// Permission has been granted
+	Granted,
+
+	// Permission has not been granted
+	Denied,
+};
+
+/**
  * A CleverTap API instance
  */
 class CLEVERTAP_API ICleverTapInstance
@@ -98,10 +113,10 @@ public:
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) = 0;
 
 	/**
-	 * Asynchronously gets the push permission status. The callback receives a value of true if push notification
-	 *  permission has been granted by the user.
+	 * Gets the push permission status. If this returns ECleverTapPushPermissionStatus::Unknown then it should be polled
+	 *  until the status has been determined.
 	 */
-	virtual void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) = 0;
+	virtual ECleverTapPushPermissionStatus GetPushPermissionStatus() = 0;
 
 	/**
 	 * Prompts the user to grant push permissions, if they've not already been granted or denied.

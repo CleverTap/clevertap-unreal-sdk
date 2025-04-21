@@ -167,14 +167,27 @@ NSArray* ConvertToNSArray(const TArray<FCleverTapProperties>& Items)
 
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
+	static constexpr int8 PUSH_PERM_STATUS_UNKNOWN = 0;
+	static constexpr int8 PUSH_PERM_STATUS_GRANTED = 1;
+	static constexpr int8 PUSH_PERM_STATUS_DENIED = 2;
+
 public:
 	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance)
-		: NativeInstance{ InNativeInstance }, SDKListener{ [[CleverTapSDKListener alloc] initWithCppInstance:this] }
+		: NativeInstance{ InNativeInstance }
+		, SDKListener{ [[CleverTapSDKListener alloc] initWithCppInstance:this] }
+		, PushPermissionStatus{ static_cast<uint8>(ECleverTapPushPermissionStatus::Unknown) }
 	{
 		if (NativeInstance != nil)
 		{
 			// TODO: Not exposed
 			// [NativeInstance setPushPermissionDelegate:SDKListener];
+
+			// TODO: Not exposed
+			// [NativeInstance getNotificationPermissionStatusWithCompletionHandler:^(UNAuthorizationStatus Status) {
+			//   const bool bIsGranted =
+			// 	  (Status != UNAuthorizationStatusNotDetermined && Status != UNAuthorizationStatusDenied);
+			//   CachePushPermissionStatus(bIsGranted);
+			// }];
 		}
 	}
 
@@ -231,15 +244,10 @@ public:
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
-	void IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback) override
+	ECleverTapPushPermissionStatus GetPushPermissionStatus() override
 	{
-		// TODO: Not exposed
-		// [NativeInstance getNotificationPermissionStatusWithCompletionHandler:^(UNAuthorizationStatus Status) {
-		//   const bool bIsGranted =
-		// 	  (Status != UNAuthorizationStatusNotDetermined && Status != UNAuthorizationStatusDenied);
-		//   Callback(bIsGranted);
-		// }];
-		Callback(false);
+		const uint8 StatusValue = PushPermissionStatus.Load();
+		return static_cast<ECleverTapPushPermissionStatus>(StatusValue);
 	}
 
 	void PromptForPushPermission(bool bFallbackToSettings) override
@@ -304,9 +312,17 @@ public:
 	}
 	// </ICleverTapInstance>
 
+	void CachePushPermissionStatus(bool bIsGranted)
+	{
+		const ECleverTapPushPermissionStatus Status =
+			bIsGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::Denied;
+		PushPermissionStatus.Store(static_cast<uint8>(Status));
+	}
+
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
+	TAtomic<uint8> PushPermissionStatus;
 };
 
 } // namespace
@@ -324,7 +340,9 @@ private:
 
 - (void)onPushPermissionResponse:(BOOL)Accepted
 {
-	CppInstance->OnPushPermissionResponse.Broadcast(Accepted ? true : false);
+	const bool bIsGranted = Accepted ? true : false;
+	CppInstance->CachePushPermissionStatus(bIsGranted);
+	CppInstance->OnPushPermissionResponse.Broadcast(bIsGranted);
 }
 
 @end

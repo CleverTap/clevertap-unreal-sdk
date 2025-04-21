@@ -80,15 +80,30 @@ TArrayView<const FCleverTapSampleKeyValuePair> UCleverTapSampleProductList::GetP
 	return TArrayView<const FCleverTapSampleKeyValuePair>(ProductParameters[Index]);
 }
 
-//
-
-static FText FormatPushPermissionGrantedText(bool bGranted)
+static FText FormatPushPermissionText(ECleverTapPushPermissionStatus Status)
 {
+	const FText StatusArg = [Status]() {
+		switch (Status)
+		{
+			case ECleverTapPushPermissionStatus::Unknown:
+				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_Unknown", "UNKNOWN");
+			case ECleverTapPushPermissionStatus::Granted:
+				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_True", "TRUE");
+			case ECleverTapPushPermissionStatus::Denied:
+				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_False", "FALSE");
+
+			default:
+			{
+				UE_LOG(LogCleverTapSample, Error, TEXT("Unknown ECleverTapPushPermissionStatus value: %d"),
+					static_cast<uint8>(Status));
+				return FText{};
+			}
+		}
+	}();
+
 	return FText::Format(
 		NSLOCTEXT("CleverTapSample", "SampleMainMenuPushPermGrantedText", "Push Permission Granted: {Granted}"),
-		FFormatNamedArguments{ { "Granted",
-			bGranted ? NSLOCTEXT("CleverTapSample", "PushPermissionGranted_True", "TRUE")
-					 : NSLOCTEXT("CleverTapSample", "PushPermissionGranted_False", "FALSE") } });
+		FFormatNamedArguments{ { "Granted", StatusArg } });
 }
 
 //===============================================
@@ -165,7 +180,9 @@ void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
 
 	if (PushPermissionGrantedText)
 	{
-		PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
+		const ECleverTapPushPermissionStatus Status =
+			bGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::Denied;
+		PushPermissionGrantedText->SetText(FormatPushPermissionText(Status));
 	}
 }
 
@@ -421,12 +438,7 @@ void USampleMainMenu::PopulateUI() const
 
 	if (PushPermissionGrantedText)
 	{
-		CleverTap.IsPushPermissionGrantedAsync(
-			[WeakThis = TWeakObjectPtr<const USampleMainMenu>{ this }](bool bGranted) {
-				if (const USampleMainMenu* const Self = WeakThis.Get())
-				{
-					Self->PushPermissionGrantedText->SetText(FormatPushPermissionGrantedText(bGranted));
-				}
-			});
+		const ECleverTapPushPermissionStatus Status = CleverTap.GetPushPermissionStatus();
+		PushPermissionGrantedText->SetText(FormatPushPermissionText(Status));
 	}
 }
