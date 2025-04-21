@@ -60,7 +60,7 @@ Android requires push notifications to be delivered via pre-defined notification
 
 Because these channels must be registered during the Java `GameApplication.onCreate()`, which happens before Unreal Engine initializes, they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
 
-You can define up to 9 channels using the following syntax:
+You can define up to 9 channels using the following syntax, which `CleverTap_Android_UPL.xml` uses to inject the necessary Java directly into `GameApplication.onCreate()`:
 
 ```ini
 [/Script/CleverTap.CleverTapConfig]
