@@ -13,8 +13,11 @@
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 
-		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default="" />
-
+		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default='ID="default"| Name="General"| Description="General Notifications"| Importance=IMPORTANCE_DEFAULT| bShowBadge=True|' />
+		<setStringFromProperty result="CTNotificationChannelSlot2" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot2" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot3" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot3" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot4" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot4" default="" />
+		<setStringFromProperty result="CTNotificationChannelSlot5" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot5" default="" />
 	</init>
 
 	<prebuildCopies>
@@ -137,7 +140,72 @@
 	</gameApplicationAttachBaseContextAdditions>
 
 	<gameApplicationOnCreateAdditions>
-		<insertValue value="$S(CTNotificationChannelSlot1)" />
+		<setString result="SetNotificationChannelDefaults" value='Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
+		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, bShowBadge );' />
+		<insert>
+			{
+			final int IMPORTANCE_DEFAULT = android.app.NotificationManager.IMPORTANCE_DEFAULT;
+			final int IMPORTANCE_HIGH = android.app.NotificationManager.IMPORTANCE_HIGH;
+			final int IMPORTANCE_LOW = android.app.NotificationManager.IMPORTANCE_LOW;
+			final int IMPORTANCE_MAX = android.app.NotificationManager.IMPORTANCE_MAX;
+			final int IMPORTANCE_MIN = android.app.NotificationManager.IMPORTANCE_MIN;
+			final int IMPORTANCE_NONE = android.app.NotificationManager.IMPORTANCE_NONE;
+			final boolean False = false;
+			final boolean True = true;
+			String ID;
+			String Name;
+			String Description;
+			int Importance = IMPORTANCE_DEFAULT;
+			boolean bShowBadge = true;
+		</insert>
+		<setBoolIsEqual result="Slot1IsEmpty" arg1="$S(CTNotificationChannelSlot1)" arg2="" />
+		<setBoolIsEqual result="Slot2IsEmpty" arg1="$S(CTNotificationChannelSlot2)" arg2="" />
+		<setBoolIsEqual result="Slot3IsEmpty" arg1="$S(CTNotificationChannelSlot3)" arg2="" />
+		<setBoolIsEqual result="Slot4IsEmpty" arg1="$S(CTNotificationChannelSlot4)" arg2="" />
+		<setBoolIsEqual result="Slot5IsEmpty" arg1="$S(CTNotificationChannelSlot5)" arg2="" />
+		<if condition="Slot1IsEmpty">
+			<false>
+				<insertValue value="$S(SetNotificationChannelDefaults)" />
+				<setStringReplace result="ConfigureSlot1" source="$S(CTNotificationChannelSlot1)" find="|" with=";" />
+				<insertValue value="$S(ConfigureSlot1);" />
+				<insertValue value="$S(CreateNotificationChannel)" />
+			</false>
+		</if>
+		<if condition="Slot2IsEmpty">
+			<false>
+				<insertValue value="$S(SetNotificationChannelDefaults)" />
+				<setStringReplace result="ConfigureSlot2" source="$S(CTNotificationChannelSlot2)" find="|" with=";" />
+				<insertValue value="$S(ConfigureSlot2);" />
+				<insertValue value="$S(CreateNotificationChannel)" />
+			</false>
+		</if>
+		<if condition="Slot3IsEmpty">
+			<false>
+				<insertValue value="$S(SetNotificationChannelDefaults)" />
+				<setStringReplace result="ConfigureSlot3" source="$S(CTNotificationChannelSlot3)" find="|" with=";" />
+				<insertValue value="$S(ConfigureSlot3);" />
+				<insertValue value="$S(CreateNotificationChannel)" />
+			</false>
+		</if>
+		<if condition="Slot4IsEmpty">
+			<false>
+				<insertValue value="$S(SetNotificationChannelDefaults)" />
+				<setStringReplace result="ConfigureSlot4" source="$S(CTNotificationChannelSlot4)" find="|" with=";" />
+				<insertValue value="$S(ConfigureSlot4);" />
+				<insertValue value="$S(CreateNotificationChannel)" />
+			</false>
+		</if>
+		<if condition="Slot5IsEmpty">
+			<false>
+				<insertValue value="$S(SetNotificationChannelDefaults)" />
+				<setStringReplace result="ConfigureSlot5" source="$S(CTNotificationChannelSlot5)" find="|" with=";" />
+				<insertValue value="$S(ConfigureSlot5);" />
+				<insertValue value="$S(CreateNotificationChannel)" />
+			</false>
+		</if>
+		<insert>
+			}
+		</insert>
 
 		<if condition="CTAutoInit">
 			<true>
