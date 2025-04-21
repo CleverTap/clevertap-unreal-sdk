@@ -39,7 +39,7 @@ CleverTap allows you to send push notifications to your applications from our da
 
 Each platform requires slightly different setup.
 
-### Android - Configuring Firebase Cloud Messaging (FCM)
+### Android - Configure Firebase Cloud Messaging (FCM)
 To use the default CleverTap notification implementation with Firebase:
 
 1. Follow [these instructions](https://developer.clevertap.com/docs/android-push) to create and register your firebase credentials in the CleverTap dashboard.
@@ -53,6 +53,28 @@ To use the default CleverTap notification implementation with Firebase:
 bAndroidIntegrateFirebase=True
 AndroidGoogleServicesJsonPath=Config/google-services.json
 ```
+
+### Android - Configure Push Notification Channels 
+
+Android requires push notifications to be delivered via pre-defined notification channels. These channels allow users to customize the behavior of different types of notifications (e.g., sounds, vibration, visibility).
+
+Because these channels must be registered during the Java `GameApplication.onCreate()`, which happens before Unreal Engine initializes, they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
+
+You can define up to 9 channels using the following syntax:
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="Important news and alerts" | Importance=IMPORTANCE_HIGH | bShowBadge=True
+```
+
+Each slot must include an `ID`, `Name`, and `Description`. You can also configure `Importance` and `bShowBadge`. 
+Valid Importance values include: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, and `IMPORTANCE_MAX`.
+
+> Note: These settings are not available through the `Project Settings` GUI, and can only be edited directly in your project’s `Config/DefaultEngine.ini`.
+
+> Note: The channel Name and Description cannot currently be run-time localized. 
+
 
 #### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
