@@ -59,9 +59,9 @@ void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount)
 	CleverTapSDK::Ignore(Key, Amount);
 }
 
-void FNullCleverTapInstance::IsPushPermissionGrantedAsync(TFunction<void(bool)> Callback)
+ECleverTapPushPermissionStatus FNullCleverTapInstance::GetPushPermissionStatus()
 {
-	Callback(false);
+	return ECleverTapPushPermissionStatus::Denied;
 }
 
 void FNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings)
