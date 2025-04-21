@@ -78,7 +78,7 @@ Valid Importance values include: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANC
 > The channel Name and Description cannot currently be run-time localized. 
 
 
-#### Custom Android Notification Handling
+### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
 
 If you’re already using another Firebase plugin and also require CleverTap push features, you’ll need to disable the CleverTap Firebase integration with `bAndroidIntegrateFirebase=False`, and replace the other plug-in’s FCM service with a custom multiplexer implemented in Java.
