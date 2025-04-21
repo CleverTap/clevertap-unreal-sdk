@@ -71,9 +71,11 @@ AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="I
 Each slot must include an `ID`, `Name`, and `Description`. You can also configure `Importance` and `bShowBadge`. 
 Valid Importance values include: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, and `IMPORTANCE_MAX`.
 
-> [!NOTE] These settings are not available through the `Project Settings` GUI, and can only be edited directly in your project’s `Config/DefaultEngine.ini`.
+> [!NOTE]
+> These settings are not available through the `Project Settings` GUI, and can only be edited directly in your project’s `Config/DefaultEngine.ini`.
 
-> [!NOTE] The channel Name and Description cannot currently be run-time localized. 
+> [!NOTE]
+> The channel Name and Description cannot currently be run-time localized. 
 
 
 #### Custom Android Notification Handling
