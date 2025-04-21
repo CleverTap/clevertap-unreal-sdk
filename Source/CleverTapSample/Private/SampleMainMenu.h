@@ -90,7 +90,7 @@ public:
 	// </FTickableGameObject>
 
 private:
-	void PopulateUI() const;
+	void PopulateUI();
 	void ConfigureSharedInstance();
 	void OnPushPermissionResponse(bool bGranted);
 
@@ -102,6 +102,7 @@ private:
 	UCleverTapSubsystem* CleverTapSys;
 
 	FString LastSeenCleverTapId;
+	bool bNeedsPushStatusRefresh{ false };
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* PushPermissionGrantedText;
