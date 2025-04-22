@@ -342,6 +342,8 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	Profile.Add("Test_FloatArray", TArray<float>{ 1.1f, 2.2f, 3.3f });
 	Profile.Add("Test_BoolArray", TArray<bool>{ true, false, true });
 
+	UE_LOG(LogCleverTapSample, Log, TEXT("Properties=%s"), *ToDebugString(Profile));
+
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();

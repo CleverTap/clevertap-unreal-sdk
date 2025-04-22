@@ -7,7 +7,7 @@
 /**
  * Represents a date for CleverTap profile properties.
  */
-struct FCleverTapDate
+struct CLEVERTAP_API FCleverTapDate
 {
 	/**
 	 * Numeric year, such as 2025
@@ -42,7 +42,7 @@ struct FCleverTapDate
 /**
  * Variant type for allowed property value types.
  */
-class FCleverTapPropertyValue
+class CLEVERTAP_API FCleverTapPropertyValue
 {
 public:
 	using VariantType = TVariant<int32, int64, float, double, bool, FString, FCleverTapDate, TArray<int32>,
@@ -90,22 +90,64 @@ public:
 	~FCleverTapPropertyValue() = default;
 
 	// Variant Methods
-	template <typename U> bool IsType() const { return Value.IsType<U>(); }
-	template <typename U> U& Get() { return Value.Get<U>(); }
-	template <typename U> const U& Get() const { return Value.Get<U>(); }
-	template <typename U> U* TryGet() { return Value.TryGet<U>(); }
-	template <typename U> const U* TryGet() const { return Value.TryGet<U>(); }
-	template <typename U> void Set(typename TIdentity<U>::Type&& InValue) { Value.Set<U>(MoveTemp(InValue)); }
-	template <typename U> void Set(const typename TIdentity<U>::Type& InValue) { Value.Set<U>(InValue); }
-	template <typename U, typename... TArgs> void Emplace(TArgs&&... Args)
+	template <typename U>
+	bool IsType() const
+	{
+		return Value.IsType<U>();
+	}
+	template <typename U>
+	U& Get()
+	{
+		return Value.Get<U>();
+	}
+	template <typename U>
+	const U& Get() const
+	{
+		return Value.Get<U>();
+	}
+	template <typename U>
+	U* TryGet()
+	{
+		return Value.TryGet<U>();
+	}
+	template <typename U>
+	const U* TryGet() const
+	{
+		return Value.TryGet<U>();
+	}
+	template <typename U>
+	void Set(typename TIdentity<U>::Type&& InValue)
+	{
+		Value.Set<U>(MoveTemp(InValue));
+	}
+	template <typename U>
+	void Set(const typename TIdentity<U>::Type& InValue)
+	{
+		Value.Set<U>(InValue);
+	}
+	template <typename U, typename... TArgs>
+	void Emplace(TArgs&&... Args)
 	{
 		Value.Emplace<U>(Forward<TArgs>(Args)...);
 	}
-	template <typename U> static constexpr SIZE_T IndexOfType() { return VariantType::IndexOfType<U>(); }
+	template <typename U>
+	static constexpr SIZE_T IndexOfType()
+	{
+		return VariantType::IndexOfType<U>();
+	}
 	SIZE_T GetIndex() const { return Value.GetIndex(); }
+
+	/** Returns a debug string describing the property's value and type. */
+	FString GetDebugString() const;
 
 private:
 	VariantType Value;
 };
 
 using FCleverTapProperties = TMap<FString, FCleverTapPropertyValue>;
+
+/** Returns a debug string describing the property's value and type. */
+CLEVERTAP_API FString ToDebugString(const FCleverTapPropertyValue& Value);
+
+/** Returns a debug string listing all properties with their keys, types, and values. */
+CLEVERTAP_API FString ToDebugString(const FCleverTapProperties& Properties);
