@@ -100,7 +100,7 @@ public:
 	template <typename U> void Set(const typename TIdentity<U>::Type& InValue) { Value.Set<U>(InValue); }
 	template <typename U, typename... TArgs> void Emplace(TArgs&&... Args) { Value.Emplace<U>(Forward<TArgs>(Args)...);	}
 	template <typename U> static constexpr SIZE_T IndexOfType() { return VariantType::IndexOfType<U>(); }
-	// clang-format off
+	// clang-format on
 
 	/** Returns the Index of the currently loaded type; as per IndexOfType<T>() */
 	SIZE_T GetIndex() const { return Value.GetIndex(); }
