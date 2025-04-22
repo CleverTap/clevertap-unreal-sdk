@@ -90,51 +90,19 @@ public:
 	~FCleverTapPropertyValue() = default;
 
 	// Variant Methods
-	template <typename U>
-	bool IsType() const
-	{
-		return Value.IsType<U>();
-	}
-	template <typename U>
-	U& Get()
-	{
-		return Value.Get<U>();
-	}
-	template <typename U>
-	const U& Get() const
-	{
-		return Value.Get<U>();
-	}
-	template <typename U>
-	U* TryGet()
-	{
-		return Value.TryGet<U>();
-	}
-	template <typename U>
-	const U* TryGet() const
-	{
-		return Value.TryGet<U>();
-	}
-	template <typename U>
-	void Set(typename TIdentity<U>::Type&& InValue)
-	{
-		Value.Set<U>(MoveTemp(InValue));
-	}
-	template <typename U>
-	void Set(const typename TIdentity<U>::Type& InValue)
-	{
-		Value.Set<U>(InValue);
-	}
-	template <typename U, typename... TArgs>
-	void Emplace(TArgs&&... Args)
-	{
-		Value.Emplace<U>(Forward<TArgs>(Args)...);
-	}
-	template <typename U>
-	static constexpr SIZE_T IndexOfType()
-	{
-		return VariantType::IndexOfType<U>();
-	}
+	// clang-format off
+	template <typename U> bool IsType() const { return Value.IsType<U>(); }
+	template <typename U> U& Get() { return Value.Get<U>(); }
+	template <typename U> const U& Get() const { return Value.Get<U>(); }
+	template <typename U> U* TryGet() { return Value.TryGet<U>(); }
+	template <typename U> const U* TryGet() const { return Value.TryGet<U>(); }
+	template <typename U> void Set(typename TIdentity<U>::Type&& InValue) { Value.Set<U>(MoveTemp(InValue)); }
+	template <typename U> void Set(const typename TIdentity<U>::Type& InValue) { Value.Set<U>(InValue); }
+	template <typename U, typename... TArgs> void Emplace(TArgs&&... Args) { Value.Emplace<U>(Forward<TArgs>(Args)...);	}
+	template <typename U> static constexpr SIZE_T IndexOfType() { return VariantType::IndexOfType<U>(); }
+	// clang-format off
+
+	/** Returns the Index of the currently loaded type; as per IndexOfType<T>() */
 	SIZE_T GetIndex() const { return Value.GetIndex(); }
 
 	/** Returns a debug string describing the property's value and type. */
