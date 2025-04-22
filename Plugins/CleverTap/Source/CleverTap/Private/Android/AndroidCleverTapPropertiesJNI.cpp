@@ -3,6 +3,7 @@
 
 #include "Android/AndroidJNIUtilities.h"
 
+#include "AndroidJNIUtilities.h"
 #include "CleverTapLog.h"
 #include "CleverTapLogLevel.h"
 #include "CleverTapUtilities.h"
@@ -513,29 +514,29 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 			}
 		}
 
-		// Get the Key and Value for this Entry
+		// Get the Key for this Entry
 		jstring JavaKey = (jstring)Env->CallObjectMethod(Entry, GetKeyMethod);
 		if (HandleExceptionOrError(Env, !JavaKey, TEXT("Iterator Entry getKey()!")))
 		{
 			continue;
 		}
-		jobject JavaValue = Env->CallObjectMethod(Entry, GetValueMethod);
-		if (HandleExceptionOrError(Env, !JavaValue, TEXT("Iterator Entry getValue()!")))
-		{
-			Env->DeleteLocalRef(JavaKey);
-			continue;
-		}
-
-		// Convert java key
+		// Convert Key
 		const char* KeyChars = Env->GetStringUTFChars(JavaKey, nullptr);
 		FString Key = FString(UTF8_TO_TCHAR(KeyChars));
 		Env->ReleaseStringUTFChars(JavaKey, KeyChars);
+		Env->DeleteLocalRef(JavaKey);
 
-		// Convert Java value
+		// Get Value for this entry
+		jobject JavaValue = Env->CallObjectMethod(Entry, GetValueMethod);
+		if (HandleExceptionOrError(Env, !JavaValue, TEXT("Iterator Entry getValue()!")))
+		{
+			continue;
+		}
+		// Convert Value
 		FCleverTapPropertyValue Value = ConvertJavaObjectToCleverTapPropertyValue(Env, JavaValue);
 		Env->DeleteLocalRef(JavaValue);
 
-		// Add to native Map
+		// Add to native Map if unique
 		if (!Properties.Contains(Key))
 		{
 			Properties.Add(Key, Value);
@@ -559,16 +560,86 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 
 FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue)
 {
-	FCleverTapPropertyValue Value;
-	if (!Env)
+	// Integer support
+	static jclass IntegerClass = CacheClass(Env, "java/lang/Integer");
+	static jmethodID GetIntValue = GetMethodID(Env, IntegerClass, "intValue", "()I");
+
+	// Long support
+	static jclass LongClass = CacheClass(Env, "java/lang/Long");
+	static jmethodID GetLongValue = GetMethodID(Env, LongClass, "longValue", "()J");
+
+	// Double support
+	static jclass DoubleClass = CacheClass(Env, "java/lang/Double");
+	static jmethodID GetDoubleValue = GetMethodID(Env, DoubleClass, "doubleValue", "()D");
+
+	// Float Support
+	static jclass FloatClass = CacheClass(Env, "java/lang/Float");
+	static jmethodID GetFloatValue = GetMethodID(Env, FloatClass, "floatValue", "()F");
+
+	// Bool support
+	static jclass BooleanClass = CacheClass(Env, "java/lang/Boolean");
+	static jmethodID GetBooleanValue = GetMethodID(Env, BooleanClass, "booleanValue", "()Z");
+
+	// String support
+	static jclass StringClass = CacheClass(Env, "java/lang/String");
+
+	// Make sure we got everything
+	if (!GetIntValue || !GetLongValue || !GetDoubleValue || !GetFloatValue || !GetBooleanValue || !StringClass)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is nullptr!"));
-		return Value;
+		UE_LOG(LogCleverTap, Error, TEXT("Missing Vital Methods!"));
+		return FCleverTapPropertyValue();
 	}
 
-	// todo implement me!
+	if (Env->IsInstanceOf(JavaValue, IntegerClass))
+	{
+		int32 Result = Env->CallIntMethod(JavaValue, GetIntValue);
+		HandleException(Env, TEXT("intValue()"));
+		return FCleverTapPropertyValue(Result);
+	}
 
-	return Value;
+	if (Env->IsInstanceOf(JavaValue, LongClass))
+	{
+		int64 Result = Env->CallLongMethod(JavaValue, GetLongValue);
+		HandleException(Env, TEXT("longValue()"));
+		return FCleverTapPropertyValue(Result);
+	}
+
+	if (Env->IsInstanceOf(JavaValue, DoubleClass))
+	{
+		double Result = Env->CallDoubleMethod(JavaValue, GetDoubleValue);
+		HandleException(Env, TEXT("doubleValue()"));
+		return FCleverTapPropertyValue(Result);
+	}
+
+	if (Env->IsInstanceOf(JavaValue, FloatClass))
+	{
+		double Result = Env->CallFloatMethod(JavaValue, GetFloatValue);
+		HandleException(Env, TEXT("floatValue()"));
+		return FCleverTapPropertyValue(Result);
+	}
+
+	if (Env->IsInstanceOf(JavaValue, BooleanClass))
+	{
+		bool Result = Env->CallBooleanMethod(JavaValue, GetBooleanValue);
+		HandleException(Env, TEXT("floatValue()"));
+		return FCleverTapPropertyValue(Result);
+	}
+
+	if (Env->IsInstanceOf(JavaValue, StringClass))
+	{
+		jstring JavaString = (jstring)JavaValue;
+		const char* ValueChars = Env->GetStringUTFChars(JavaString, nullptr);
+		FString Result = FString(UTF8_TO_TCHAR(ValueChars));
+		Env->ReleaseStringUTFChars(JavaString, ValueChars);
+		return FCleverTapPropertyValue(Result);
+	}
+
+	// todo we need the Java date thing here too
+	// todo we need to handle arrays of things (can convert all to array of string probably)
+
+	// convert to string as a fallback
+	UE_LOG(LogCleverTap, Error, TEXT("Unsupported property type, converting to string!"));
+	return FCleverTapPropertyValue(JavaObjectToString(Env, JavaValue));
 }
 
 }}} // namespace CleverTapSDK::Android::JNI
