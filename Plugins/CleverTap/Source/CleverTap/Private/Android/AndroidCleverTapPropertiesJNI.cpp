@@ -419,9 +419,156 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 
 FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap)
 {
-	FCleverTapProperties properties;
-	// todo implement this!
-	return properties;
+	FCleverTapProperties Properties;
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is nullptr!"));
+		return Properties;
+	}
+
+	jclass MapClass = Env->GetObjectClass(JavaMap);
+	if (HandleExceptionOrError(Env, !MapClass, TEXT("Getting class for Map!")))
+	{
+		return Properties;
+	}
+	jmethodID EntrySetMethod = GetMethodID(Env, MapClass, "entrySet", "()Ljava/util/Set;");
+	if (!EntrySetMethod)
+	{
+		return Properties;
+	}
+	jobject EntrySet = Env->CallObjectMethod(JavaMap, EntrySetMethod);
+	if (HandleExceptionOrError(Env, !EntrySet, TEXT("Getting entrySet from Map!")))
+	{
+		return Properties;
+	}
+
+	jclass SetClass = Env->GetObjectClass(EntrySet);
+	if (HandleExceptionOrError(Env, !SetClass, TEXT("Getting class for EntrySet!")))
+	{
+		return Properties;
+	}
+	jmethodID IteratorMethod = GetMethodID(Env, SetClass, "iterator", "()Ljava/util/Iterator;");
+	if (!IteratorMethod)
+	{
+		return Properties;
+	}
+	jobject Iterator = Env->CallObjectMethod(EntrySet, IteratorMethod);
+	if (HandleExceptionOrError(Env, !Iterator, TEXT("Getting iterator for EntrySet!")))
+	{
+		return Properties;
+	}
+
+	jclass IteratorClass = Env->GetObjectClass(Iterator);
+	if (HandleExceptionOrError(Env, !IteratorClass, TEXT("Getting class of Iterator!")))
+	{
+		return Properties;
+	}
+
+	jmethodID HasNextMethod = GetMethodID(Env, IteratorClass, "hasNext", "()Z");
+	jmethodID NextMethod = GetMethodID(Env, IteratorClass, "next", "()Ljava/lang/Object;");
+	if (!HasNextMethod || !NextMethod)
+	{
+		return Properties;
+	}
+
+	jclass EntryClass = nullptr;
+	jmethodID GetKeyMethod = nullptr;
+	jmethodID GetValueMethod = nullptr;
+
+	while (true)
+	{
+		bool HasNext = Env->CallBooleanMethod(Iterator, HasNextMethod);
+		if (HandleException(Env, TEXT("iterator->hasNext()")))
+		{
+			break;
+		}
+		if (!HasNext)
+		{
+			break;
+		}
+
+		jobject Entry = Env->CallObjectMethod(Iterator, NextMethod);
+		if (HandleException(Env, TEXT("iterator->next()")))
+		{
+			break;
+		}
+		if (!Entry)
+		{
+			continue;
+		}
+
+		// Only look up once
+		if (!EntryClass)
+		{
+			EntryClass = Env->GetObjectClass(Entry);
+			if (HandleExceptionOrError(Env, !EntryClass, TEXT("Getting class for Map Set Iterator Entry")))
+			{
+				return Properties;
+			}
+			GetKeyMethod = GetMethodID(Env, EntryClass, "getKey", "()Ljava/lang/Object;");
+			GetValueMethod = GetMethodID(Env, EntryClass, "getValue", "()Ljava/lang/Object;");
+			if (!GetKeyMethod || !GetValueMethod)
+			{
+				return Properties;
+			}
+		}
+
+		// Get the Key and Value for this Entry
+		jstring JavaKey = (jstring)Env->CallObjectMethod(Entry, GetKeyMethod);
+		if (HandleExceptionOrError(Env, !JavaKey, TEXT("Iterator Entry getKey()!")))
+		{
+			continue;
+		}
+		jobject JavaValue = Env->CallObjectMethod(Entry, GetValueMethod);
+		if (HandleExceptionOrError(Env, !JavaValue, TEXT("Iterator Entry getValue()!")))
+		{
+			Env->DeleteLocalRef(JavaKey);
+			continue;
+		}
+
+		// Convert java key
+		const char* KeyChars = Env->GetStringUTFChars(JavaKey, nullptr);
+		FString Key = FString(UTF8_TO_TCHAR(KeyChars));
+		Env->ReleaseStringUTFChars(JavaKey, KeyChars);
+
+		// Convert Java value
+		FCleverTapPropertyValue Value = ConvertJavaObjectToCleverTapPropertyValue(Env, JavaValue);
+		Env->DeleteLocalRef(JavaValue);
+
+		// Add to native Map
+		if (!Properties.Contains(Key))
+		{
+			Properties.Add(Key, Value);
+		}
+		else
+		{
+			UE_LOG(LogCleverTap, Error, TEXT("Java Map has duplicate key \"%s\"! Ignoring additional value!"), *Key);
+		}
+	}
+
+	if (EntryClass)
+	{
+		Env->DeleteLocalRef(EntryClass);
+	}
+	Env->DeleteLocalRef(SetClass);
+	Env->DeleteLocalRef(MapClass);
+	Env->DeleteLocalRef(IteratorClass);
+
+	return Properties;
+}
+
+FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue)
+{
+	FCleverTapPropertyValue Value;
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is nullptr!"));
+		return Value;
+	}
+
+	// todo implement me!
+
+	return Value;
 }
 
 }}} // namespace CleverTapSDK::Android::JNI

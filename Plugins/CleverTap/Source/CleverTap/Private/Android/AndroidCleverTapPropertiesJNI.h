@@ -11,5 +11,6 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 
 FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap);
+FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue);
 
 }}} // namespace CleverTapSDK::Android::JNI
