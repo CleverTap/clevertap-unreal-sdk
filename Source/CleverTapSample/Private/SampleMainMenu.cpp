@@ -188,8 +188,15 @@ void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
 
 void USampleMainMenu::OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload)
 {
-	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushNotificationClicked()"));
-	// todo something here!
+	FString PayloadString = ToDebugString(NotificationPayload);
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushNotificationClicked(NotificationPayload=%s)"), *PayloadString);
+
+	if (PushNotificationClickedText)
+	{
+		PushNotificationClickedText->SetText(FText::Format(
+			NSLOCTEXT("CleverTapSample", "PushNotificationClickedPayload", "Push Notification Clicked: {Payload}"),
+			FFormatNamedArguments{ { "Payload", FText::FromString(PayloadString) } }));
+	}
 }
 
 void USampleMainMenu::OnUserLogin(const FString& Name, const FString& Email, const FString& Identity)
