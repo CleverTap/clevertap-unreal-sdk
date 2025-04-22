@@ -8,7 +8,13 @@
 
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
+#if UE_BUILD_SHIPPING
+// Shipping builds try to keep running in the face of JNI exceptions
 static bool bCrashOnJNIException = false;
+#else
+// allow crashing on JNI exceptions in non-shipping builds
+static bool bCrashOnJNIException = true;
+#endif
 
 void SetCrashOnJNIException(bool CrashOnException)
 {
@@ -79,6 +85,39 @@ JNIEnv* GetJNIEnv()
 		UE_LOG(LogCleverTap, Error, TEXT("FAndroidApplication::GetJavaEnv() returned nullptr!"));
 	}
 	return Env;
+}
+
+jclass CacheClass(JNIEnv* Env, const char* ClassPath)
+{
+	UE_LOG(LogCleverTap, Log, TEXT("CacheClass(%hs)"), ClassPath);
+
+	// check to see if we already have it cached
+	static TMap<FString, jclass> Cache;
+	auto ClassPathString = FString(ClassPath);
+	const auto* ItemPtr = Cache.Find(ClassPathString);
+	if (ItemPtr)
+	{
+		UE_LOG(LogCleverTap, Log, TEXT("CacheClass - class found (%hs)"), ClassPath);
+		return *ItemPtr;
+	}
+
+	// nope, load it
+	UE_LOG(LogCleverTap, Log, TEXT("CacheClass - loading class (%hs)"), ClassPath);
+	jclass Local = LoadJavaClass(Env, ClassPath);
+	if (!Local)
+	{
+		return nullptr;
+	}
+
+	// convert to a GlobalRef so it'll be stable
+	jclass Global = static_cast<jclass>(Env->NewGlobalRef(Local));
+	Env->DeleteLocalRef(Local);
+
+	// cache it forever
+	UE_LOG(LogCleverTap, Log, TEXT("CacheClass - caching class (%hs)"), ClassPath);
+	Cache.Add(ClassPathString, Global);
+
+	return Global;
 }
 
 jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath)
@@ -261,7 +300,6 @@ FString JavaObjectToString(JNIEnv* Env, jobject JavaObject)
 	}
 	if (!JavaObject)
 	{
-		UE_LOG(LogCleverTap, Warning, TEXT("JavaObjectToString: JavaObject is null"));
 		return TEXT("<null>");
 	}
 

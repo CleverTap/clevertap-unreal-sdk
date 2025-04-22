@@ -23,6 +23,16 @@ bool HandleExceptionOrError(JNIEnv* Env, bool bIsError, const FString& Context);
 bool HandleException(JNIEnv* Env, const FString& Context);
 
 JNIEnv* GetJNIEnv();
+
+/** Loads & caches a java class as a GlobalRef.
+ *
+ *  Returned jclass is valid for the life of the JVM; suitable for persisting as a static.
+ *  Do not release the returned reference!
+ *
+ *  Efficient if the class is already cached.
+ */
+jclass CacheClass(JNIEnv* Env, const char* ClassPath);
+
 jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath);
 FString GetJClassName(JNIEnv* Env, jclass Class);
 jmethodID GetMethodID(JNIEnv* Env, jclass Class, const char* Name, const char* Signature);
