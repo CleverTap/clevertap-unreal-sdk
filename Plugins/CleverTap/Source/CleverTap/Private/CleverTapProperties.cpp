@@ -167,6 +167,6 @@ FString ToDebugString(const FCleverTapProperties& Properties)
 		}
 		Result += FString::Printf(TEXT("\"%s\"=%s"), *KVP.Key, *KVP.Value.GetDebugString());
 	}
-	Result += TEXT("}");
+	Result += TEXT(" }");
 	return Result;
 }
