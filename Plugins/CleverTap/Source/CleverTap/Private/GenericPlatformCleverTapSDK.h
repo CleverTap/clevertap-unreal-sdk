@@ -30,6 +30,11 @@ struct FGenericPlatformSDK
 	 */
 	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
 		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
+
+	/**
+	 * Tell the specific CleverTap instance to register for remote notifications.
+	 */
+	static void SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token);
 };
 
 }} // namespace CleverTapSDK::GenericPlatform

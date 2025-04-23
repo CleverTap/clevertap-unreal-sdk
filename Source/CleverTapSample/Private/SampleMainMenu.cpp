@@ -431,11 +431,23 @@ void USampleMainMenu::Tick(float DeltaTime)
 		return;
 	}
 
-	FString CleverTapId = CleverTapSys->SharedInstance().GetCleverTapId();
-	if (LastSeenCleverTapId != CleverTapSys->SharedInstance().GetCleverTapId())
+	const bool bNeedsUIRefresh = [this]() {
+		ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+		if (LastSeenCleverTapId != CleverTap.GetCleverTapId())
+		{
+			return true;
+		}
+
+		if (bNeedsPushStatusRefresh && CleverTap.GetPushPermissionStatus() != ECleverTapPushPermissionStatus::Unknown)
+		{
+			return true;
+		}
+
+		return false;
+	}();
+	if (bNeedsUIRefresh)
 	{
 		PopulateUI();
-		LastSeenCleverTapId = MoveTemp(CleverTapId);
 	}
 }
 
@@ -444,7 +456,7 @@ TStatId USampleMainMenu::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USampleMainMenu, STATGROUP_Tickables);
 }
 
-void USampleMainMenu::PopulateUI() const
+void USampleMainMenu::PopulateUI()
 {
 	if (CleverTapSys == nullptr || !CleverTapSys->IsSharedInstanceInitialized())
 	{
@@ -455,18 +467,21 @@ void USampleMainMenu::PopulateUI() const
 
 	if (CleverTapIdText)
 	{
-		const FString CleverTapId = CleverTap.GetCleverTapId();
+		FString CleverTapId = CleverTap.GetCleverTapId();
 		CleverTapIdText->SetText(
 			FText::Format(NSLOCTEXT("CleverTapSample", "SampleMainMenuIdText", "CleverTap Id: {Id}"), [&] {
 				FFormatNamedArguments Args;
 				Args.Add("Id", FText::FromString(CleverTapId));
 				return Args;
 			}()));
+		LastSeenCleverTapId = MoveTemp(CleverTapId);
 	}
 
 	if (PushPermissionGrantedText)
 	{
 		const ECleverTapPushPermissionStatus Status = CleverTap.GetPushPermissionStatus();
 		PushPermissionGrantedText->SetText(FormatPushPermissionText(Status));
+
+		bNeedsPushStatusRefresh = (Status == ECleverTapPushPermissionStatus::Unknown);
 	}
 }

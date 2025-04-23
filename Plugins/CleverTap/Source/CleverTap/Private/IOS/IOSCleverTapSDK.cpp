@@ -319,6 +319,11 @@ public:
 		PushPermissionStatus.Store(static_cast<uint8>(Status));
 	}
 
+	void SetPushToken(const TArray<uint8>& Token)
+	{
+		[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
+	}
+
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
@@ -384,7 +389,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCle
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap sharedInstance];
+	CleverTap* const SharedInst = [CleverTap autoIntegrate];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 
@@ -398,8 +403,14 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap sharedInstanceWithCleverTapID:CleverTapId.GetNSString()];
+	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID:CleverTapId.GetNSString()];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
+}
+
+void FPlatformSDK::SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token)
+{
+	auto& IOSInstance = static_cast<FIOSCleverTapInstance&>(Instance);
+	IOSInstance.SetPushToken(Token);
 }
 
 }} // namespace CleverTapSDK::IOS
