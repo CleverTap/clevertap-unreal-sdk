@@ -624,7 +624,7 @@ void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallb
 
 jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertConfig& PrimerConfig)
 {
-	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	static jclass BridgeClass = GetBridgeClass(Env);
 	static jmethodID BuildMethod =
 		GetStaticMethodID(Env, BridgeClass, "buildPushPrimerAlertConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
 	if (!BuildMethod)
@@ -657,7 +657,7 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 
 jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PrimerConfig)
 {
-	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	static jclass BridgeClass = GetBridgeClass(Env);
 	static jmethodID BuildMethod = GetStaticMethodID(
 		Env, BridgeClass, "buildPushPrimerHalfInterstitialConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
 	if (!BuildMethod)
