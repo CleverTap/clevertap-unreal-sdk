@@ -1,11 +1,36 @@
 package com.clevertap.android.unreal;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import java.util.Map;
 import org.json.JSONObject;
 
 // Utilities to make it easier to use the CleverTapAPI from Unreal/C++ 
 public class UECleverTapBridge {
+
+    // Update the name and description for an existing android notification channel
+    // Returns true on success, false if no such channel or incompatible API.
+    public static boolean localizeNotificationChannel(Context context, String channelId, String name,
+            String description) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // incompatible build!
+            return false;
+        }
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel existing = nm.getNotificationChannel(channelId);
+        if (existing == null) {
+            // no such channel
+            return false;
+        }
+        existing.setName(name);
+        existing.setDescription(description);
+        // Re-register to apply name/description changes
+        nm.createNotificationChannel(existing);
+        return true;
+    }
 
     public static JSONObject buildPushPrimerAlertConfig(Map<String, Object> params) {
         return CTLocalInApp.builder()

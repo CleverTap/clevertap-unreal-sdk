@@ -167,4 +167,19 @@ public:
 	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
 	 */
 	virtual void EnableOnPushNotificationClicked() = 0;
+
+	/**
+	 * Android Only: Updates the name and description of an existing Notification Channel with localized text.
+	 *
+	 * Returns true on success. Returns false if a channel with this ID does not exist, or the underlying OS doesn't
+	 * support notification channels. No-op on non-Android platforms.
+	 *
+	 * Notification Channels must must be preconfigured in your project’s `Config/DefaultEngine.ini`;
+	 * this allows them to be registered during the Java `GameApplication$onCreate()` method before Unreal has
+	 * initialized.
+	 *
+	 * Call this function during startup (and at locale change) to update the name and description strings.
+	 */
+	virtual bool LocalizeAndroidNotificationChannel(
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) = 0;
 };

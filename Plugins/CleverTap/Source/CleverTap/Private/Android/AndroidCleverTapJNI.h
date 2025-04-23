@@ -18,6 +18,9 @@ jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
 
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
 
+bool LocalizeNotificationChannel(
+	JNIEnv* Env, const FString& ChannelId, const FText& ChannelName, const FText& Description);
+
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
 void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);

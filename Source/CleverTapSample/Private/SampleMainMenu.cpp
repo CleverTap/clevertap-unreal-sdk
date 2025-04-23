@@ -161,6 +161,25 @@ void USampleMainMenu::ConfigureSharedInstance()
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
+	// Localize the names and descriptions of the android notification channels
+	{
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_general", "General"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("news"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_news", "News"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_news", "Important news and alerts"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("chat"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_chat", "Chat Messages"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_chat", "Private and group messages"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("promos"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_promos", "Promotions"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_promos", "Special offers"));
+	}
+
 	// simple test of the OnPushPermissionResponse notification
 	CleverTap.OnPushPermissionResponse.AddUObject(this, &USampleMainMenu::OnPushPermissionResponse);
 

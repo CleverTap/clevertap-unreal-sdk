@@ -34,4 +34,7 @@ public:
 		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override;
 
 	void EnableOnPushNotificationClicked() override;
+
+	bool LocalizeAndroidNotificationChannel(
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override;
 };

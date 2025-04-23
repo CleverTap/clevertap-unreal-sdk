@@ -144,8 +144,16 @@
 	</gameApplicationAttachBaseContextAdditions>
 
 	<gameApplicationOnCreateAdditions>
+		<if condition="CTAutoInit">
+			<true>
+				<insert>
+					com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+				</insert>
+			</true>
+		</if>
+
 		<setString result="SetNotificationChannelDefaults" value='ID=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
-		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, bShowBadge );' />
+		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name.isEmpty() ? ID : Name, Description, Importance, bShowBadge );' />
 		<insert>
 			{
 			final int IMPORTANCE_DEFAULT = android.app.NotificationManager.IMPORTANCE_DEFAULT;
@@ -182,13 +190,5 @@
 		<insert>
 			}
 		</insert>
-
-		<if condition="CTAutoInit">
-			<true>
-				<insert>
-					com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
-				</insert>
-			</true>
-		</if>
 	</gameApplicationOnCreateAdditions>
 </root>

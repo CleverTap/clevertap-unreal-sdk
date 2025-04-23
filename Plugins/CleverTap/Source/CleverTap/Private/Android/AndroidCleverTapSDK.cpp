@@ -127,6 +127,17 @@ public:
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
 	}
 
+	bool LocalizeAndroidNotificationChannel(
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override
+	{
+		bool Success = JNI::LocalizeNotificationChannel(JNI::GetJNIEnv(), ChannelID, ChannelName, ChannelDescription);
+		if (!Success)
+		{
+			UE_LOG(LogCleverTap, Error, TEXT("LocalizeAndroidNotificationChannel(%s) failed. Unknown ID?"), *ChannelID);
+		}
+		return Success;
+	}
+
 	ECleverTapPushPermissionStatus GetPushPermissionStatus() override
 	{
 		if (JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance))
