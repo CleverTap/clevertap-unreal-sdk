@@ -28,7 +28,7 @@ enum class ECleverTapPushPermissionStatus : uint8
 	Granted,
 
 	// Permission has not been granted
-	Denied,
+	NotGranted,
 };
 
 /**

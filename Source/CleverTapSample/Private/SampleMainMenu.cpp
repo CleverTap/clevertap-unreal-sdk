@@ -89,7 +89,7 @@ static FText FormatPushPermissionText(ECleverTapPushPermissionStatus Status)
 				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_Unknown", "UNKNOWN");
 			case ECleverTapPushPermissionStatus::Granted:
 				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_True", "TRUE");
-			case ECleverTapPushPermissionStatus::Denied:
+			case ECleverTapPushPermissionStatus::NotGranted:
 				return NSLOCTEXT("CleverTapSample", "PushPermissionGranted_False", "FALSE");
 
 			default:
@@ -200,7 +200,7 @@ void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
 	if (PushPermissionGrantedText)
 	{
 		const ECleverTapPushPermissionStatus Status =
-			bGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::Denied;
+			bGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::NotGranted;
 		PushPermissionGrantedText->SetText(FormatPushPermissionText(Status));
 	}
 }

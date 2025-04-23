@@ -144,7 +144,7 @@ public:
 		{
 			return ECleverTapPushPermissionStatus::Granted;
 		}
-		return ECleverTapPushPermissionStatus::Denied;
+		return ECleverTapPushPermissionStatus::NotGranted;
 	}
 
 	void PromptForPushPermission(bool bFallbackToSettings) override
