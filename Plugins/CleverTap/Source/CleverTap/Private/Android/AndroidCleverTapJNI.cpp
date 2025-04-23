@@ -26,11 +26,12 @@ static jclass GetBridgeClass(JNIEnv* Env)
 
 static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FString>& IdentityKeys)
 {
-	jclass StringClass = LoadJavaClass(Env, "java/lang/String");
+	static jclass StringClass = CacheClass(Env, "java/lang/String");
 	if (!StringClass)
 	{
 		return;
 	}
+
 	jclass ConfigClass = Env->GetObjectClass(ConfigInstance);
 	if (HandleExceptionOrError(Env, !ConfigClass, TEXT("Getting CleverTapInstanceConfig class")))
 	{
@@ -68,19 +69,11 @@ static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FS
 
 static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
 {
-	// Find the CleverTapInstanceConfig class
-	jclass ConfigClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
-	if (!ConfigClass)
-	{
-		return nullptr;
-	}
-
-	// Get the static method ID for createInstance()
-	jmethodID CreateMethod = GetStaticMethodID(Env, ConfigClass, "createInstance",
+	static jclass ConfigClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
+	static jmethodID CreateMethod = GetStaticMethodID(Env, ConfigClass, "createInstance",
 		"(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
 	if (!CreateMethod)
 	{
-		Env->DeleteLocalRef(ConfigClass);
 		return nullptr;
 	}
 	jobject Context = FAndroidApplication::GetGameActivityThis();
@@ -97,7 +90,6 @@ static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstan
 	{
 		// keep going
 	}
-	Env->DeleteLocalRef(ConfigClass);
 	Env->DeleteLocalRef(JAccountId);
 	Env->DeleteLocalRef(JAccountToken);
 	Env->DeleteLocalRef(JAccountRegion);
@@ -111,18 +103,11 @@ static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstan
 static void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
 {
 	// Find the CleverTapAPI class
-	jclass CleverTapClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapAPI");
-	if (!CleverTapClass)
-	{
-		return;
-	}
-
-	// Get the field ID for defaultConfig (a static field)
-	jfieldID DefaultConfigField =
+	static jclass CleverTapClass = GetCleverTapAPIClass(Env);
+	static jfieldID DefaultConfigField =
 		GetStaticFieldID(Env, CleverTapClass, "defaultConfig", "Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
 	if (!DefaultConfigField)
 	{
-		Env->DeleteLocalRef(CleverTapClass);
 		return;
 	}
 
@@ -132,9 +117,6 @@ static void SetDefaultConfig(JNIEnv* Env, jobject ConfigInstance)
 	{
 		// error logged; fall through
 	}
-
-	// Cleanup
-	Env->DeleteLocalRef(CleverTapClass);
 }
 
 void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
@@ -191,19 +173,11 @@ jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId)
 
 static jobject JavaLogLevelFromString(JNIEnv* Env, const char* LogLevelName)
 {
-	jclass LogLevelClass = LoadJavaClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
-	if (!LogLevelClass)
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("Failed to find CleverTapAPI$LogLevel class"));
-		return nullptr;
-	}
-
-	// Find the method to get the enum constant from the name
-	jmethodID ValueOfMethod = GetStaticMethodID(
+	static jclass LogLevelClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
+	static jmethodID ValueOfMethod = GetStaticMethodID(
 		Env, LogLevelClass, "valueOf", "(Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;");
 	if (!ValueOfMethod)
 	{
-		Env->DeleteLocalRef(LogLevelClass);
 		return nullptr;
 	}
 	// Get the enum constant from the name
@@ -217,7 +191,6 @@ static jobject JavaLogLevelFromString(JNIEnv* Env, const char* LogLevelName)
 		// fall through
 	}
 	Env->DeleteLocalRef(JavaLogLevelName);
-	Env->DeleteLocalRef(LogLevelClass);
 	return LogLevelEnumValue;
 }
 
@@ -295,9 +268,9 @@ bool LocalizeNotificationChannel(
 
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
 {
-	const char* ClassPath = "com/clevertap/android/unreal/UECleverTapListener";
-	jclass ListenerClass = LoadJavaClass(Env, ClassPath);
-	jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
+	static const char* ClassPath = "com/clevertap/android/unreal/UECleverTapListener";
+	static jclass ListenerClass = CacheClass(Env, ClassPath);
+	static jmethodID ListenerConstructor = GetMethodID(Env, ListenerClass, "<init>", "(J)V");
 	if (!ListenerConstructor)
 	{
 		return nullptr;
@@ -308,14 +281,13 @@ jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* 
 		UE_LOG(LogCleverTap, Error, TEXT("Failed creating listener of class \"%hs\""), ClassPath);
 		Listener = nullptr;
 	}
-	Env->DeleteLocalRef(ListenerClass);
 	return Listener;
 }
 
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
 {
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	jmethodID RegisterListenerMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID RegisterListenerMethod =
 		GetMethodID(Env, CleverTapAPIClass, "registerPushPermissionNotificationResponseListener",
 			"(Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V");
 	if (!RegisterListenerMethod)
@@ -329,8 +301,8 @@ void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstan
 
 void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
 {
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	jmethodID SetListenerMethod = GetMethodID(Env, CleverTapAPIClass, "setCTPushNotificationListener",
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetListenerMethod = GetMethodID(Env, CleverTapAPIClass, "setCTPushNotificationListener",
 		"(Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;)V");
 	if (!SetListenerMethod)
 	{
@@ -343,14 +315,8 @@ void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInsta
 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)
 {
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return TEXT("");
-	}
-
-	// Get the getCleverTapID() method ID
-	jmethodID GetIDMethod = GetMethodID(Env, CleverTapAPIClass, "getCleverTapID", "()Ljava/lang/String;");
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID GetIDMethod = GetMethodID(Env, CleverTapAPIClass, "getCleverTapID", "()Ljava/lang/String;");
 	if (!GetIDMethod)
 	{
 		return TEXT("");
@@ -367,8 +333,6 @@ FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)
 	const char* IDChars = Env->GetStringUTFChars(JavaID, nullptr);
 	FString CleverTapID = FString(IDChars);
 	Env->ReleaseStringUTFChars(JavaID, IDChars);
-
-	// Cleanup
 	Env->DeleteLocalRef(JavaID);
 
 	return CleverTapID;
@@ -378,12 +342,8 @@ void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::OnUserLogin(Profile)"));
 	UE_LOG(LogCleverTap, Log, TEXT("Profile: %s"), *JavaObjectToString(Env, Profile));
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-	jmethodID OnUserLoginMethod = GetMethodID(Env, CleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID OnUserLoginMethod = GetMethodID(Env, CleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;)V");
 	if (!OnUserLoginMethod)
 	{
 		return;
@@ -403,14 +363,8 @@ void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile, const 
 	UE_LOG(
 		LogCleverTap, Log, TEXT("CleverTapID: \"%s\", Profile: %s"), *CleverTapID, *JavaObjectToString(Env, Profile));
 
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-
-	// Get the OnUserLogin method with the correct signature (Map + String)
-	jmethodID OnUserLoginMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID OnUserLoginMethod =
 		GetMethodID(Env, CleverTapAPIClass, "onUserLogin", "(Ljava/util/Map;Ljava/lang/String;)V");
 	if (!OnUserLoginMethod)
 	{
@@ -440,13 +394,8 @@ void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile)
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushProfile()"));
 	UE_LOG(LogCleverTap, Log, TEXT("Profile: %s"), *JavaObjectToString(Env, Profile));
 
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-	// Get the pushProfile method
-	jmethodID PushProfileMethod = GetMethodID(Env, CleverTapAPIClass, "pushProfile", "(Ljava/util/Map;)V");
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID PushProfileMethod = GetMethodID(Env, CleverTapAPIClass, "pushProfile", "(Ljava/util/Map;)V");
 	if (!PushProfileMethod)
 	{
 		return;
@@ -463,13 +412,8 @@ void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile)
 void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushEvent(%s)"), *EventName);
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-	// Get the pushProfile method
-	jmethodID PushEventMethod = GetMethodID(Env, CleverTapAPIClass, "pushEvent", "(Ljava/lang/String;)V");
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID PushEventMethod = GetMethodID(Env, CleverTapAPIClass, "pushEvent", "(Ljava/lang/String;)V");
 	if (!PushEventMethod)
 	{
 		return;
@@ -484,6 +428,7 @@ void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName)
 	{
 		// already logged; fall through
 	}
+	Env->DeleteLocalRef(JavaEventName);
 }
 
 void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName, jobject Actions)
@@ -491,13 +436,8 @@ void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName,
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::PushEvent(%s, Actions)"), *EventName);
 	UE_LOG(LogCleverTap, Log, TEXT("EventName: '%s', Actions: %s"), *EventName, *JavaObjectToString(Env, Actions));
 
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-	// Get the pushProfile method
-	jmethodID PushEventMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID PushEventMethod =
 		GetMethodID(Env, CleverTapAPIClass, "pushEvent", "(Ljava/lang/String;Ljava/util/Map;)V");
 	if (!PushEventMethod)
 	{
@@ -523,13 +463,8 @@ void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject ChargeDeta
 	UE_LOG(LogCleverTap, Log, TEXT("ChargeDetails: '%s', Items: %s"), *JavaObjectToString(Env, ChargeDetails),
 		*JavaObjectToString(Env, Items));
 
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	if (!CleverTapAPIClass)
-	{
-		return;
-	}
-	// Get the pushProfile method
-	jmethodID PushChargedEventMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID PushChargedEventMethod =
 		GetMethodID(Env, CleverTapAPIClass, "pushChargedEvent", "(Ljava/util/HashMap;Ljava/util/ArrayList;)V");
 	if (!PushChargedEventMethod)
 	{
@@ -545,8 +480,8 @@ void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject ChargeDeta
 
 static void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
 {
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	jmethodID DecrementMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID DecrementMethod =
 		GetMethodID(Env, CleverTapAPIClass, "decrementValue", "(Ljava/lang/String;Ljava/lang/Number;)V");
 	if (!DecrementMethod)
 	{
@@ -565,12 +500,8 @@ static void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString
 void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::DecrementValue(%s,%d)"), *Key, Amount);
-	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
-	if (!IntegerClass)
-	{
-		return;
-	}
-	jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	static jclass IntegerClass = CacheClass(Env, "java/lang/Integer");
+	static jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
 	if (!IntegerCtor)
 	{
 		return;
@@ -582,19 +513,14 @@ void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 	}
 	DecrementValue(Env, CleverTapInstance, Key, NumberObj);
 	Env->DeleteLocalRef(NumberObj);
-	Env->DeleteLocalRef(IntegerClass);
 }
 
 void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::DecrementValue(%s,%f)"), *Key, Amount);
 
-	jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
-	if (!DoubleClass)
-	{
-		return;
-	}
-	jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
+	static jclass DoubleClass = CacheClass(Env, "java/lang/Double");
+	static jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
 	if (!DoubleCtor)
 	{
 		return;
@@ -606,13 +532,12 @@ void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 	}
 	DecrementValue(Env, CleverTapInstance, Key, NumberObj);
 	Env->DeleteLocalRef(NumberObj);
-	Env->DeleteLocalRef(DoubleClass);
 }
 
 static void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
 {
-	jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	jmethodID IncrementMethod =
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID IncrementMethod =
 		GetMethodID(Env, CleverTapAPIClass, "incrementValue", "(Ljava/lang/String;Ljava/lang/Number;)V");
 	if (!IncrementMethod)
 	{
@@ -631,12 +556,8 @@ static void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::IncrementValue(%s,%d)"), *Key, Amount);
-	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
-	if (!IntegerClass)
-	{
-		return;
-	}
-	jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	static jclass IntegerClass = CacheClass(Env, "java/lang/Integer");
+	static jmethodID IntegerCtor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
 	if (!IntegerCtor)
 	{
 		return;
@@ -648,18 +569,13 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 	}
 	IncrementValue(Env, CleverTapInstance, Key, NumberObj);
 	Env->DeleteLocalRef(NumberObj);
-	Env->DeleteLocalRef(IntegerClass);
 }
 
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::IncrementValue(%s,%f)"), *Key, Amount);
-	jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
-	if (!DoubleClass)
-	{
-		return;
-	}
-	jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
+	static jclass DoubleClass = CacheClass(Env, "java/lang/Double");
+	static jmethodID DoubleCtor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
 	if (!DoubleCtor)
 	{
 		return;
@@ -671,7 +587,6 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 	}
 	IncrementValue(Env, CleverTapInstance, Key, NumberObj);
 	Env->DeleteLocalRef(NumberObj);
-	Env->DeleteLocalRef(DoubleClass);
 }
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)
@@ -709,8 +624,8 @@ void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallb
 
 jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertConfig& PrimerConfig)
 {
-	jclass BridgeClass = LoadJavaClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
-	jmethodID BuildMethod =
+	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	static jmethodID BuildMethod =
 		GetStaticMethodID(Env, BridgeClass, "buildPushPrimerAlertConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
 	if (!BuildMethod)
 	{
@@ -735,7 +650,6 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 	{
 		ResultJson = nullptr;
 	}
-	Env->DeleteLocalRef(BridgeClass);
 	Env->DeleteLocalRef(JavaMap);
 
 	return ResultJson;
@@ -743,8 +657,8 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 
 jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PrimerConfig)
 {
-	jclass BridgeClass = LoadJavaClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
-	jmethodID BuildMethod = GetStaticMethodID(
+	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	static jmethodID BuildMethod = GetStaticMethodID(
 		Env, BridgeClass, "buildPushPrimerHalfInterstitialConfig", "(Ljava/util/Map;)Lorg/json/JSONObject;");
 	if (!BuildMethod)
 	{
@@ -781,7 +695,7 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfIn
 	{
 		ResultJson = nullptr;
 	}
-	Env->DeleteLocalRef(BridgeClass);
+
 	Env->DeleteLocalRef(JavaMap);
 
 	return ResultJson;

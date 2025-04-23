@@ -33,8 +33,8 @@ JNIEnv* GetJNIEnv();
  */
 jclass CacheClass(JNIEnv* Env, const char* ClassPath);
 
-jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath);
-FString GetJClassName(JNIEnv* Env, jclass Class);
+jclass LoadClass(JNIEnv* Env, const char* ClassPath);
+FString GetClassName(JNIEnv* Env, jclass Class);
 jmethodID GetMethodID(JNIEnv* Env, jclass Class, const char* Name, const char* Signature);
 jmethodID GetStaticMethodID(JNIEnv* Env, jclass Class, const char* Name, const char* Signature);
 jfieldID GetStaticFieldID(JNIEnv* Env, jclass Class, const char* Name, const char* Signature);

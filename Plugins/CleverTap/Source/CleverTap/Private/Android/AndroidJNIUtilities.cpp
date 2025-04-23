@@ -89,21 +89,17 @@ JNIEnv* GetJNIEnv()
 
 jclass CacheClass(JNIEnv* Env, const char* ClassPath)
 {
-	UE_LOG(LogCleverTap, Log, TEXT("CacheClass(%hs)"), ClassPath);
-
 	// check to see if we already have it cached
 	static TMap<FString, jclass> Cache;
 	auto ClassPathString = FString(ClassPath);
 	const auto* ItemPtr = Cache.Find(ClassPathString);
 	if (ItemPtr)
 	{
-		UE_LOG(LogCleverTap, Log, TEXT("CacheClass - class found (%hs)"), ClassPath);
 		return *ItemPtr;
 	}
 
 	// nope, load it
-	UE_LOG(LogCleverTap, Log, TEXT("CacheClass - loading class (%hs)"), ClassPath);
-	jclass Local = LoadJavaClass(Env, ClassPath);
+	jclass Local = LoadClass(Env, ClassPath);
 	if (!Local)
 	{
 		return nullptr;
@@ -114,13 +110,12 @@ jclass CacheClass(JNIEnv* Env, const char* ClassPath)
 	Env->DeleteLocalRef(Local);
 
 	// cache it forever
-	UE_LOG(LogCleverTap, Log, TEXT("CacheClass - caching class (%hs)"), ClassPath);
 	Cache.Add(ClassPathString, Global);
 
 	return Global;
 }
 
-jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath)
+jclass LoadClass(JNIEnv* Env, const char* ClassPath)
 {
 	if (!Env)
 	{
@@ -173,7 +168,7 @@ jclass LoadJavaClass(JNIEnv* Env, const char* ClassPath)
 	return FoundClass;
 }
 
-FString GetJClassName(JNIEnv* Env, jclass Class)
+FString GetClassName(JNIEnv* Env, jclass Class)
 {
 	if (!Env)
 	{
@@ -221,7 +216,7 @@ jmethodID GetMethodID(JNIEnv* Env, jclass Class, const char* Name, const char* S
 	if (ExceptionThrown(Env) || !MethodId)
 	{
 		HandleExceptionOrError(Env, !MethodId,
-			FString::Printf(TEXT("GetMethodID %s %hs %hs failed"), *GetJClassName(Env, Class), Name, Signature));
+			FString::Printf(TEXT("GetMethodID %s %hs %hs failed"), *GetClassName(Env, Class), Name, Signature));
 		return nullptr;
 	}
 	return MethodId;
@@ -238,7 +233,7 @@ jmethodID GetStaticMethodID(JNIEnv* Env, jclass Class, const char* Name, const c
 	if (ExceptionThrown(Env) || !MethodId)
 	{
 		HandleExceptionOrError(Env, !MethodId,
-			FString::Printf(TEXT("GetStaticMethodID %s %hs %hs failed"), *GetJClassName(Env, Class), Name, Signature));
+			FString::Printf(TEXT("GetStaticMethodID %s %hs %hs failed"), *GetClassName(Env, Class), Name, Signature));
 		return nullptr;
 	}
 	return MethodId;
@@ -255,7 +250,7 @@ jfieldID GetStaticFieldID(JNIEnv* Env, jclass Class, const char* Name, const cha
 	if (ExceptionThrown(Env) || !FieldId)
 	{
 		HandleExceptionOrError(Env, !FieldId,
-			FString::Printf(TEXT("GetStaticFieldID %s %hs %hs failed"), *GetJClassName(Env, Class), Name, Signature));
+			FString::Printf(TEXT("GetStaticFieldID %s %hs %hs failed"), *GetClassName(Env, Class), Name, Signature));
 		return nullptr;
 	}
 	return FieldId;

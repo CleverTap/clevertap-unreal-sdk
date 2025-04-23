@@ -21,17 +21,13 @@ enum class ETimeZone
 static jobject CreateJavaTimeZone(JNIEnv* Env, ETimeZone TimeZone)
 {
 	// Get TimeZone class & methods
-	jclass TimeZoneClass = LoadJavaClass(Env, "java/util/TimeZone");
-	if (!TimeZoneClass)
-	{
-		return nullptr;
-	}
-	jmethodID GetTimeZoneMethod =
+	static jclass TimeZoneClass = CacheClass(Env, "java/util/TimeZone");
+	static jmethodID GetTimeZoneMethod =
 		GetStaticMethodID(Env, TimeZoneClass, "getTimeZone", "(Ljava/lang/String;)Ljava/util/TimeZone;");
-	jmethodID GetDefaultTimeZoneMethod = GetStaticMethodID(Env, TimeZoneClass, "getDefault", "()Ljava/util/TimeZone;");
+	static jmethodID GetDefaultTimeZoneMethod =
+		GetStaticMethodID(Env, TimeZoneClass, "getDefault", "()Ljava/util/TimeZone;");
 	if (!GetTimeZoneMethod || !GetDefaultTimeZoneMethod)
 	{
-		Env->DeleteLocalRef(TimeZoneClass);
 		return nullptr;
 	}
 	jobject JavaTimeZone = nullptr;
@@ -64,7 +60,6 @@ static jobject CreateJavaTimeZone(JNIEnv* Env, ETimeZone TimeZone)
 			UE_LOG(LogCleverTap, Error, TEXT("Invalid TimeZone enum!"));
 			break;
 	}
-	Env->DeleteLocalRef(TimeZoneClass);
 
 	return JavaTimeZone;
 }
@@ -72,14 +67,10 @@ static jobject CreateJavaTimeZone(JNIEnv* Env, ETimeZone TimeZone)
 static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate& Date, ETimeZone TimeZone)
 {
 	// Find Java's Calendar class & methods we need
-	jclass CalendarClass = LoadJavaClass(Env, "java/util/GregorianCalendar");
-	if (!CalendarClass)
-	{
-		return nullptr;
-	}
-	jmethodID CalendarCtor = GetMethodID(Env, CalendarClass, "<init>", "(Ljava/util/TimeZone;)V");
-	jmethodID SetMethod = GetMethodID(Env, CalendarClass, "set", "(IIIIII)V");
-	jmethodID GetTimeMethod = GetMethodID(Env, CalendarClass, "getTime", "()Ljava/util/Date;");
+	static jclass CalendarClass = CacheClass(Env, "java/util/GregorianCalendar");
+	static jmethodID CalendarCtor = GetMethodID(Env, CalendarClass, "<init>", "(Ljava/util/TimeZone;)V");
+	static jmethodID SetMethod = GetMethodID(Env, CalendarClass, "set", "(IIIIII)V");
+	static jmethodID GetTimeMethod = GetMethodID(Env, CalendarClass, "getTime", "()Ljava/util/Date;");
 	if (!CalendarCtor || !SetMethod || !GetTimeMethod)
 	{
 		return nullptr;
@@ -96,7 +87,6 @@ static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate&
 	jobject JavaCalendar = Env->NewObject(CalendarClass, CalendarCtor, JavaTimeZone);
 	bool bCalendarConstructionFailed = HandleExceptionOrError(Env, !JavaCalendar, TEXT("Calendar Constructor"));
 	Env->DeleteLocalRef(JavaTimeZone);
-	Env->DeleteLocalRef(CalendarClass);
 	if (bCalendarConstructionFailed)
 	{
 		return nullptr;
@@ -126,9 +116,9 @@ static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate&
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties)
 {
 	// HashMap Support
-	jclass HashMapClass = LoadJavaClass(Env, "java/util/HashMap");
-	jmethodID HashMapConstructor = GetMethodID(Env, HashMapClass, "<init>", "()V");
-	jmethodID HashMapPut =
+	static jclass HashMapClass = CacheClass(Env, "java/util/HashMap");
+	static jmethodID HashMapConstructor = GetMethodID(Env, HashMapClass, "<init>", "()V");
+	static jmethodID HashMapPut =
 		GetMethodID(Env, HashMapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 	if (!HashMapConstructor || !HashMapPut)
 	{
@@ -136,49 +126,49 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	}
 
 	// Integer support
-	jclass IntegerClass = LoadJavaClass(Env, "java/lang/Integer");
-	jmethodID IntegerConstructor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
+	static jclass IntegerClass = CacheClass(Env, "java/lang/Integer");
+	static jmethodID IntegerConstructor = GetMethodID(Env, IntegerClass, "<init>", "(I)V");
 	if (!IntegerConstructor)
 	{
 		return nullptr;
 	}
 
 	// Long support
-	jclass LongClass = LoadJavaClass(Env, "java/lang/Long");
-	jmethodID LongConstructor = GetMethodID(Env, LongClass, "<init>", "(J)V");
+	static jclass LongClass = CacheClass(Env, "java/lang/Long");
+	static jmethodID LongConstructor = GetMethodID(Env, LongClass, "<init>", "(J)V");
 	if (!LongConstructor)
 	{
 		return nullptr;
 	}
 
 	// Double support
-	jclass DoubleClass = LoadJavaClass(Env, "java/lang/Double");
-	jmethodID DoubleConstructor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
+	static jclass DoubleClass = CacheClass(Env, "java/lang/Double");
+	static jmethodID DoubleConstructor = GetMethodID(Env, DoubleClass, "<init>", "(D)V");
 	if (!DoubleConstructor)
 	{
 		return nullptr;
 	}
 
 	// Float Support
-	jclass FloatClass = LoadJavaClass(Env, "java/lang/Float");
-	jmethodID FloatConstructor = GetMethodID(Env, FloatClass, "<init>", "(F)V");
+	static jclass FloatClass = CacheClass(Env, "java/lang/Float");
+	static jmethodID FloatConstructor = GetMethodID(Env, FloatClass, "<init>", "(F)V");
 	if (!FloatConstructor)
 	{
 		return nullptr;
 	}
 
 	// Bool support
-	jclass BooleanClass = LoadJavaClass(Env, "java/lang/Boolean");
-	jmethodID BooleanConstructor = GetMethodID(Env, BooleanClass, "<init>", "(Z)V");
+	static jclass BooleanClass = CacheClass(Env, "java/lang/Boolean");
+	static jmethodID BooleanConstructor = GetMethodID(Env, BooleanClass, "<init>", "(Z)V");
 	if (!BooleanConstructor)
 	{
 		return nullptr;
 	}
 
 	// ArrayList support
-	jclass ArrayListClass = LoadJavaClass(Env, "java/util/ArrayList");
-	jmethodID ArrayListConstructor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
-	jmethodID ArrayListAdd = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
+	static jclass ArrayListClass = CacheClass(Env, "java/util/ArrayList");
+	static jmethodID ArrayListConstructor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
+	static jmethodID ArrayListAdd = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
 	if (!ArrayListConstructor || !ArrayListAdd)
 	{
 		return nullptr;
@@ -188,7 +178,6 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	jobject JavaMap = Env->NewObject(HashMapClass, HashMapConstructor);
 	if (HandleExceptionOrError(Env, !JavaMap, TEXT("HashMap Constructor")))
 	{
-		Env->DeleteLocalRef(HashMapClass);
 		return nullptr;
 	}
 
@@ -369,26 +358,14 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 		Env->DeleteLocalRef(JavaKey);
 	}
 
-	Env->DeleteLocalRef(HashMapClass);
-	Env->DeleteLocalRef(IntegerClass);
-	Env->DeleteLocalRef(LongClass);
-	Env->DeleteLocalRef(DoubleClass);
-	Env->DeleteLocalRef(FloatClass);
-	Env->DeleteLocalRef(BooleanClass);
-	Env->DeleteLocalRef(ArrayListClass);
-
 	return JavaMap;
 }
 
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array)
 {
-	jclass ArrayListClass = LoadJavaClass(Env, "java/util/ArrayList");
-	if (!ArrayListClass)
-	{
-		return nullptr;
-	}
-	jmethodID ArrayListCtor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
-	jmethodID AddMethod = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
+	static jclass ArrayListClass = CacheClass(Env, "java/util/ArrayList");
+	static jmethodID ArrayListCtor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
+	static jmethodID AddMethod = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
 	if (!ArrayListCtor || !AddMethod)
 	{
 		return nullptr;
