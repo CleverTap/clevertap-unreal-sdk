@@ -61,7 +61,7 @@ void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount)
 
 ECleverTapPushPermissionStatus FNullCleverTapInstance::GetPushPermissionStatus()
 {
-	return ECleverTapPushPermissionStatus::Denied;
+	return ECleverTapPushPermissionStatus::NotGranted;
 }
 
 void FNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings)

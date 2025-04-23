@@ -315,7 +315,7 @@ public:
 	void CachePushPermissionStatus(bool bIsGranted)
 	{
 		const ECleverTapPushPermissionStatus Status =
-			bIsGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::Denied;
+			bIsGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::NotGranted;
 		PushPermissionStatus.Store(static_cast<uint8>(Status));
 	}
 
