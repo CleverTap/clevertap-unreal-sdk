@@ -56,26 +56,21 @@ AndroidGoogleServicesJsonPath=Config/google-services.json
 
 ### Android - Configure Push Notification Channels 
 
-Android requires push notifications to be delivered via pre-defined notification channels. These channels allow users to customize the behavior of different types of notifications (e.g., sounds, vibration, visibility).
+Android requires push notifications to be delivered via pre-defined notification channels. These channels let users customize how different types of notifications behave (e.g., sound, vibration, visibility).
 
-Because these channels must be registered during the Java `GameApplication.onCreate()`, which happens before Unreal Engine initializes, they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
+Because channels must be registered during Java's `GameApplication.onCreate()` - before Unreal Engine has initialized - they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
 
-You can define up to 9 channels using the following syntax, which `CleverTap_Android_UPL.xml` uses to inject the necessary Java directly into `GameApplication.onCreate()`:
-
+You can define up to 9 channels using the syntax below. The plugin’s `CleverTap_Android_UPL.xml` reads these entries and injects the required Java into `GameApplication.onCreate()`:
 ```ini
 [/Script/CleverTap.CleverTapConfig]
 AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
 AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="Important news and alerts" | Importance=IMPORTANCE_HIGH | bShowBadge=True
 ```
-
-Each slot must include an `ID`, `Name`, and `Description`. You can also configure `Importance` and `bShowBadge`. 
-Valid Importance values include: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, and `IMPORTANCE_MAX`.
-
 > [!NOTE]
-> These settings are not available through the `Project Settings` GUI, and can only be edited directly in your project’s `Config/DefaultEngine.ini`.
-
-> [!NOTE]
-> The channel Name and Description cannot currently be run-time localized. 
+> - Only `ID` is mandatory.
+> - `Name` and `Description` can be localized at runtime by calling `LocalizeAndroidNotificationChannel()` 
+> - Valid Importance values are: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, and `IMPORTANCE_MAX`.
+> - These settings can only be edited directly in your project’s `Config/DefaultEngine.ini`; they are **not** available in the `Project Settings` GUI.
 
 
 ### Custom Android Notification Handling
