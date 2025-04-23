@@ -560,8 +560,18 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 	// String support
 	static jclass StringClass = CacheClass(Env, "java/lang/String");
 
+	// Collection support
+	static jclass CollectionClass = CacheClass(Env, "java/util/Collection");
+	static jmethodID CollectionIteratorMethod = GetMethodID(Env, CollectionClass, "iterator", "()Ljava/util/Iterator;");
+
+	// Iterator support
+	static jclass IteratorClass = CacheClass(Env, "java/util/Iterator");
+	static jmethodID HasNextMethod = GetMethodID(Env, IteratorClass, "hasNext", "()Z");
+	static jmethodID NextMethod = GetMethodID(Env, IteratorClass, "next", "()Ljava/lang/Object;");
+
 	// Make sure we got everything
-	if (!GetIntValue || !GetLongValue || !GetDoubleValue || !GetFloatValue || !GetBooleanValue || !StringClass)
+	if (!GetIntValue || !GetLongValue || !GetDoubleValue || !GetFloatValue || !GetBooleanValue || !StringClass
+		|| !CollectionIteratorMethod || !HasNextMethod || !NextMethod)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Missing Vital Methods!"));
 		return FCleverTapPropertyValue();
@@ -612,10 +622,39 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 	}
 
 	// todo we need the Java date thing here too
-	// todo we need to handle arrays of things (can convert all to array of string probably)
 
-	// convert to string as a fallback
-	UE_LOG(LogCleverTap, Error, TEXT("Unsupported property type, converting to string!"));
+	if (Env->IsInstanceOf(JavaValue, CollectionClass))
+	{
+		// Convert all colllections to TArray<FString>
+		TArray<FString> StringArray;
+		jobject Iterator = Env->CallObjectMethod(JavaValue, CollectionIteratorMethod);
+		if (HandleExceptionOrError(Env, !Iterator, "getting Collection Iterator"))
+		{
+			return FCleverTapPropertyValue(StringArray);
+		}
+		while (1)
+		{
+			bool HasNext = Env->CallBooleanMethod(Iterator, HasNextMethod);
+			if (HandleException(Env, TEXT("Iterator.hasNext()")) || !HasNext)
+			{
+				break;
+			}
+			jobject Element = Env->CallObjectMethod(Iterator, NextMethod);
+			if (HandleExceptionOrError(Env, !Element, TEXT("Iterator.next()")))
+			{
+				break;
+			}
+			StringArray.Add(JavaObjectToString(Env, Element));
+			Env->DeleteLocalRef(Element);
+		}
+		Env->DeleteLocalRef(Iterator);
+		return FCleverTapPropertyValue(StringArray);
+	}
+
+	//  we made it to here without recogonizing a handled type; convert to string as a fallback
+	UE_LOG(LogCleverTap, Error, TEXT("Unsupported property type '%s', converting to string!"),
+		*GetClassName(Env, Env->GetObjectClass(JavaValue)));
+
 	return FCleverTapPropertyValue(JavaObjectToString(Env, JavaValue));
 }
 
