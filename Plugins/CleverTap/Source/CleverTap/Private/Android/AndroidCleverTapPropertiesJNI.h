@@ -7,10 +7,20 @@
 
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
+enum class ETimeZone
+{
+	UTC,
+	Local
+};
+
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
+FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap);
+
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 
-FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap);
 FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue);
+
+jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate& Date, ETimeZone TimeZone = ETimeZone::UTC);
+FCleverTapDate ConvertJavaDateToCleverTapDate(JNIEnv* Env, jobject JavaDate, ETimeZone TimeZone = ETimeZone::UTC);
 
 }}} // namespace CleverTapSDK::Android::JNI

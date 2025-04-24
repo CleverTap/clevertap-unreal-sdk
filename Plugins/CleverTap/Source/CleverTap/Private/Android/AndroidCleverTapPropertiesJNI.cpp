@@ -3,7 +3,6 @@
 
 #include "Android/AndroidJNIUtilities.h"
 
-#include "AndroidJNIUtilities.h"
 #include "CleverTapLog.h"
 #include "CleverTapLogLevel.h"
 #include "CleverTapUtilities.h"
@@ -11,12 +10,6 @@
 #include "Android/AndroidApplication.h"
 
 namespace CleverTapSDK { namespace Android { namespace JNI {
-
-enum class ETimeZone
-{
-	UTC,
-	Local
-};
 
 static jobject CreateJavaTimeZone(JNIEnv* Env, ETimeZone TimeZone)
 {
@@ -64,7 +57,7 @@ static jobject CreateJavaTimeZone(JNIEnv* Env, ETimeZone TimeZone)
 	return JavaTimeZone;
 }
 
-static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate& Date, ETimeZone TimeZone)
+jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate& Date, ETimeZone TimeZone)
 {
 	// Find Java's Calendar class & methods we need
 	static jclass CalendarClass = CacheClass(Env, "java/util/GregorianCalendar");
@@ -111,6 +104,73 @@ static jobject ConvertCleverTapDateToJavaDate(JNIEnv* Env, const FCleverTapDate&
 		return nullptr;
 	}
 	return JavaDate;
+}
+
+FCleverTapDate ConvertJavaDateToCleverTapDate(JNIEnv* Env, jobject JavaDate, ETimeZone TimeZone)
+{
+	FCleverTapDate Result = { 0, 0, 0 };
+	if (!JavaDate)
+		return Result;
+
+	static jclass CalendarClass = CacheClass(Env, "java/util/Calendar");
+	static jmethodID GetInstanceMethod = GetStaticMethodID(Env, CalendarClass, "getInstance", "()Ljava/util/Calendar;");
+	static jmethodID SetTimeZoneMethod = GetMethodID(Env, CalendarClass, "setTimeZone", "(Ljava/util/TimeZone;)V");
+	static jmethodID SetTimeMethod = GetMethodID(Env, CalendarClass, "setTime", "(Ljava/util/Date;)V");
+	static jmethodID GetMethod = GetMethodID(Env, CalendarClass, "get", "(I)I");
+	static jfieldID YEAR_Field = GetStaticFieldID(Env, CalendarClass, "YEAR", "I");
+	static jfieldID MONTH_Field = GetStaticFieldID(Env, CalendarClass, "MONTH", "I");
+	static jfieldID DAY_Field = GetStaticFieldID(Env, CalendarClass, "DAY_OF_MONTH", "I");
+	if (!GetInstanceMethod || !SetTimeZoneMethod || !SetTimeMethod || !GetMethod || !YEAR_Field || !MONTH_Field
+		|| !DAY_Field)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("ConvertJavaDateToCleverTapDate missing vital Java methods!"));
+		return Result;
+	}
+
+	jobject Calendar = Env->CallStaticObjectMethod(CalendarClass, GetInstanceMethod);
+	if (HandleExceptionOrError(Env, !Calendar, TEXT("Calendar.getInstance()")))
+	{
+		return Result;
+	}
+
+	jobject JavaTimeZone = CreateJavaTimeZone(Env, TimeZone);
+	if (!JavaTimeZone)
+	{
+		Env->DeleteLocalRef(Calendar);
+		return Result;
+	}
+	Env->CallVoidMethod(Calendar, SetTimeZoneMethod, JavaTimeZone);
+	if (HandleException(Env, TEXT("Calendar.setTimeZone()")))
+	{
+		Env->DeleteLocalRef(Calendar);
+		return Result;
+	}
+	Env->DeleteLocalRef(JavaTimeZone);
+
+	Env->CallVoidMethod(Calendar, SetTimeMethod, JavaDate);
+	if (HandleException(Env, TEXT("Calendar.setTime()")))
+	{
+		Env->DeleteLocalRef(Calendar);
+		return Result;
+	}
+
+	bool Errored = false;
+	int32 Year = Env->CallIntMethod(Calendar, GetMethod, Env->GetStaticIntField(CalendarClass, YEAR_Field));
+	Errored |= HandleException(Env, TEXT("Calendar.get(YEAR)"));
+	int32 Month = Env->CallIntMethod(Calendar, GetMethod, Env->GetStaticIntField(CalendarClass, MONTH_Field));
+	Errored |= HandleException(Env, TEXT("Calendar.get(MONTH)"));
+	int32 Day = Env->CallIntMethod(Calendar, GetMethod, Env->GetStaticIntField(CalendarClass, DAY_Field));
+	Errored |= HandleException(Env, TEXT("Calendar.get(DAY)"));
+	Env->DeleteLocalRef(Calendar);
+	if (Errored)
+	{
+		return Result;
+	}
+
+	Result.Year = Year;
+	Result.Month = Month + 1; // Java month is 0-based
+	Result.Day = Day;
+	return Result;
 }
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties)
@@ -361,40 +421,6 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	return JavaMap;
 }
 
-jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array)
-{
-	static jclass ArrayListClass = CacheClass(Env, "java/util/ArrayList");
-	static jmethodID ArrayListCtor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
-	static jmethodID AddMethod = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
-	if (!ArrayListCtor || !AddMethod)
-	{
-		return nullptr;
-	}
-
-	jobject JavaArray = Env->NewObject(ArrayListClass, ArrayListCtor);
-	if (HandleExceptionOrError(Env, !JavaArray, TEXT("Constructing ArrayList")))
-	{
-		return nullptr;
-	}
-
-	for (const FCleverTapProperties& Item : Array)
-	{
-		jobject JavaItem = ConvertCleverTapPropertiesToJavaMap(Env, Item);
-		if (!JavaItem)
-		{
-			// already logged that we had a problem; keep going
-			continue;
-		}
-		Env->CallBooleanMethod(JavaArray, AddMethod, JavaItem);
-		if (HandleException(Env, TEXT("Adding Item")))
-		{
-			// already logged that we had a problem; keep going
-		}
-		Env->DeleteLocalRef(JavaItem);
-	}
-	return JavaArray;
-}
-
 FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap)
 {
 	FCleverTapProperties Properties;
@@ -535,6 +561,40 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 	return Properties;
 }
 
+jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array)
+{
+	static jclass ArrayListClass = CacheClass(Env, "java/util/ArrayList");
+	static jmethodID ArrayListCtor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
+	static jmethodID AddMethod = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
+	if (!ArrayListCtor || !AddMethod)
+	{
+		return nullptr;
+	}
+
+	jobject JavaArray = Env->NewObject(ArrayListClass, ArrayListCtor);
+	if (HandleExceptionOrError(Env, !JavaArray, TEXT("Constructing ArrayList")))
+	{
+		return nullptr;
+	}
+
+	for (const FCleverTapProperties& Item : Array)
+	{
+		jobject JavaItem = ConvertCleverTapPropertiesToJavaMap(Env, Item);
+		if (!JavaItem)
+		{
+			// already logged that we had a problem; keep going
+			continue;
+		}
+		Env->CallBooleanMethod(JavaArray, AddMethod, JavaItem);
+		if (HandleException(Env, TEXT("Adding Item")))
+		{
+			// already logged that we had a problem; keep going
+		}
+		Env->DeleteLocalRef(JavaItem);
+	}
+	return JavaArray;
+}
+
 FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue)
 {
 	// Integer support
@@ -559,6 +619,9 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 
 	// String support
 	static jclass StringClass = CacheClass(Env, "java/lang/String");
+
+	// Date Support
+	static jclass DateClass = CacheClass(Env, "java/util/Date");
 
 	// Collection support
 	static jclass CollectionClass = CacheClass(Env, "java/util/Collection");
@@ -608,7 +671,7 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 	if (Env->IsInstanceOf(JavaValue, BooleanClass))
 	{
 		bool Result = Env->CallBooleanMethod(JavaValue, GetBooleanValue);
-		HandleException(Env, TEXT("floatValue()"));
+		HandleException(Env, TEXT("booleanValue()"));
 		return FCleverTapPropertyValue(Result);
 	}
 
@@ -621,7 +684,10 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 		return FCleverTapPropertyValue(Result);
 	}
 
-	// todo we need the Java date thing here too
+	if (Env->IsInstanceOf(JavaValue, DateClass))
+	{
+		return FCleverTapPropertyValue(ConvertJavaDateToCleverTapDate(Env, JavaValue));
+	}
 
 	if (Env->IsInstanceOf(JavaValue, CollectionClass))
 	{
@@ -651,11 +717,14 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 		return FCleverTapPropertyValue(StringArray);
 	}
 
-	//  we made it to here without recogonizing a handled type; convert to string as a fallback
-	UE_LOG(LogCleverTap, Error, TEXT("Unsupported property type '%s', converting to string!"),
-		*GetClassName(Env, Env->GetObjectClass(JavaValue)));
+	//  we made it to here without recogonizing a handled type;
+	//  convert to string as a fallback
+	FString StringResult = JavaObjectToString(Env, JavaValue);
 
-	return FCleverTapPropertyValue(JavaObjectToString(Env, JavaValue));
+	UE_LOG(LogCleverTap, Warning, TEXT("Unsupported property type '%s', converted to string: \"%s\""),
+		*GetClassName(Env, Env->GetObjectClass(JavaValue)), *StringResult);
+
+	return FCleverTapPropertyValue(StringResult);
 }
 
 }}} // namespace CleverTapSDK::Android::JNI
