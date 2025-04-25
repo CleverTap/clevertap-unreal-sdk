@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "SampleMainMenu.generated.h"
 
 class UCleverTapSubsystem;
@@ -106,6 +107,10 @@ private:
 
 	FString LastSeenCleverTapId;
 	bool bNeedsPushStatusRefresh{ false };
+
+	// In your UUserWidget subclass
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UWidgetSwitcher* TabSwitcher;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* PushPermissionGrantedText;

@@ -210,11 +210,18 @@ void USampleMainMenu::OnPushNotificationClicked(const FCleverTapProperties& Noti
 	FString PayloadString = ToDebugString(NotificationPayload);
 	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushNotificationClicked(NotificationPayload=%s)"), *PayloadString);
 
+	// update PushNotificationClickedText with a dump of the payload
 	if (PushNotificationClickedText)
 	{
 		PushNotificationClickedText->SetText(FText::Format(
 			NSLOCTEXT("CleverTapSample", "PushNotificationClickedPayload", "Push Notification Clicked: {Payload}"),
 			FFormatNamedArguments{ { "Payload", FText::FromString(PayloadString) } }));
+	}
+
+	// Switch to the tab with the PushNotificationClickedText
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
 	}
 }
 
