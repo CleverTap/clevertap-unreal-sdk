@@ -152,7 +152,8 @@ public:
 	 */
 	FOnPushPermissionResponse OnPushPermissionResponse;
 
-	/** Called when the user taps a push notification.
+	/**
+	 * Called when the user taps a push notification.
 	 *
 	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
 	 * ready.
@@ -175,7 +176,7 @@ public:
 	 * support notification channels. No-op on non-Android platforms.
 	 *
 	 * Notification Channels must must be preconfigured in your project’s `Config/DefaultEngine.ini`;
-	 * this allows them to be registered during the Java `GameApplication$onCreate()` method before Unreal has
+	 * this allows them to be registered during the Java `GameApplication.onCreate()` method before Unreal has
 	 * initialized.
 	 *
 	 * Call this function during startup (and at locale change) to update the name and description strings.
