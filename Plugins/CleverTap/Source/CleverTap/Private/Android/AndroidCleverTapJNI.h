@@ -11,15 +11,22 @@
 namespace CleverTapSDK { namespace Android { namespace JNI {
 
 jclass GetCleverTapAPIClass(JNIEnv* Env);
-
-void RegisterCleverTapLifecycleCallbacks(JNIEnv* Env);
-
 void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
 
 jobject GetDefaultInstance(JNIEnv* Env);
 jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
 
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
+
+bool LocalizeNotificationChannel(
+	JNIEnv* Env, const FString& ChannelId, const FText& ChannelName, const FText& Description);
+
+jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
+void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+
+FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
+
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
 void OnUserLogin(JNIEnv* Env, jobject CleverTapInstance, jobject Profile, const FString& CleverTapID);
 void PushProfile(JNIEnv* Env, jobject CleverTapInstance, jobject Profile);
@@ -33,13 +40,6 @@ void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount);
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
-
-FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
-
-jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
-jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
-
-bool RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
 void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings);

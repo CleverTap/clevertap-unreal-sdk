@@ -161,8 +161,35 @@ void USampleMainMenu::ConfigureSharedInstance()
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
+	// Localize the names and descriptions of the android notification channels
+	{
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_general", "General"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("news"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_news", "News"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_news", "Important news and alerts"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("chat"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_chat", "Chat Messages"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_chat", "Private and group messages"));
+
+		CleverTap.LocalizeAndroidNotificationChannel(TEXT("promos"),
+			NSLOCTEXT("CleverTapSample", "ChannelName_promos", "Promotions"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_promos", "Special offers"));
+	}
+
 	// simple test of the OnPushPermissionResponse notification
 	CleverTap.OnPushPermissionResponse.AddUObject(this, &USampleMainMenu::OnPushPermissionResponse);
+
+	// simple test of the OnPushNotificationClicked notification
+	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
+
+	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
+	// if we were launched in response to clicking on a notification, this will generate a
+	// call to the OnPushNotificationClicked() we just registered
+	CleverTap.EnableOnPushNotificationClicked();
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
@@ -175,6 +202,26 @@ void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
 		const ECleverTapPushPermissionStatus Status =
 			bGranted ? ECleverTapPushPermissionStatus::Granted : ECleverTapPushPermissionStatus::NotGranted;
 		PushPermissionGrantedText->SetText(FormatPushPermissionText(Status));
+	}
+}
+
+void USampleMainMenu::OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload)
+{
+	FString PayloadString = ToDebugString(NotificationPayload);
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnPushNotificationClicked(NotificationPayload=%s)"), *PayloadString);
+
+	// update PushNotificationClickedText with a dump of the payload
+	if (PushNotificationClickedText)
+	{
+		PushNotificationClickedText->SetText(FText::Format(
+			NSLOCTEXT("CleverTapSample", "PushNotificationClickedPayload", "Push Notification Clicked: {Payload}"),
+			FFormatNamedArguments{ { "Payload", FText::FromString(PayloadString) } }));
+	}
+
+	// Switch to the tab with the PushNotificationClickedText
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
 	}
 }
 
@@ -327,6 +374,8 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	Profile.Add("Test_DoubleArray", TArray<double>{ 1.1, 2.2, 3.3 });
 	Profile.Add("Test_FloatArray", TArray<float>{ 1.1f, 2.2f, 3.3f });
 	Profile.Add("Test_BoolArray", TArray<bool>{ true, false, true });
+
+	UE_LOG(LogCleverTapSample, Log, TEXT("Properties=%s"), *ToDebugString(Profile));
 
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());

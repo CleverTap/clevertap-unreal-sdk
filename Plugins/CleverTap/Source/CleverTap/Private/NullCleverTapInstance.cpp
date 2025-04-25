@@ -79,3 +79,11 @@ void FNullCleverTapInstance::PromptForPushPermission(
 {
 	CleverTapSDK::Ignore(PushPrimerHalfInterstitialConfig);
 }
+
+void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}
+
+bool FNullCleverTapInstance::LocalizeAndroidNotificationChannel(
+	const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
+{
+	return false;
+}

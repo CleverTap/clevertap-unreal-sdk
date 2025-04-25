@@ -95,13 +95,13 @@ public:
 	 * When false, Push Messaging will not function unless Firebase is
 	 * being configured into the Android build elsewhere in the build process.
 	 */
-	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
 	bool bAndroidIntegrateFirebase = true;
 
 	/**
 	 * Android Only: Project relative path to the google-services.json
 	 * file needed to configure Google Firebase Messaging / FCM.
 	 */
-	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
 	FString AndroidGoogleServicesJsonPath = TEXT("Config/google-services.json");
 };

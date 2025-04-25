@@ -12,6 +12,11 @@
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
 
 /**
+ * Delegate type used to broadcast notifications when the user taps on a Push Notification.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
+
+/**
  * Status of if the user has granted permission to send push notifications.
  */
 enum class ECleverTapPushPermissionStatus : uint8
@@ -146,4 +151,36 @@ public:
 	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()
 	 */
 	FOnPushPermissionResponse OnPushPermissionResponse;
+
+	/**
+	 * Called when the user taps a push notification.
+	 *
+	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
+	 * ready.
+	 */
+	FOnPushNotificationClicked OnPushNotificationClicked;
+
+	/**
+	 * Enables delivery of push notification click events.
+	 *
+	 * Call this after binding to OnPushNotificationClicked and your systems are ready to handle incoming events.
+	 * If the game was launched by clicking on a push notification, it will be delivered immediately after this
+	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
+	 */
+	virtual void EnableOnPushNotificationClicked() = 0;
+
+	/**
+	 * Android Only: Updates the name and description of an existing Notification Channel with localized text.
+	 *
+	 * Returns true on success. Returns false if a channel with this ID does not exist, or the underlying OS doesn't
+	 * support notification channels. No-op on non-Android platforms.
+	 *
+	 * Notification Channels must must be preconfigured in your project’s `Config/DefaultEngine.ini`;
+	 * this allows them to be registered during the Java `GameApplication.onCreate()` method before Unreal has
+	 * initialized.
+	 *
+	 * Call this function during startup (and at locale change) to update the name and description strings.
+	 */
+	virtual bool LocalizeAndroidNotificationChannel(
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) = 0;
 };

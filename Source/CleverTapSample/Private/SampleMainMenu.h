@@ -1,9 +1,12 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapProperties.h"
+
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "SampleMainMenu.generated.h"
 
 class UCleverTapSubsystem;
@@ -93,6 +96,7 @@ private:
 	void PopulateUI();
 	void ConfigureSharedInstance();
 	void OnPushPermissionResponse(bool bGranted);
+	void OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload);
 
 private:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
@@ -105,5 +109,11 @@ private:
 	bool bNeedsPushStatusRefresh{ false };
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UWidgetSwitcher* TabSwitcher;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* PushPermissionGrantedText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* PushNotificationClickedText;
 };
