@@ -108,7 +108,6 @@ private:
 	FString LastSeenCleverTapId;
 	bool bNeedsPushStatusRefresh{ false };
 
-	// In your UUserWidget subclass
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UWidgetSwitcher* TabSwitcher;
 
