@@ -34,6 +34,26 @@ RegionCode= ;Reference https://developer.clevertap.com/docs/idc#ios to determine
 ```
 Alternatively you can edit the Plugin's settings in the UE4Editor.
 
+## Initialization
+By default, with `bAutoInitializeSharedInstance` set to `true` in `Config\DefaultEngine.ini`, the `UCleverTapSubsystem`
+will automatically initialize the CleverTap SDK and the default shared instance.
+
+> [!NOTE]
+> Deferred initialization is only available on iOS. Android platforms must use auto initialization.<br/>
+> On iOS, initialization can be deferred if `bAutoInitializeSharedInstance` is set to `false`. An explicit call to
+> `UCleverTapSubsystem::InitializeSharedInstance()` can be made to initialize the default shared instance. Configuration
+> parameters can either be pulled from the `UCleverTapConfig` INI configuration or explicitly specified using a
+> `FCleverTapInstanceConfig` as shown below.
+> ```cpp
+> FCleverTapInstanceConfig Config;
+> Config.ProjectId = /*Your Project Id*/;
+> Config.ProjectToken = /*Your project token*/;
+> Config.RegionCode = /*Region code*/;
+> Config.LogLevel = /*ECleverTapLogLevel enum specifying your desired CleverTap SDK log verbosity*/;
+> GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
+> ```
+
+
 ## Push Notification Configuration
 CleverTap allows you to send push notifications to your applications from our dashboard, once the user has granted permission in response to a call to `PromptForPushPermission()`. 
 
@@ -60,17 +80,37 @@ Android requires push notifications to be delivered via pre-defined notification
 
 Because channels must be registered during Java's `GameApplication.onCreate()` - before Unreal Engine has initialized - they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
 
-You can define up to 9 channels using the syntax below. The plugin’s `CleverTap_Android_UPL.xml` reads these entries and injects the required Java into `GameApplication.onCreate()`:
+#### Basic Setup 
+Define up to 9 channels in your DefaultEngine.ini. Only the ID field is required - this is the unique identifier for the channel.
+
 ```ini
 [/Script/CleverTap.CleverTapConfig]
 AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
 AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="Important news and alerts" | Importance=IMPORTANCE_HIGH | bShowBadge=True
 ```
+Valid Importance values: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, `IMPORTANCE_MAX`.
+
 > [!NOTE]
-> - Only `ID` is mandatory.
-> - `Name` and `Description` can be localized at runtime by calling `LocalizeAndroidNotificationChannel()` 
-> - Valid Importance values are: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, and `IMPORTANCE_MAX`.
-> - These settings can only be edited directly in your project’s `Config/DefaultEngine.ini`; they are **not** available in the `Project Settings` GUI.
+> - The plugin’s `CleverTap_Android_UPL.xml` reads these entries and injects the required Java into `GameApplication.onCreate()`. Errors in the `ini` syntax will cause the compilation of `GameApplication.java` to fail.
+> - The `AndroidNotificationChannelSlot` settings can only be edited directly in your project’s `Config/DefaultEngine.ini`; they are **not** available in the `Project Settings` GUI.
+
+#### Channel Localization 
+You can set the channel’s display name and description at runtime using Unreal's localization system. If you use runtime localization, there's no need to specify `Name` or `Description` in the .ini.
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidNotificationChannelSlot1=ID="general" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+AndroidNotificationChannelSlot2=ID="news" | Importance=IMPORTANCE_HIGH | bShowBadge=True
+```
+
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
+        NSLOCTEXT("CleverTapSample", "ChannelName_general", "General"),
+        NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
+```
+
 
 
 ### Custom Android Notification Handling
@@ -100,25 +140,6 @@ public class UnifiedMessagingService extends SomeOtherPluginMessagingService {
 
 For more information, see [Custom Android Push Notification Handling](https://developer.clevertap.com/docs/android-push#custom-android-push-notification-handling) 
 
-
-## Initialization
-By default, with `bAutoInitializeSharedInstance` set to `true` in `Config\DefaultEngine.ini`, the `UCleverTapSubsystem`
-will automatically initialize the CleverTap SDK and the default shared instance.
-
-> [!NOTE]
-> Deferred initialization is only available on iOS. Android platforms must use auto initialization.<br/>
-> On iOS, initialization can be deferred if `bAutoInitializeSharedInstance` is set to `false`. An explicit call to
-> `UCleverTapSubsystem::InitializeSharedInstance()` can be made to initialize the default shared instance. Configuration
-> parameters can either be pulled from the `UCleverTapConfig` INI configuration or explicitly specified using a
-> `FCleverTapInstanceConfig` as shown below.
-> ```cpp
-> FCleverTapInstanceConfig Config;
-> Config.ProjectId = /*Your Project Id*/;
-> Config.ProjectToken = /*Your project token*/;
-> Config.RegionCode = /*Region code*/;
-> Config.LogLevel = /*ECleverTapLogLevel enum specifying your desired CleverTap SDK log verbosity*/;
-> GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
-> ```
 
 ## User Profiles
 ### On User Login
