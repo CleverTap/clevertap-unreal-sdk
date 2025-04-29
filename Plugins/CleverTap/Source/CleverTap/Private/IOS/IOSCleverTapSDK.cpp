@@ -333,6 +333,9 @@ FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
+	static constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_PUSH = 0x1;
+	static constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK = 0x2;
+
 	static constexpr int8 PUSH_PERM_STATUS_UNKNOWN = 0;
 	static constexpr int8 PUSH_PERM_STATUS_GRANTED = 1;
 	static constexpr int8 PUSH_PERM_STATUS_DENIED = 2;
@@ -345,7 +348,6 @@ public:
 	{
 		if (NativeInstance != nil)
 		{
-			[NativeInstance setUrlDelegate:SDKListener];
 			// TODO: Not exposed
 			// [NativeInstance setPushPermissionDelegate:SDKListener];
 
@@ -481,11 +483,11 @@ public:
 
 	void EnableOnPushNotificationClicked() override
 	{
-		if (bRegisteredForPushNotificationClicked)
+		if (IsRegisteredForPushNotificationClicked())
 		{
 			return;
 		}
-		bRegisteredForPushNotificationClicked = true;
+		SetIsRegisteredForPushNotificationClicked();
 
 		[NativeInstance setPushNotificationDelegate:SDKListener];
 	}
@@ -499,9 +501,26 @@ public:
 
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler) override
 	{
+		if (!IsRegisteredForDeepLinkHandler())
+		{
+			[NativeInstance setUrlDelegate:SDKListener];
+			SetIsRegisteredForDeepLinkHandler();
+		}
+
 		UrlHandler = MoveTemp(InUrlHandler);
 	}
 	// </ICleverTapInstance>
+
+	bool IsRegisteredForPushNotificationClicked() const
+	{
+		return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_PUSH) != 0;
+	}
+
+	void SetIsRegisteredForPushNotificationClicked() { StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_PUSH; }
+
+	bool IsRegisteredForDeepLinkHandler() const { return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK) != 0; }
+
+	void SetIsRegisteredForDeepLinkHandler() { StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK; }
 
 	void CachePushPermissionStatus(bool bIsGranted)
 	{
@@ -530,7 +549,7 @@ private:
 	CleverTapSDKListener* SDKListener{};
 	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
 	TAtomic<uint8> PushPermissionStatus;
-	bool bRegisteredForPushNotificationClicked{ false };
+	uint8 StateFlags{};
 };
 
 } // namespace
