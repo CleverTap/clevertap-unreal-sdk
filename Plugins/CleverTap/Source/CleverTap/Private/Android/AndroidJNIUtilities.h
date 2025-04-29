@@ -50,7 +50,7 @@ bool ExceptionThrown(JNIEnv* Env);
  *  For example:
  *
  *      jobject JavaCalendar = Env->NewObject(CalendarClass, CalendarCtor, JavaTimeZone);
- *	    bool bCalendarConstructionFailed = HandleExceptionOrError(Env, !JavaCalendar, TEXT("Calendar Constructor"));
+ *      bool bCalendarConstructionFailed = HandleExceptionOrError(Env, !JavaCalendar, TEXT("Calendar Constructor"));
  */
 bool HandleExceptionOrError(JNIEnv* Env, bool bIsError, const FString& Context);
 
@@ -63,8 +63,8 @@ bool HandleExceptionOrError(JNIEnv* Env, bool bIsError, const FString& Context);
  *  Call this function after any JNI method that can't also return an error condition to cleanly handle it:
  *  for example:
  *
- *		bool HasNext = Env->CallBooleanMethod(Iterator, HasNextMethod);
- *		if (HandleException(Env, TEXT("iterator->hasNext()")))
+ *      bool HasNext = Env->CallBooleanMethod(Iterator, HasNextMethod);
+ *      if (HandleException(Env, TEXT("iterator->hasNext()")))
  *
  */
 bool HandleException(JNIEnv* Env, const FString& Context);
