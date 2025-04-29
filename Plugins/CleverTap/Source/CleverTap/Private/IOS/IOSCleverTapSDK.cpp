@@ -363,53 +363,70 @@ public:
 	~FIOSCleverTapInstance() { [SDKListener release]; }
 
 	// <ICleverTapInstance>
-	FString GetCleverTapId() override { return FString{ [NativeInstance profileGetCleverTapID] }; }
+	FString GetCleverTapId() override
+	{
+		check(NativeInstance != nil);
+		return FString{ [NativeInstance profileGetCleverTapID] };
+	}
 
 	void OnUserLogin(const FCleverTapProperties& Profile) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile)];
 	}
 
 	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile) withCleverTapID:CleverTapId.GetNSString()];
 	}
 
 	void PushProfile(const FCleverTapProperties& Profile) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profilePush:ConvertToNSDictionary(Profile)];
 	}
 
-	void PushEvent(const FString& EventName) override { [NativeInstance recordEvent:EventName.GetNSString()]; }
+	void PushEvent(const FString& EventName) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance recordEvent:EventName.GetNSString()];
+	}
 
 	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance recordEvent:EventName.GetNSString() withProps:ConvertToNSDictionary(Actions)];
 	}
 
 	void PushChargedEvent(const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance recordChargedEventWithDetails:ConvertToNSDictionary(ChargeDetails)
 											 andItems:ConvertToNSArray(Items)];
 	}
 
 	void DecrementValue(const FString& Key, int Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
 	void DecrementValue(const FString& Key, double Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
 	void IncrementValue(const FString& Key, int Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
 	void IncrementValue(const FString& Key, double Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
@@ -421,6 +438,7 @@ public:
 
 	void PromptForPushPermission(bool bFallbackToSettings) override
 	{
+		check(NativeInstance != nil);
 		// TODO: Not exposed
 		// [NativeInstance promptForPushPermission:ConvertToNSValue(bFallbackToSettings)];
 		FPlatformMisc::RegisterForRemoteNotifications();
@@ -428,6 +446,8 @@ public:
 
 	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override
 	{
+		check(NativeInstance != nil);
+
 		CTLocalInApp* localInAppBuilder =
 			[[CTLocalInApp alloc] initWithInAppType:ALERT
 										  titleText:ConvertToNSValue(PushPrimerAlertConfig.TitleText)
@@ -445,6 +465,8 @@ public:
 	void PromptForPushPermission(
 		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override
 	{
+		check(NativeInstance != nil);
+
 		CTLocalInApp* localInAppBuilder = [[CTLocalInApp alloc]
 				  initWithInAppType:HALF_INTERSTITIAL
 						  titleText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.TitleText)
@@ -483,6 +505,8 @@ public:
 
 	void EnableOnPushNotificationClicked() override
 	{
+		check(NativeInstance != nil);
+
 		if (IsRegisteredForPushNotificationClicked())
 		{
 			return;
@@ -501,6 +525,8 @@ public:
 
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler) override
 	{
+		check(NativeInstance != nil);
+
 		if (!IsRegisteredForDeepLinkHandler())
 		{
 			[NativeInstance setUrlDelegate:SDKListener];
@@ -531,6 +557,8 @@ public:
 
 	void SetPushToken(const TArray<uint8>& Token)
 	{
+		check(NativeInstance != nil);
+
 		[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
 	}
 
