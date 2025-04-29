@@ -207,6 +207,11 @@ public:
 			BufferedPushNotificationPayload.Reset();
 		}
 	}
+
+	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override
+	{
+		CleverTapSDK::Ignore(UrlHandler);
+	}
 };
 
 TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;

@@ -7,6 +7,8 @@
 #include "CleverTapUtilities.h"
 
 #import <CleverTapSDK/CleverTap.h>
+#import <CleverTapSDK/CleverTapPushNotificationDelegate.h>
+#import <CleverTapSDK/CleverTapURLDelegate.h>
 #import <CleverTapSDK/CTLocalInApp.h>
 
 namespace {
@@ -14,7 +16,8 @@ class FIOSCleverTapInstance;
 }
 
 // TODO: Not exposed
-@interface CleverTapSDKListener : NSObject // <CleverTapPushPermissionDelegate>
+@interface CleverTapSDKListener :
+	NSObject <CleverTapPushNotificationDelegate, CleverTapURLDelegate /*, CleverTapPushPermissionDelegate*/>
 - (instancetype)initWithCppInstance:(FIOSCleverTapInstance*)Instance;
 @end
 
@@ -155,18 +158,184 @@ NSDictionary* ConvertToNSDictionary(const FCleverTapProperties& Properties)
 
 NSArray* ConvertToNSArray(const TArray<FCleverTapProperties>& Items)
 {
-	NSMutableArray* result = [NSMutableArray arrayWithCapacity:Items.Num()];
+	NSMutableArray* Result = [NSMutableArray arrayWithCapacity:Items.Num()];
 
 	for (const FCleverTapProperties& Properties : Items)
 	{
-		[result addObject:ConvertToNSDictionary(Properties)];
+		[Result addObject:ConvertToNSDictionary(Properties)];
 	}
 
-	return result;
+	return Result;
+}
+
+FCleverTapPropertyValue ConvertFromNSNumber(NSNumber* Value)
+{
+	if (Value == (void*)kCFBooleanTrue || Value == (void*)kCFBooleanFalse)
+	{
+		return FCleverTapPropertyValue{ Value == (void*)kCFBooleanTrue ? true : false };
+	}
+
+	const char* const ObjCType = [Value objCType];
+	switch (*ObjCType)
+	{
+		case 'c':
+		{
+			const char Underlying = [Value charValue];
+			return FCleverTapPropertyValue{ static_cast<int32>(Underlying) };
+		}
+
+		case 'C':
+		{
+			const unsigned char Underlying = [Value unsignedCharValue];
+			return FCleverTapPropertyValue{ static_cast<int32>(Underlying) };
+		}
+
+		case 's':
+		{
+			const short Underlying = [Value shortValue];
+			return FCleverTapPropertyValue{ static_cast<int32>(Underlying) };
+		}
+
+		case 'S':
+		{
+			const unsigned short Underlying = [Value unsignedShortValue];
+			return FCleverTapPropertyValue{ static_cast<int32>(Underlying) };
+		}
+
+		case 'i':
+		{
+			const int Underlying = [Value intValue];
+			return FCleverTapPropertyValue{ static_cast<int32>(Underlying) };
+		}
+
+		case 'I':
+		{
+			const unsigned int Underlying = [Value unsignedIntValue];
+			return FCleverTapPropertyValue{ static_cast<int64>(Underlying) };
+		}
+
+		case 'l':
+		{
+			const long Underlying = [Value longValue];
+			return FCleverTapPropertyValue{ static_cast<int64>(Underlying) };
+		}
+
+		case 'L':
+		{
+			const unsigned long Underlying = [Value unsignedLongValue];
+			return FCleverTapPropertyValue{ static_cast<int64>(Underlying) };
+		}
+
+		case 'q':
+		{
+			const long long Underlying = [Value longLongValue];
+			return FCleverTapPropertyValue{ static_cast<int64>(Underlying) };
+		}
+
+		case 'Q':
+		{
+			const unsigned long long Underlying = [Value unsignedLongLongValue];
+			return FCleverTapPropertyValue{ static_cast<int64>(Underlying) };
+		}
+
+		case 'f':
+		{
+			const float Underlying = [Value floatValue];
+			return FCleverTapPropertyValue{ Underlying };
+		}
+
+		case 'd':
+		{
+			const double Underlying = [Value doubleValue];
+			return FCleverTapPropertyValue{ Underlying };
+		}
+
+		default:
+		{
+			UE_LOG(LogCleverTap, Error, TEXT("Unhandled Objective-C type: %s"), *FString{ ObjCType });
+		}
+		break;
+	}
+
+	return FCleverTapPropertyValue{};
+}
+
+TArray<FString> ConvertFromNSArray(NSArray* Arr)
+{
+	TArray<FString> Result{};
+	if (Arr == nil)
+	{
+		return Result;
+	}
+
+	const int NumElems = [Arr count];
+	if (NumElems == 0)
+	{
+		return Result;
+	}
+
+	Result.Reserve(NumElems);
+
+	for (id ElemValue in Arr)
+	{
+		Result.Emplace(FString{ [NSString stringWithFormat:@"%@", ElemValue] });
+	}
+
+	return Result;
+}
+
+FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
+{
+	FCleverTapProperties Result;
+	if (Dict == nil)
+	{
+		return Result;
+	}
+
+	const int32 NumElements = [Dict count];
+	if (NumElements == 0)
+	{
+		return Result;
+	}
+	Result.Reserve(NumElements);
+
+	for (NSString* Key in Dict)
+	{
+		id Value = Dict[Key];
+		if (Value == nil || [Value isEqual:[NSNull null]])
+		{
+			continue;
+		}
+
+		FString KeyString{ Key };
+
+		if ([Value isKindOfClass:[NSString class]])
+		{
+			Result.Add(MoveTemp(KeyString), FCleverTapPropertyValue{ FString{ (NSString*)Value } });
+		}
+		else if ([Value isKindOfClass:[NSNumber class]])
+		{
+			Result.Add(MoveTemp(KeyString), ConvertFromNSNumber((NSNumber*)Value));
+		}
+		else if ([Value isKindOfClass:[NSArray class]])
+		{
+			Result.Add(MoveTemp(KeyString), ConvertFromNSArray((NSArray*)Value));
+		}
+		else
+		{
+			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary value type: %s"),
+				*FString{ NSStringFromClass([Value class]) });
+		}
+	}
+
+	return Result;
 }
 
 class FIOSCleverTapInstance : public ICleverTapInstance
 {
+	static constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_PUSH = 0x1;
+	static constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK = 0x2;
+
 	static constexpr int8 PUSH_PERM_STATUS_UNKNOWN = 0;
 	static constexpr int8 PUSH_PERM_STATUS_GRANTED = 1;
 	static constexpr int8 PUSH_PERM_STATUS_DENIED = 2;
@@ -194,53 +363,70 @@ public:
 	~FIOSCleverTapInstance() { [SDKListener release]; }
 
 	// <ICleverTapInstance>
-	FString GetCleverTapId() override { return FString{ [NativeInstance profileGetCleverTapID] }; }
+	FString GetCleverTapId() override
+	{
+		check(NativeInstance != nil);
+		return FString{ [NativeInstance profileGetCleverTapID] };
+	}
 
 	void OnUserLogin(const FCleverTapProperties& Profile) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile)];
 	}
 
 	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance onUserLogin:ConvertToNSDictionary(Profile) withCleverTapID:CleverTapId.GetNSString()];
 	}
 
 	void PushProfile(const FCleverTapProperties& Profile) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profilePush:ConvertToNSDictionary(Profile)];
 	}
 
-	void PushEvent(const FString& EventName) override { [NativeInstance recordEvent:EventName.GetNSString()]; }
+	void PushEvent(const FString& EventName) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance recordEvent:EventName.GetNSString()];
+	}
 
 	void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance recordEvent:EventName.GetNSString() withProps:ConvertToNSDictionary(Actions)];
 	}
 
 	void PushChargedEvent(const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance recordChargedEventWithDetails:ConvertToNSDictionary(ChargeDetails)
 											 andItems:ConvertToNSArray(Items)];
 	}
 
 	void DecrementValue(const FString& Key, int Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
 	void DecrementValue(const FString& Key, double Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileDecrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
 	void IncrementValue(const FString& Key, int Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithInt:Amount] forKey:Key.GetNSString()];
 	}
 
 	void IncrementValue(const FString& Key, double Amount) override
 	{
+		check(NativeInstance != nil);
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
 	}
 
@@ -252,12 +438,16 @@ public:
 
 	void PromptForPushPermission(bool bFallbackToSettings) override
 	{
+		check(NativeInstance != nil);
 		// TODO: Not exposed
 		// [NativeInstance promptForPushPermission:ConvertToNSValue(bFallbackToSettings)];
+		FPlatformMisc::RegisterForRemoteNotifications();
 	}
 
 	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) override
 	{
+		check(NativeInstance != nil);
+
 		CTLocalInApp* localInAppBuilder =
 			[[CTLocalInApp alloc] initWithInAppType:ALERT
 										  titleText:ConvertToNSValue(PushPrimerAlertConfig.TitleText)
@@ -275,6 +465,8 @@ public:
 	void PromptForPushPermission(
 		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) override
 	{
+		check(NativeInstance != nil);
+
 		CTLocalInApp* localInAppBuilder = [[CTLocalInApp alloc]
 				  initWithInAppType:HALF_INTERSTITIAL
 						  titleText:ConvertToNSValue(PushPrimerHalfInterstitialConfig.TitleText)
@@ -310,7 +502,51 @@ public:
 		// TODO: Not exposed
 		// [NativeInstance promptPushPrimer:localInAppBuilder.getLocalInAppSettings]
 	}
+
+	void EnableOnPushNotificationClicked() override
+	{
+		check(NativeInstance != nil);
+
+		if (IsRegisteredForPushNotificationClicked())
+		{
+			return;
+		}
+		SetIsRegisteredForPushNotificationClicked();
+
+		[NativeInstance setPushNotificationDelegate:SDKListener];
+	}
+
+	bool LocalizeAndroidNotificationChannel(
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override
+	{
+		CleverTapSDK::Ignore(ChannelID, ChannelName, ChannelDescription);
+		return false;
+	}
+
+	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler) override
+	{
+		check(NativeInstance != nil);
+
+		if (!IsRegisteredForDeepLinkHandler())
+		{
+			[NativeInstance setUrlDelegate:SDKListener];
+			SetIsRegisteredForDeepLinkHandler();
+		}
+
+		UrlHandler = MoveTemp(InUrlHandler);
+	}
 	// </ICleverTapInstance>
+
+	bool IsRegisteredForPushNotificationClicked() const
+	{
+		return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_PUSH) != 0;
+	}
+
+	void SetIsRegisteredForPushNotificationClicked() { StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_PUSH; }
+
+	bool IsRegisteredForDeepLinkHandler() const { return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK) != 0; }
+
+	void SetIsRegisteredForDeepLinkHandler() { StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK; }
 
 	void CachePushPermissionStatus(bool bIsGranted)
 	{
@@ -321,13 +557,27 @@ public:
 
 	void SetPushToken(const TArray<uint8>& Token)
 	{
+		check(NativeInstance != nil);
+
 		[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
+	}
+
+	bool HandleUrl(FString Url, ECleverTapChannel Channel) const
+	{
+		if (UrlHandler)
+		{
+			return UrlHandler(MoveTemp(Url), Channel);
+		}
+
+		return true;
 	}
 
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
+	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
 	TAtomic<uint8> PushPermissionStatus;
+	uint8 StateFlags{};
 };
 
 } // namespace
@@ -346,8 +596,39 @@ private:
 - (void)onPushPermissionResponse:(BOOL)Accepted
 {
 	const bool bIsGranted = Accepted ? true : false;
-	CppInstance->CachePushPermissionStatus(bIsGranted);
-	CppInstance->OnPushPermissionResponse.Broadcast(bIsGranted);
+	AsyncTask(ENamedThreads::GameThread, [bIsGranted, Inst = CppInstance]() {
+		Inst->CachePushPermissionStatus(bIsGranted);
+		Inst->OnPushPermissionResponse.Broadcast(bIsGranted);
+	});
+}
+
+- (BOOL)shouldHandleCleverTapURL:(NSURL*)Url forChannel:(CleverTapChannel)Channel
+{
+	const ECleverTapChannel Ch = [Channel] {
+		switch (Channel)
+		{
+			case CleverTapPushNotification:
+				return ECleverTapChannel::PushNotification;
+			case CleverTapAppInbox:
+				return ECleverTapChannel::AppInbox;
+			case CleverTapInAppNotification:
+				return ECleverTapChannel::InAppNotification;
+			default:
+			{
+				UE_LOG(LogCleverTap, Error, TEXT("Unhandled CleverTapChannel value: %d"), static_cast<int32>(Channel));
+				return ECleverTapChannel{};
+			}
+		}
+	}();
+
+	return CppInstance->HandleUrl(FString{ [Url absoluteString] }, Ch) ? YES : NO;
+}
+
+- (void)pushNotificationTappedWithCustomExtras:(NSDictionary*)CustomExtras
+{
+	FCleverTapProperties Extras = ConvertFromNSDictionary(CustomExtras);
+	AsyncTask(ENamedThreads::GameThread,
+		[Extras = MoveTemp(Extras), Inst = CppInstance]() { Inst->OnPushNotificationClicked.Broadcast(Extras); });
 }
 
 @end

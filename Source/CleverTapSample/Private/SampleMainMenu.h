@@ -116,4 +116,7 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* PushNotificationClickedText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* DeepLinkText;
 };

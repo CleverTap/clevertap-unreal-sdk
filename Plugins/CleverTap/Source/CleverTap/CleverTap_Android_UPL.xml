@@ -121,9 +121,10 @@
 			// checkout the latest sdk version at
 			// https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
 			implementation "com.clevertap.android:clevertap-android-sdk:7.3.1"
-
+			implementation "com.clevertap.android:push-templates:1.4.0"
 			implementation "androidx.core:core:1.13.0"
 			implementation 'com.android.installreferrer:installreferrer:2.2'
+
 			// implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
 			}
 		</insert>
@@ -148,11 +149,29 @@
 		<if condition="CTAutoInit">
 			<true>
 				<insert>
-					com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					com.clevertap.android.sdk.CleverTapAPI CleverTapAPI = com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
 				</insert>
 			</true>
 		</if>
 
+		<!-- Notification Channel Configuration
+		
+			This section generates a call to CleverTapAPI.createNotificationChannel() for each non-empty CTNotificationChannelSlot defined in the ini file.
+
+			Expected input looks like this; each field is optional in the grammar, but the ID field is required for it to work at runtime:
+				AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+
+			We pre-declare variables and constants to create a suitable context, then replace all pipes (|) with semicolons (;) to form valid Java assignment syntax.
+			(Pipes were used instead of semicolons because Unreal's various INI parsers handle semicolons inconsistently.)
+				ID="general" ; Name="General" ; Description="General Notifications" ; Importance=IMPORTANCE_DEFAULT ; bShowBadge=True
+
+			Then for each slot we:
+				- restore all variables to their defaults
+				- apply the settings using the java we got from search and replace
+				- call CleverTapAPI.createNotificationChannel() using the settings variables
+
+		-->
 		<setString result="SetNotificationChannelDefaults" value='ID=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
 		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name.isEmpty() ? ID : Name, Description, Importance, bShowBadge );' />
 		<insert>

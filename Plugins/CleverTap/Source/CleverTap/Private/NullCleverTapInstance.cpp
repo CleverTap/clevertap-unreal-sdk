@@ -85,5 +85,11 @@ void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}
 bool FNullCleverTapInstance::LocalizeAndroidNotificationChannel(
 	const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
 {
+	CleverTapSDK::Ignore(ChannelID, ChannelName, ChannelDescription);
 	return false;
+}
+
+void FNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)
+{
+	CleverTapSDK::Ignore(UrlHandler);
 }
