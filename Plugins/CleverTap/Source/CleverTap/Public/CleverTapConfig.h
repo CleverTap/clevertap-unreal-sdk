@@ -104,4 +104,10 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
 	FString AndroidGoogleServicesJsonPath = TEXT("Config/google-services.json");
+
+	/**
+	 * Android Only: Provides the capability to reach users on devices that suppress notifications via GCM/FCM.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	bool bAndroidEnablePullNotifications = true;
 };

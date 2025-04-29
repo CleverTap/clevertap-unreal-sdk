@@ -9,6 +9,7 @@
 		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false" />
 		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true" />
 		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false" />
+		<setBoolFromProperty result="CTEnableBackgroundSync" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidEnablePullNotifications" default="true" />
 
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
@@ -61,6 +62,15 @@
 				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER" />
 				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)" />
 				<addElement tag="application" name="CLEVERTAP_IDENTIFIER" />
+
+				<if condition="CTEnableBackgroundSync">
+					<true>
+						<setElement result="CLEVERTAP_BACKGROUND_SYNC" xml="&lt;meta-data/&gt;" />
+						<addAttribute tag="$CLEVERTAP_BACKGROUND_SYNC" name="android:name" value="CLEVERTAP_BACKGROUND_SYNC" />
+						<addAttribute tag="$CLEVERTAP_BACKGROUND_SYNC" name="android:value" value="1" />
+						<addElement tag="application" name="CLEVERTAP_BACKGROUND_SYNC" />
+					</true>
+				</if>
 			</true>
 		</if>
 
