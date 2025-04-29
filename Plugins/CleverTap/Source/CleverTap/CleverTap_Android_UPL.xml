@@ -152,6 +152,23 @@
 			</true>
 		</if>
 
+		<!-- Notification Channel Configuration
+		
+			This section generates a call to CleverTapAPI.createNotificationChannel() for each non-empty CTNotificationChannelSlot defined in the ini file.
+
+			Expected input looks like this; each field is optional in the grammar, but the ID field is required for it to work at runtime:
+				AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+
+			We pre-declare variables and constants to create a suitable context, then replace all pipes (|) with semicolons (;) to form valid Java assignment syntax.
+			(Pipes were used instead of semicolons because Unreal's various INI parsers handle semicolons inconsistently.)
+				ID="general" ; Name="General" ; Description="General Notifications" ; Importance=IMPORTANCE_DEFAULT ; bShowBadge=True
+
+			Then for each slot we:
+				- restore all variables to their defaults
+				- apply the settings using the java we got from search and replace
+				- call CleverTapAPI.createNotificationChannel() using the settings variables
+
+		-->
 		<setString result="SetNotificationChannelDefaults" value='ID=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
 		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name.isEmpty() ? ID : Name, Description, Importance, bShowBadge );' />
 		<insert>
