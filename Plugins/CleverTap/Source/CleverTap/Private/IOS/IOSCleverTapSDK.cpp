@@ -496,6 +496,11 @@ public:
 		CleverTapSDK::Ignore(ChannelID, ChannelName, ChannelDescription);
 		return false;
 	}
+
+	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler) override
+	{
+		UrlHandler = MoveTemp(InUrlHandler);
+	}
 	// </ICleverTapInstance>
 
 	void CachePushPermissionStatus(bool bIsGranted)
@@ -510,9 +515,20 @@ public:
 		[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
 	}
 
+	bool HandleUrl(FString Url, ECleverTapChannel Channel) const
+	{
+		if (UrlHandler)
+		{
+			return UrlHandler(MoveTemp(Url), Channel);
+		}
+
+		return true;
+	}
+
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
+	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
 	TAtomic<uint8> PushPermissionStatus;
 	bool bRegisteredForPushNotificationClicked{ false };
 };
@@ -541,7 +557,24 @@ private:
 
 - (BOOL)shouldHandleCleverTapURL:(NSURL*)Url forChannel:(CleverTapChannel)Channel
 {
-	return YES;
+	const ECleverTapChannel Ch = [Channel] {
+		switch (Channel)
+		{
+			case CleverTapPushNotification:
+				return ECleverTapChannel::PushNotification;
+			case CleverTapAppInbox:
+				return ECleverTapChannel::AppInbox;
+			case CleverTapInAppNotification:
+				return ECleverTapChannel::InAppNotification;
+			default:
+			{
+				UE_LOG(LogCleverTap, Error, TEXT("Unhandled CleverTapChannel value: %d"), static_cast<int32>(Channel));
+				return ECleverTapChannel{};
+			}
+		}
+	}();
+
+	return CppInstance->HandleUrl(FString{ [Url absoluteString] }, Ch) ? YES : NO;
 }
 
 - (void)pushNotificationTappedWithCustomExtras:(NSDictionary*)CustomExtras

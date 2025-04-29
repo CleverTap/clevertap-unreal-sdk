@@ -37,4 +37,6 @@ public:
 
 	bool LocalizeAndroidNotificationChannel(
 		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override;
+
+	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override;
 };

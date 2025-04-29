@@ -32,6 +32,16 @@ enum class ECleverTapPushPermissionStatus : uint8
 };
 
 /**
+ * A CleverTap channel that a link or notification came from
+ */
+enum class ECleverTapChannel : uint8
+{
+	PushNotification,
+	AppInbox,
+	InAppNotification,
+};
+
+/**
  * A CleverTap API instance
  */
 class CLEVERTAP_API ICleverTapInstance
@@ -183,4 +193,14 @@ public:
 	 */
 	virtual bool LocalizeAndroidNotificationChannel(
 		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) = 0;
+
+	/**
+	 * iOS Only: Register a URL handler if you would like to implement custom handling for URLs in the case of in-app
+	 *  notification CTAs and push notifications.
+	 *
+	 * The handler is unique and registering a second handler replaces the original. The handler should return true if
+	 *  if you would like CleverTap to open the URL supplied to it. There is no guarantee on the thread that the
+	 *  handler is called on.
+	 */
+	virtual void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) = 0;
 };
