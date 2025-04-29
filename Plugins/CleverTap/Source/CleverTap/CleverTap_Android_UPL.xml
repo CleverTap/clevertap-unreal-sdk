@@ -121,8 +121,9 @@
 			// checkout the latest sdk version at
 			// https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
 			implementation "com.clevertap.android:clevertap-android-sdk:7.3.1"
-
+			implementation "com.clevertap.android:push-templates:1.4.0"
 			implementation "androidx.core:core:1.13.0"
+
 			// implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
 			}
 		</insert>
@@ -147,7 +148,8 @@
 		<if condition="CTAutoInit">
 			<true>
 				<insert>
-					com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					com.clevertap.android.sdk.CleverTapAPI CleverTapAPI = com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
 				</insert>
 			</true>
 		</if>
