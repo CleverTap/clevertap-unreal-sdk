@@ -195,6 +195,20 @@ public:
 		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) = 0;
 
 	/**
+	 * Android Only: Updates the name of an existing Notification Channel Group with localized text.
+	 *
+	 * Returns true on success. Returns false if a group with this ID does not exist, or the underlying OS doesn't
+	 * support notification channels. No-op on non-Android platforms.
+	 *
+	 * Notification Channel Groups must must be preconfigured in your project’s `Config/DefaultEngine.ini`;
+	 * this allows them to be registered during the Java `GameApplication.onCreate()` method before Unreal has
+	 * initialized.
+	 *
+	 * Call this function during startup (and at locale change) to update with the localized name.
+	 */
+	virtual bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) = 0;
+
+	/**
 	 * iOS Only: Register a URL handler if you would like to implement custom handling for URLs in the case of in-app
 	 *  notification CTAs and push notifications.
 	 *

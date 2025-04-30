@@ -138,6 +138,17 @@ public:
 		return Success;
 	}
 
+	bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) override
+	{
+		bool Success = JNI::LocalizeNotificationChannelGroup(JNI::GetJNIEnv(), GroupID, GroupName);
+		if (!Success)
+		{
+			UE_LOG(
+				LogCleverTap, Error, TEXT("LocalizeAndroidNotificationChannelGroup(%s) failed. Unknown ID?"), *GroupID);
+		}
+		return Success;
+	}
+
 	ECleverTapPushPermissionStatus GetPushPermissionStatus() override
 	{
 		if (JNI::IsPushPermissionGranted(JNI::GetJNIEnv(), JavaCleverTapInstance))
