@@ -14,11 +14,7 @@
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 
-		<!-- todo figure out how to handle the first slot default problem -->
 		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default='ID="default"| Name="General"| Description="General Notifications"| Importance=IMPORTANCE_DEFAULT| bShowBadge=True|' />
-
-		<setStringFromProperty result="CTNotificationChannelGroupSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelGroupSlot1" default="" />
-
 	</init>
 
 	<prebuildCopies>
@@ -252,9 +248,6 @@
 		<setInt result="index" value="1" />
 		<setBool result="loopRun" value="true" />
 		<while condition="loopRun">
-			<!-- todo we want the default for the first slot -->
-			<setStringFromProperty result="CTNotificationChannelSlot$I(index)" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot$I(index)" default="" />
-
 			<setBoolIsEqual result="Slot_$I(index)_IsEmpty" arg1="$S(CTNotificationChannelSlot$I(index))" arg2="" />
 			<if condition="Slot_$I(index)_IsEmpty">
 				<false>
@@ -269,6 +262,9 @@
 			</if>
 			<setIntAdd result="index" arg1="$I(index)" arg2="1" />
 			<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="100" />
+
+			<!-- load the string for the next iteration; this makes it easy for the first slot to have a different default -->
+			<setStringFromProperty result="CTNotificationChannelSlot$I(index)" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot$I(index)" default="" />
 		</while>
 
 		<insert>
