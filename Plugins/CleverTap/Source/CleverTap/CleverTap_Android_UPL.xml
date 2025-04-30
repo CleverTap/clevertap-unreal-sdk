@@ -159,7 +159,7 @@
 
 		<!-- Notification Channel Group Configuration
 		
-			This section generates a call to CleverTapAPI.createNotificationChannelGroup() for each non-empty AndroidNotificationChannelGroupSlot1 defined in the ini file.
+			This section generates a call to CleverTapAPI.createNotificationChannelGroup() for each non-empty AndroidNotificationChannelGroupSlot defined in the ini file.
 
 			Expected input looks like this; each field is optional in the grammar, but the ID field is required for it to work at runtime:
 				AndroidNotificationChannelSlot1=ID="general" | Name="General"
@@ -221,7 +221,7 @@
 			Then for each slot we:
 				- restore all variables to their defaults
 				- apply the settings using the java we got from search and replace
-				- call CleverTapAPI.createNotificationChannel() using the settings variables;
+				- call CleverTapAPI.createNotificationChannel() using the settings variables
 
 		-->
 		<insert>
