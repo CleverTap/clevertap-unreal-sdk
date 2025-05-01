@@ -71,7 +71,7 @@ To use the default CleverTap notification implementation with Firebase:
 ```ini
 [/Script/CleverTap.CleverTapConfig]
 bAndroidIntegrateFirebase=True
-AndroidGoogleServicesJsonPath=Config/google-services.json
+AndroidGoogleServicesJsonPath=Config/Android/google-services.json
 ```
 
 ### Android - Configure Push Notification Channels 
@@ -118,11 +118,25 @@ You can define a specific notification channel that CleverTap will use if the ch
 In case the SDK does not find the default channel ID specified in the manifest, it will automatically fall back to using a default channel called `Miscellaneous`. This ensures that push notifications are still delivered, even if no specific default channel is specified in the manifest.
 
 To specify your app’s preferred default channel:
-
 ```ini
 [/Script/CleverTap.CleverTapConfig]
 AndroidDefaultNotificationChannel=general
 ```
+
+### Android Small Notification Icon
+By default, our SDK uses the app's icon for both the notification icon and the notification bar icon; however, since Android 5, all non-alpha channels are ignored while drawing the main notification icon. 
+
+You can supply the project-relative path to an alpha-only png to use instead:
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidSmallNotificationIconPath=Config/Android/sample_small_notification_icon.png
+```
+
+Note that the base filename must contain only lowercase letters (`a`-`z`), digits (`0`-`9`), or underscores (`_`).
+
+For more information about the image requirements, see https://developer.clevertap.com/docs/android-push#set-the-small-notification-icon
+
+> [!NOTE] If you're using `ico=...` in push payloads, your project must ensure the specified image is copied into `res/drawable/` using your own UPL step.
 
 ### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
