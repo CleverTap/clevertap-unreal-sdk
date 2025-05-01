@@ -173,8 +173,8 @@ void USampleMainMenu::ConfigureSharedInstance()
 			TEXT("marketing"), NSLOCTEXT("CleverTapSample", "ChannelGroupName_marketing", "Marketing"));
 
 		CleverTap.LocalizeAndroidNotificationChannel(TEXT("messages"),
-			NSLOCTEXT("CleverTapSample", "ChannelName_general", "Messages"),
-			NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "Chat Messages"));
+			NSLOCTEXT("CleverTapSample", "ChannelName_messages", "Messages"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_messages", "Chat Messages"));
 
 		CleverTap.LocalizeAndroidNotificationChannel(TEXT("reminders"),
 			NSLOCTEXT("CleverTapSample", "ChannelName_reminders", "Reminders"),
@@ -185,12 +185,12 @@ void USampleMainMenu::ConfigureSharedInstance()
 			NSLOCTEXT("CleverTapSample", "ChannelDesc_news", "Important news and alerts"));
 
 		CleverTap.LocalizeAndroidNotificationChannel(TEXT("system_alerts"),
-			NSLOCTEXT("CleverTapSample", "ChannelName_alerts", "System Alerts"),
-			NSLOCTEXT("CleverTapSample", "ChannelDesc_alerts", "Important System Messages"));
+			NSLOCTEXT("CleverTapSample", "ChannelName_system_alerts", "System Alerts"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_system_alerts", "Important System Messages"));
 
 		CleverTap.LocalizeAndroidNotificationChannel(TEXT("updates"),
-			NSLOCTEXT("CleverTapSample", "ChannelName_chat", "Updates"),
-			NSLOCTEXT("CleverTapSample", "ChannelDesc_chat", "New Version Announcments"));
+			NSLOCTEXT("CleverTapSample", "ChannelName_updates", "Updates"),
+			NSLOCTEXT("CleverTapSample", "ChannelDesc_updates", "New Version Announcments"));
 
 		CleverTap.LocalizeAndroidNotificationChannel(TEXT("promotions"),
 			NSLOCTEXT("CleverTapSample", "ChannelName_promotions", "Promotions"),
