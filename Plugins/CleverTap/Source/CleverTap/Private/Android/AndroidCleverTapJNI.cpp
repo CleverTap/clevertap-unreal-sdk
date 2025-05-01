@@ -266,6 +266,29 @@ bool LocalizeNotificationChannel(
 	return Success;
 }
 
+bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const FText& GroupName)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID LocalizeGroupMethod = GetStaticMethodID(Env, BridgeClass, "localizeNotificationChannelGroup",
+		"(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z");
+	if (!LocalizeGroupMethod)
+	{
+		return false;
+	}
+
+	jobject Context = FAndroidApplication::GetGameActivityThis();
+	jstring JGroupId = Env->NewStringUTF(TCHAR_TO_UTF8(*GroupId));
+	jstring JGroupName = Env->NewStringUTF(TCHAR_TO_UTF8(*GroupName.ToString()));
+	bool Success = Env->CallStaticBooleanMethod(BridgeClass, LocalizeGroupMethod, Context, JGroupId, JGroupName);
+	if (HandleException(Env, "localizeNotificationChannelGroup()"))
+	{
+		Success = false;
+	}
+	Env->DeleteLocalRef(JGroupId);
+	Env->DeleteLocalRef(JGroupName);
+	return Success;
+}
+
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
 {
 	static const char* ClassPath = "com/clevertap/android/unreal/UECleverTapListener";

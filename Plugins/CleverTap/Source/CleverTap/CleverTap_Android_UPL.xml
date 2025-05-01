@@ -15,14 +15,6 @@
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 
 		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default='ID="default"| Name="General"| Description="General Notifications"| Importance=IMPORTANCE_DEFAULT| bShowBadge=True|' />
-		<setStringFromProperty result="CTNotificationChannelSlot2" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot2" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot3" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot3" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot4" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot4" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot5" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot5" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot6" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot6" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot7" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot7" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot8" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot8" default="" />
-		<setStringFromProperty result="CTNotificationChannelSlot9" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot9" default="" />
 	</init>
 
 	<prebuildCopies>
@@ -165,16 +157,66 @@
 			</true>
 		</if>
 
-		<!-- Notification Channel Configuration
+		<!-- Notification Channel Group Configuration
 		
-			This section generates a call to CleverTapAPI.createNotificationChannel() for each non-empty CTNotificationChannelSlot defined in the ini file.
+			This section generates a call to CleverTapAPI.createNotificationChannelGroup() for each non-empty AndroidNotificationChannelGroupSlot defined in the ini file.
 
 			Expected input looks like this; each field is optional in the grammar, but the ID field is required for it to work at runtime:
-				AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+				AndroidNotificationChannelSlot1=ID="general" | Name="General"
 
 			We pre-declare variables and constants to create a suitable context, then replace all pipes (|) with semicolons (;) to form valid Java assignment syntax.
 			(Pipes were used instead of semicolons because Unreal's various INI parsers handle semicolons inconsistently.)
-				ID="general" ; Name="General" ; Description="General Notifications" ; Importance=IMPORTANCE_DEFAULT ; bShowBadge=True
+				ID="general" ; Name="General" 
+
+			Then for each slot we:
+				- restore all variables to their defaults
+				- apply the settings using the java we got from search and replace
+				- call CleverTapAPI.createNotificationChannelGroup() using the settings variables
+
+		-->
+		<insert>
+			{
+			String ID;
+			String Name;
+		</insert>
+
+		<setString result="SetNotificationChannelGroupDefaults" value='ID=""; Name=""; ' />
+		<setString result="CreateNotificationChannelGroup" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannelGroup( getApplicationContext(), ID, Name.isEmpty() ? ID : Name );' />
+
+		<setInt result="index" value="1" />
+		<setBool result="loopRun" value="true" />
+		<while condition="loopRun">
+			<setStringFromProperty result="CTNotificationChannelGroupSlot$I(index)" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelGroupSlot$I(index)" default="" />
+			<setBoolIsEqual result="GroupSlot_$I(index)_IsEmpty" arg1="$S(CTNotificationChannelGroupSlot$I(index))" arg2="" />
+			<if condition="GroupSlot_$I(index)_IsEmpty">
+				<false>
+					<insertValue value="$S(SetNotificationChannelGroupDefaults)" />
+					<insertNewline />
+					<setStringReplace result="ConfigureGroupSlot$I(index)" source="$S(CTNotificationChannelGroupSlot$I(index))" find="|" with=";" />
+					<insertValue value="$S(ConfigureGroupSlot$I(index));" />
+					<insertNewline />
+					<insertValue value="$S(CreateNotificationChannelGroup)" />
+					<insertNewline />
+				</false>
+			</if>
+			<setIntAdd result="index" arg1="$I(index)" arg2="1" />
+			<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="10" />
+		</while>
+
+		<insert>
+			}
+		</insert>
+
+		<!-- Notification Channel Configuration
+		
+			This section generates a call to CleverTapAPI.createNotificationChannel() for each non-empty AndroidNotificationChannelSlot defined in the ini file.
+
+			Expected input looks like this; each field is optional in the grammar, but the ID field is required for it to work at runtime:
+				AndroidNotificationChannelSlot1=ID="general" | Group="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+
+			We pre-declare variables and constants to create a suitable context, then replace all pipes (|) with semicolons (;) to form valid Java assignment syntax.
+			(Pipes were used instead of semicolons because Unreal's various INI parsers handle semicolons inconsistently.)
+				ID="general" ; Group="general" ; Name="General" ; Description="General Notifications" ; Importance=IMPORTANCE_DEFAULT ; bShowBadge=True
 
 			Then for each slot we:
 				- restore all variables to their defaults
@@ -182,8 +224,6 @@
 				- call CleverTapAPI.createNotificationChannel() using the settings variables
 
 		-->
-		<setString result="SetNotificationChannelDefaults" value='ID=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; ' />
-		<setString result="CreateNotificationChannel" value='com.clevertap.android.sdk.CleverTapAPI.createNotificationChannel( getApplicationContext(), ID, Name.isEmpty() ? ID : Name, Description, Importance, bShowBadge );' />
 		<insert>
 			{
 			final int IMPORTANCE_DEFAULT = android.app.NotificationManager.IMPORTANCE_DEFAULT;
@@ -195,11 +235,15 @@
 			final boolean False = false;
 			final boolean True = true;
 			String ID;
+			String Group;
 			String Name;
 			String Description;
 			int Importance = IMPORTANCE_DEFAULT;
 			boolean bShowBadge = true;
 		</insert>
+
+		<setString result="SetNotificationChannelDefaults" value='ID=""; Group=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True;' />
+		<setString result="CreateNotificationChannel" value='com.clevertap.android.unreal.UECleverTapBridge.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, Group, bShowBadge);' />
 
 		<setInt result="index" value="1" />
 		<setBool result="loopRun" value="true" />
@@ -209,12 +253,18 @@
 				<false>
 					<insertValue value="$S(SetNotificationChannelDefaults)" />
 					<setStringReplace result="ConfigureSlot$I(index)" source="$S(CTNotificationChannelSlot$I(index))" find="|" with=";" />
+					<insertNewline />
 					<insertValue value="$S(ConfigureSlot$I(index));" />
+					<insertNewline />
 					<insertValue value="$S(CreateNotificationChannel)" />
+					<insertNewline />
 				</false>
 			</if>
 			<setIntAdd result="index" arg1="$I(index)" arg2="1" />
-			<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="9" />
+			<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="100" />
+
+			<!-- load the string for the next iteration; this makes it easy for the first slot to have a different default -->
+			<setStringFromProperty result="CTNotificationChannelSlot$I(index)" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot$I(index)" default="" />
 		</while>
 
 		<insert>

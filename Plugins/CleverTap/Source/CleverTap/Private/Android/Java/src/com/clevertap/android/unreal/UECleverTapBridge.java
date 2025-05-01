@@ -1,26 +1,71 @@
 package com.clevertap.android.unreal;
 
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 
 // Utilities to make it easier to use the CleverTapAPI from Unreal/C++ 
 public class UECleverTapBridge {
 
+    // Create a notification channel using the appropriate overload & defaults.
+    // Needs to happen during onCreate() to be reliable.
+    public static void createNotificationChannel(Context context, String channelId,
+            CharSequence name, String description, int importance, String groupId,
+            boolean showBadge) {
+
+        // default the name to the id if none provided
+        if (name == null || name.isEmpty()) {
+            name = channelId;
+        }
+
+        if (groupId != null && !groupId.isEmpty()) {
+            // create channel assigned to group
+            CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, groupId,
+                    showBadge);
+        } else {
+            // create channel with no group
+            CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, showBadge);
+        }
+    }
+
+    // Find the first channel with this channelID, ignoring groupId!
+    // Returns null if no such channel found.
+    //
+    // This function is required because
+    // NotificationManager.getNotificationChannel(context,channelID)
+    // doesn't work for grouped channels!
+    public static NotificationChannel getNotificationChannel(Context context, String channelId) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // incompatible build; no channel support
+            return null;
+        }
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        for (NotificationChannel channel : nm.getNotificationChannels()) {
+            if (channel.getId().equals(channelId)) {
+                // found it
+                return channel;
+            }
+        }
+        // no such channel
+        return null;
+    }
+
     // Update the name and description for an existing android notification channel
     // Returns true on success, false if no such channel or incompatible API.
     public static boolean localizeNotificationChannel(Context context, String channelId, String name,
             String description) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            // incompatible build!
+            // incompatible build; no channel support
             return false;
         }
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel existing = nm.getNotificationChannel(channelId);
+        NotificationChannel existing = getNotificationChannel(context, channelId);
         if (existing == null) {
             // no such channel
             return false;
@@ -28,7 +73,24 @@ public class UECleverTapBridge {
         existing.setName(name);
         existing.setDescription(description);
         // Re-register to apply name/description changes
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         nm.createNotificationChannel(existing);
+        return true;
+    }
+
+    public static boolean localizeNotificationChannelGroup(Context context, String groupId, String name) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // incompatible build; no channel support
+            return false;
+        }
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannelGroup group = nm.getNotificationChannelGroup(groupId);
+        if (group == null) {
+            // no such group
+            return false;
+        }
+        // re-create with the new name; there's no way to update in place
+        CleverTapAPI.createNotificationChannelGroup(context, groupId, name);
         return true;
     }
 

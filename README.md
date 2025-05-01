@@ -81,7 +81,7 @@ Android requires push notifications to be delivered via pre-defined notification
 Because channels must be registered during Java's `GameApplication.onCreate()` - before Unreal Engine has initialized - they cannot be created dynamically from C++. Instead, they must be preconfigured in your project’s `Config/DefaultEngine.ini`.
 
 #### Basic Setup 
-Define up to 9 channels in your DefaultEngine.ini. Only the ID field is required - this is the unique identifier for the channel.
+Define up to 100 channels in your DefaultEngine.ini. Only the ID field is required - this is the unique identifier for the channel.
 
 ```ini
 [/Script/CleverTap.CleverTapConfig]
@@ -95,7 +95,7 @@ Valid Importance values: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, 
 > - The `AndroidNotificationChannelSlot` settings can only be edited directly in your project’s `Config/DefaultEngine.ini`; they are **not** available in the `Project Settings` GUI.
 
 #### Channel Localization 
-You can set the channel’s display name and description at runtime using Unreal's localization system. If you use runtime localization, there's no need to specify `Name` or `Description` in the .ini.
+You can set the channel’s display name and description at runtime using Unreal's localization system. If you use runtime localization, there's no need to specify `Name` or `Description` in the `.ini`.
 
 ```ini
 [/Script/CleverTap.CleverTapConfig]
@@ -111,6 +111,25 @@ CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
         NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
 ```
 
+#### Channel Grouping 
+You can define up to 10 notification channel groups to categorize related channels.
+Each group is declared in your `.ini`, and channels can reference them using `Group="group_id"`.
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidNotificationChannelGroupSlot1=ID="general" | Name="General"
+AndroidNotificationChannelSlot1=ID="general" | Group="general" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
+```
+
+Group names can be localized at runtime, just like channels.
+Call `LocalizeAndroidNotificationChannelGroup()` early in startup and again after locale changes.
+
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.LocalizeAndroidNotificationChannelGroup( TEXT("general"), 
+        NSLOCTEXT("CleverTapSample", "ChannelGroupName_general", "General"));
+```
 
 
 ### Custom Android Notification Handling
