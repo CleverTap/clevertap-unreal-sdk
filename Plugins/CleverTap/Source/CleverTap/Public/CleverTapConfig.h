@@ -106,6 +106,12 @@ public:
 	FString AndroidGoogleServicesJsonPath = TEXT("Config/google-services.json");
 
 	/**
+	 * Android Only: Default channel to use for push notifications that didn't specify a (valid) channel.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	FString AndroidDefaultNotificationChannel;
+
+	/**
 	 * Android Only: Provides the capability to reach users on devices that suppress notifications via GCM/FCM.
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")

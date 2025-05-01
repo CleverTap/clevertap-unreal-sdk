@@ -112,6 +112,17 @@ CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
 ```
 
 
+### Default Android Notification Channel
+You can define a specific notification channel that CleverTap will use if the channel provided in the push payload is not registered by your app. This ensures that push notifications are displayed consistently even if the app's notification channels are not set up.
+
+In case the SDK does not find the default channel ID specified in the manifest, it will automatically fall back to using a default channel called `Miscellaneous`. This ensures that push notifications are still delivered, even if no specific default channel is specified in the manifest.
+
+To specify your app’s preferred default channel:
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidDefaultNotificationChannel=general
+```
 
 ### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
