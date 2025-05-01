@@ -89,6 +89,12 @@ bool FNullCleverTapInstance::LocalizeAndroidNotificationChannel(
 	return false;
 }
 
+bool FNullCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName)
+{
+	CleverTapSDK::Ignore(GroupID, GroupName);
+	return false;
+}
+
 void FNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)
 {
 	CleverTapSDK::Ignore(UrlHandler);
