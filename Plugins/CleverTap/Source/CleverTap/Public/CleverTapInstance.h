@@ -79,6 +79,13 @@ public:
 	virtual void PushProfile(const FCleverTapProperties& Profile) = 0;
 
 	/**
+	 * Returns the user profile property value for the given key, or an empty optional if not found.
+	 *
+	 * NOTE: May not reflect recent changes immediately due to asynchronous updates in the SDK.
+	 */
+	virtual TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) = 0;
+
+	/**
 	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
@@ -101,6 +108,66 @@ public:
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
 	virtual void IncrementValue(const FString& Key, double Amount) = 0;
+
+	/**
+	 * Add a unique value to a multi-value user profile property
+	 * If the property does not exist it will be created.
+	 *
+	 * Max 100 values, on reaching 100 cap, oldest value(s) will be removed.
+	 * Values must be Strings and are limited to 512 characters.
+	 *
+	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
+	 * with the current value cast to a string and the new value(s) added
+	 */
+	virtual void AddMultiValueForKey(const FString& Key, const FString& Value) = 0;
+
+	/**
+	 * Add a collection of unique values to a multi-value user profile property
+	 * If the property does not exist it will be created
+	 *
+	 * Max 100 values, on reaching 100 cap, oldest value(s) will be removed.
+	 * Values must be Strings and are limited to 512 characters.
+	 *
+	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
+	 * with the current value cast to a string and the new value(s) added
+	 */
+	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) = 0;
+
+	/**
+	 * Remove a unique value from a multi-value user profile property.
+	 *
+	 * If the key currently contains a scalar value, prior to performing the remove operation
+	 * the key will be promoted to a multi-value property with the current value cast to a string.
+	 * If the multi-value property is empty after the remove operation, the key will be removed.
+	 */
+	virtual void RemoveMultiValueForKey(const FString& Key, const FString& Value) = 0;
+
+	/**
+	 * Remove a collection of unique values from a multi-value user profile property
+	 *
+	 * If the key currently contains a scalar value, prior to performing the remove operation
+	 * the key will be promoted to a multi-value property with the current value cast to a string.
+	 *
+	 * If the multi-value property is empty after the remove operation, the key will be removed.
+	 */
+	virtual void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) = 0;
+
+	/**
+	 * Remove the user profile property value specified by key from the user profile.
+	 *
+	 * This method can be used to remove PII data (for eg. Email,Name,Phone), locally from database and shared prefs.
+	 */
+	virtual void RemoveValueForKey(const FString& Key) = 0;
+
+	/**
+	 * Set a collection of unique values as a multi-value user profile property.
+	 *
+	 * Any existing value will be overwritten.
+	 *
+	 * Max 100 values, on reaching 100 cap, oldest value(s) will be removed.
+	 * Values must be Strings and are limited to 512 characters.
+	 */
+	virtual void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values) = 0;
 
 	/**
 	 * Record a user event on the user's profile with the specified event name.

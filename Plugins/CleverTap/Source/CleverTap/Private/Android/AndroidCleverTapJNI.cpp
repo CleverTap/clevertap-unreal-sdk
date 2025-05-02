@@ -501,6 +501,27 @@ void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject ChargeDeta
 	}
 }
 
+jobject GetProperty(JNIEnv* Env, jobject CleverTapInstance, const FString& Key)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID GetPropertyMethod =
+		GetMethodID(Env, CleverTapAPIClass, "getProperty", "(Ljava/lang/String;)Ljava/lang/Object;");
+	if (!GetPropertyMethod)
+	{
+		return nullptr;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jobject JavaValue = Env->CallObjectMethod(CleverTapInstance, GetPropertyMethod, JavaKey);
+	if (HandleException(Env, "getProperty()"))
+	{
+		// already logged; fall through
+	}
+	Env->DeleteLocalRef(JavaKey);
+
+	return JavaValue;
+}
+
 static void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, jobject Amount)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
@@ -610,6 +631,112 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 	}
 	IncrementValue(Env, CleverTapInstance, Key, NumberObj);
 	Env->DeleteLocalRef(NumberObj);
+}
+
+void AddMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID AddMultiValueMethod =
+		GetMethodID(Env, CleverTapAPIClass, "addMultiValueForKey", "(Ljava/lang/String;Ljava/lang/String;)V");
+	if (!AddMultiValueMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jstring JavaValue = Env->NewStringUTF(TCHAR_TO_UTF8(*Value));
+	Env->CallVoidMethod(CleverTapInstance, AddMultiValueMethod, JavaKey, JavaValue);
+	HandleException(Env, "addMultiValueForKey()");
+	Env->DeleteLocalRef(JavaKey);
+	Env->DeleteLocalRef(JavaValue);
+}
+
+void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID AddMultiValuesMethod =
+		GetMethodID(Env, CleverTapAPIClass, "addMultiValuesForKey", "(Ljava/lang/String;Ljava/util/ArrayList;)V");
+	if (!AddMultiValuesMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jobject JavaValues = StringArrayToJavaArrayList(Env, Values);
+	Env->CallVoidMethod(CleverTapInstance, AddMultiValuesMethod, JavaKey, JavaValues);
+	HandleException(Env, "addMultiValuesForKey()");
+	Env->DeleteLocalRef(JavaKey);
+	Env->DeleteLocalRef(JavaValues);
+}
+
+void RemoveMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID RemoveMultiValueMethod =
+		GetMethodID(Env, CleverTapAPIClass, "removeMultiValueForKey", "(Ljava/lang/String;Ljava/lang/String;)V");
+	if (!RemoveMultiValueMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jstring JavaValue = Env->NewStringUTF(TCHAR_TO_UTF8(*Value));
+	Env->CallVoidMethod(CleverTapInstance, RemoveMultiValueMethod, JavaKey, JavaValue);
+	HandleException(Env, "removeMultiValueForKey()");
+	Env->DeleteLocalRef(JavaKey);
+	Env->DeleteLocalRef(JavaValue);
+}
+
+void RemoveMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID RemoveMultiValuesMethod =
+		GetMethodID(Env, CleverTapAPIClass, "removeMultiValuesForKey", "(Ljava/lang/String;Ljava/util/ArrayList;)V");
+	if (!RemoveMultiValuesMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jobject JavaValues = StringArrayToJavaArrayList(Env, Values);
+	Env->CallVoidMethod(CleverTapInstance, RemoveMultiValuesMethod, JavaKey, JavaValues);
+	HandleException(Env, "removeMultiValuesForKey()");
+	Env->DeleteLocalRef(JavaKey);
+	Env->DeleteLocalRef(JavaValues);
+}
+
+void RemoveValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID RemoveValueMethod =
+		GetMethodID(Env, CleverTapAPIClass, "removeValueForKey", "(Ljava/lang/String;)V");
+	if (!RemoveValueMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	Env->CallVoidMethod(CleverTapInstance, RemoveValueMethod, JavaKey);
+	HandleException(Env, "removeMultiValueForKey()");
+	Env->DeleteLocalRef(JavaKey);
+}
+
+void SetMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetMultiValuesMethod =
+		GetMethodID(Env, CleverTapAPIClass, "setMultiValuesForKey", "(Ljava/lang/String;Ljava/util/ArrayList;)V");
+	if (!SetMultiValuesMethod)
+	{
+		return;
+	}
+
+	jstring JavaKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Key));
+	jobject JavaValues = StringArrayToJavaArrayList(Env, Values);
+	Env->CallVoidMethod(CleverTapInstance, SetMultiValuesMethod, JavaKey, JavaValues);
+	HandleException(Env, "setMultiValuesForKey()");
+	Env->DeleteLocalRef(JavaKey);
+	Env->DeleteLocalRef(JavaValues);
 }
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance)

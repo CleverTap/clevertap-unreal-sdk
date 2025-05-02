@@ -21,11 +21,20 @@ public:
 	void PushChargedEvent(
 		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) override;
 
+	TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) override;
+
 	void DecrementValue(const FString& Key, int Amount) override;
 	void DecrementValue(const FString& Key, double Amount) override;
 
 	void IncrementValue(const FString& Key, int Amount) override;
 	void IncrementValue(const FString& Key, double Amount) override;
+
+	void AddMultiValueForKey(const FString& Key, const FString& Value) override;
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override;
+	void RemoveMultiValueForKey(const FString& Key, const FString& Value) override;
+	void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override;
+	void RemoveValueForKey(const FString& Key) override;
+	void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values) override;
 
 	ECleverTapPushPermissionStatus GetPushPermissionStatus() override;
 	void PromptForPushPermission(bool bFallbackToSettings) override;

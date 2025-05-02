@@ -37,11 +37,20 @@ void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName)
 void PushEvent(JNIEnv* Env, jobject CleverTapInstance, const FString& EventName, jobject Actions);
 void PushChargedEvent(JNIEnv* Env, jobject CleverTapInstance, jobject Actions, jobject Items);
 
+jobject GetProperty(JNIEnv* Env, jobject CleverTapInstance, const FString& Key);
+
 void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount);
 void DecrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
 
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, int Amount);
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
+
+void AddMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
+void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values);
+void RemoveMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
+void RemoveMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values);
+void RemoveValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key);
+void SetMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values);
 
 bool IsPushPermissionGranted(JNIEnv* Env, jobject CleverTapInstance);
 void PromptForPushPermission(JNIEnv* Env, jobject CleverTapInstance, bool bFallbackToSettings);

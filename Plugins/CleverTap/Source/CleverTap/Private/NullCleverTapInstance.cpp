@@ -39,6 +39,12 @@ void FNullCleverTapInstance::PushChargedEvent(
 	CleverTapSDK::Ignore(ChargeDetails, Items);
 }
 
+TOptional<FCleverTapPropertyValue> FNullCleverTapInstance::GetProperty(const FString& Key)
+{
+	CleverTapSDK::Ignore(Key);
+	return {};
+}
+
 void FNullCleverTapInstance::DecrementValue(const FString& Key, int Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
@@ -57,6 +63,36 @@ void FNullCleverTapInstance::IncrementValue(const FString& Key, int Amount)
 void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
+}
+
+void FNullCleverTapInstance::AddMultiValueForKey(const FString& Key, const FString& Value)
+{
+	CleverTapSDK::Ignore(Key, Value);
+}
+
+void FNullCleverTapInstance::AddMultiValuesForKey(const FString& Key, const TArray<FString> Values)
+{
+	CleverTapSDK::Ignore(Key, Values);
+}
+
+void FNullCleverTapInstance::RemoveMultiValueForKey(const FString& Key, const FString& Value)
+{
+	CleverTapSDK::Ignore(Key, Value);
+}
+
+void FNullCleverTapInstance::RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
+{
+	CleverTapSDK::Ignore(Key, Values);
+}
+
+void FNullCleverTapInstance::RemoveValueForKey(const FString& Key)
+{
+	CleverTapSDK::Ignore(Key);
+}
+
+void FNullCleverTapInstance::SetMultiValuesForKey(const FString& Key, const TArray<FString> Values)
+{
+	CleverTapSDK::Ignore(Key, Values);
 }
 
 ECleverTapPushPermissionStatus FNullCleverTapInstance::GetPushPermissionStatus()

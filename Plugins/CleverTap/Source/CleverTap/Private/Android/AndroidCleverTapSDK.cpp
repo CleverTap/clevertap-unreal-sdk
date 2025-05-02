@@ -107,6 +107,19 @@ public:
 		Env->DeleteLocalRef(JavaItems);
 	}
 
+	TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) override
+	{
+		auto* Env = JNI::GetJNIEnv();
+		jobject JavaValue = JNI::GetProperty(Env, JavaCleverTapInstance, Key);
+		if (JavaValue == nullptr)
+		{
+			return {};
+		}
+		FCleverTapPropertyValue Value = JNI::ConvertJavaObjectToCleverTapPropertyValue(Env, JavaValue);
+		Env->DeleteLocalRef(JavaValue);
+		return Value;
+	}
+
 	void DecrementValue(const FString& Key, int Amount) override
 	{
 		JNI::DecrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
@@ -125,6 +138,36 @@ public:
 	void IncrementValue(const FString& Key, double Amount) override
 	{
 		JNI::IncrementValue(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Amount);
+	}
+
+	void AddMultiValueForKey(const FString& Key, const FString& Value) override
+	{
+		JNI::AddMultiValueForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Value);
+	}
+
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override
+	{
+		JNI::AddMultiValuesForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Values);
+	}
+
+	void RemoveMultiValueForKey(const FString& Key, const FString& Value) override
+	{
+		JNI::RemoveMultiValueForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Value);
+	}
+
+	void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override
+	{
+		JNI::RemoveMultiValuesForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Values);
+	}
+
+	void RemoveValueForKey(const FString& Key) override
+	{
+		JNI::RemoveValueForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key);
+	}
+
+	void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values) override
+	{
+		JNI::SetMultiValuesForKey(JNI::GetJNIEnv(), JavaCleverTapInstance, Key, Values);
 	}
 
 	bool LocalizeAndroidNotificationChannel(

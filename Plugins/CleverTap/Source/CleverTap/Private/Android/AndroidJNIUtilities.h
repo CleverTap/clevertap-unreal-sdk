@@ -121,4 +121,7 @@ FString JavaObjectToString(JNIEnv* Env, jobject JavaObject);
 /** Converts a Java Array<String> to an Unreal FString for debugging. */
 FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array);
 
+/** Converts an unreal TArray<FString> to a Java ArrayList<String> */
+jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArray);
+
 }}} // namespace CleverTapSDK::Android::JNI
