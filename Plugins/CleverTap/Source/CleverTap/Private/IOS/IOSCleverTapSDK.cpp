@@ -568,6 +568,12 @@ public:
 		return false;
 	}
 
+	bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) override
+	{
+		CleverTapSDK::Ignore(GroupID, GroupName);
+		return false;
+	}
+
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler) override
 	{
 		check(NativeInstance != nil);
