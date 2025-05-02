@@ -207,11 +207,6 @@ void USampleMainMenu::ConfigureSharedInstance()
 	// simple test of the OnPushNotificationClicked notification
 	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
 
-	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
-	// if we were launched in response to clicking on a notification, this will generate a
-	// call to the OnPushNotificationClicked() we just registered
-	CleverTap.EnableOnPushNotificationClicked();
-
 	CleverTap.RegisterCleverTapUrlHandler(
 		[WeakThis = TSoftObjectPtr<USampleMainMenu>{ this }](FString Url, ECleverTapChannel Channel) {
 			// Make sure to do the update on the game thread
@@ -226,6 +221,11 @@ void USampleMainMenu::ConfigureSharedInstance()
 			});
 			return true;
 		});
+
+	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
+	// if we were launched in response to clicking on a notification, this will generate a
+	// call to the OnPushNotificationClicked() we just registered
+	CleverTap.EnableOnPushNotificationClicked();
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)

@@ -5,6 +5,7 @@
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
 #include "CleverTapUtilities.h"
+#include "Misc/CoreDelegates.h"
 
 #import <CleverTapSDK/CleverTap.h>
 #import <CleverTapSDK/CleverTapPushNotificationDelegate.h>
@@ -13,7 +14,15 @@
 
 namespace {
 class FIOSCleverTapInstance;
-}
+
+// Need to listen to and handle remote notifications that happen while the engine is initializing
+FString SavedRemoteNotificationString;
+FDelegateHandle RemoteNotificationListenerHandle = [] {
+	return FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.AddLambda(
+		[](FString UserInfo, int AppState) { SavedRemoteNotificationString = MoveTemp(UserInfo); });
+}();
+
+} // namespace
 
 // TODO: Not exposed
 @interface CleverTapSDKListener :
@@ -514,6 +523,42 @@ public:
 		SetIsRegisteredForPushNotificationClicked();
 
 		[NativeInstance setPushNotificationDelegate:SDKListener];
+
+		// Handle saved notifications
+		if (!SavedRemoteNotificationString.IsEmpty())
+		{
+			NSData* JsonStringData =
+				[SavedRemoteNotificationString.GetNSString() dataUsingEncoding:NSUTF8StringEncoding];
+			NSError* Err = nil;
+			id JsonData = [NSJSONSerialization JSONObjectWithData:JsonStringData
+														  options:NSJSONReadingMutableContainers
+															error:&Err];
+			if (JsonData)
+			{
+				[NativeInstance handleNotificationWithData:JsonData];
+			}
+
+			SavedRemoteNotificationString.Empty();
+		}
+		if (RemoteNotificationListenerHandle.IsValid())
+		{
+			FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Remove(RemoteNotificationListenerHandle);
+		}
+
+		// Handle a window where replayed notifications can happen through the Unreal delegate but not through the
+		//  swizzled IOSAppDelegate method
+		ReplayedNotificationDelegateHandle = FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.AddLambda(
+			[this](FString UserInfo, int AppState) {
+				NSData* JsonStringData = [UserInfo.GetNSString() dataUsingEncoding:NSUTF8StringEncoding];
+				NSError* Err = nil;
+				id JsonData = [NSJSONSerialization JSONObjectWithData:JsonStringData
+															  options:NSJSONReadingMutableContainers
+																error:&Err];
+				if (JsonData)
+				{
+					[NativeInstance handleNotificationWithData:JsonData];
+				}
+			});
 	}
 
 	bool LocalizeAndroidNotificationChannel(
@@ -562,6 +607,18 @@ public:
 		[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
 	}
 
+	void HandlePushNotificationTapped(const FCleverTapProperties& Extras)
+	{
+		// Remove the replay catch delegate when we get a push notification through this path
+		if (ReplayedNotificationDelegateHandle.IsValid())
+		{
+			FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Remove(ReplayedNotificationDelegateHandle);
+		}
+
+		// Broadcast the tap
+		this->OnPushNotificationClicked.Broadcast(Extras);
+	}
+
 	bool HandleUrl(FString Url, ECleverTapChannel Channel) const
 	{
 		if (UrlHandler)
@@ -576,6 +633,7 @@ private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
 	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
+	FDelegateHandle ReplayedNotificationDelegateHandle;
 	TAtomic<uint8> PushPermissionStatus;
 	uint8 StateFlags{};
 };
@@ -628,7 +686,7 @@ private:
 {
 	FCleverTapProperties Extras = ConvertFromNSDictionary(CustomExtras);
 	AsyncTask(ENamedThreads::GameThread,
-		[Extras = MoveTemp(Extras), Inst = CppInstance]() { Inst->OnPushNotificationClicked.Broadcast(Extras); });
+		[Extras = MoveTemp(Extras), Inst = CppInstance]() { Inst->HandlePushNotificationTapped(Extras); });
 }
 
 @end
