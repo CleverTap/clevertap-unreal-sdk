@@ -155,7 +155,8 @@ Note that the base filename must contain only lowercase letters (`a`-`z`), digit
 
 For more information about the image requirements, see https://developer.clevertap.com/docs/android-push#set-the-small-notification-icon
 
-> [!NOTE] If you're using `ico=...` in push payloads, your project must ensure the specified image is copied into `res/drawable/` using your own UPL step.
+> [!NOTE]
+> If you're using `ico=...` in push payloads, your project must ensure the specified image is copied into `res/drawable/` using your own UPL step.
 
 ### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).
@@ -184,6 +185,35 @@ public class UnifiedMessagingService extends SomeOtherPluginMessagingService {
 
 For more information, see [Custom Android Push Notification Handling](https://developer.clevertap.com/docs/android-push#custom-android-push-notification-handling) 
 
+### iOS - Configuring Apple Push Notifications (APNs)
+1. Follow the [CleverTap guide](https://developer.clevertap.com/docs/push-notifications-ios#step-1-configure-push-notifications) to set up APNs for your app.
+2. In your project's `Config/DefaultEngine.ini` ensure `bEnableRemoteNotificationsSupport` is `True` in the `[/Script/IOSRuntimeSettings.IOSRuntimeSettings]` section.
+
+> [!NOTE]
+> The CleverTap Unreal plugin currently does not support [Push Impressions](https://developer.clevertap.com/docs/push-notifications-ios#push-impressions), [Push Primers](https://developer.clevertap.com/docs/push-notifications-ios#ios-push-primer), or [Rich Push Notifications](https://developer.clevertap.com/docs/rich-push-notifications).
+
+#### iOS - Optional Engine changes for Push Notifications that launch the App
+If you're App isn't in the foreground or background then Unreal will not forward the push notification to CleverTap unless you make engine changes to `Engine/Source/Runtime/ApplicationCore/Private/IOS/IOSAppDelegate.cpp`.  An example of such changes can be found in the `EnginePatches/iOSSavedRemoteNotifications.patch` patch file. This can be applied in the Unreal root directory using the linux patch command.
+```bash
+UnrealEngine % patch -p1 -u -i /path/to/CleverTapSample/EnginePatches/iOSSavedRemoteNotifications.patch
+```
+
+On Windows, a patch program equivalent can be installed using winget.
+```powershell
+winget install GnuWin32.Patch
+```
+
+### Enabling OnPushNotificationClicked
+After setting up your shared CleverTap instance the `OnPushNotificationClicked` delegate can be enabled by calling `EnableOnPushNotificationClicked()`. On iOS, if the engine patch has been applied for push notifications that launch the app then this can trigger attempting to broadcast the push notification that launched the app. Therefore a delegate listener should be added before calling `EnableOnPushNotificationClicked()`.
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.OnPushNotificationClicked.AddLambda([](const FCleverTapProperties& NotificationPayload)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Push notification was tapped"));
+	});
+CleverTap.EnableOnPushNotificationClicked();
+```
 
 ## User Profiles
 ### On User Login
