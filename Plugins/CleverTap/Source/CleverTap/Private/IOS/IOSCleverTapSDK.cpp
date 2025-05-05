@@ -293,6 +293,38 @@ TArray<FString> ConvertFromNSArray(NSArray* Arr)
 	return Result;
 }
 
+bool TryConvertFromNSValue(id Value, FCleverTapPropertyValue* OutValue)
+{
+	check(OutValue != nullptr);
+
+	if (Value == nil)
+	{
+		*OutValue = FCleverTapPropertyValue{};
+		return false;
+	}
+
+	if ([Value isKindOfClass:[NSString class]])
+	{
+		OutValue->Emplace<FString>((NSString*)Value);
+		return true;
+	}
+
+	if ([Value isKindOfClass:[NSNumber class]])
+	{
+		*OutValue = ConvertFromNSNumber((NSNumber*)Value);
+		return true;
+	}
+
+	if ([Value isKindOfClass:[NSArray class]])
+	{
+		*OutValue = ConvertFromNSArray((NSArray*)Value);
+		return true;
+	}
+
+	*OutValue = FCleverTapPropertyValue{};
+	return false;
+}
+
 FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 {
 	FCleverTapProperties Result;
@@ -316,23 +348,14 @@ FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 			continue;
 		}
 
-		FString KeyString{ Key };
-
-		if ([Value isKindOfClass:[NSString class]])
+		FCleverTapPropertyValue MaybeUnrealValue;
+		if (TryConvertFromNSValue(Value, &MaybeUnrealValue))
 		{
-			Result.Add(MoveTemp(KeyString), FCleverTapPropertyValue{ FString{ (NSString*)Value } });
-		}
-		else if ([Value isKindOfClass:[NSNumber class]])
-		{
-			Result.Add(MoveTemp(KeyString), ConvertFromNSNumber((NSNumber*)Value));
-		}
-		else if ([Value isKindOfClass:[NSArray class]])
-		{
-			Result.Add(MoveTemp(KeyString), ConvertFromNSArray((NSArray*)Value));
+			Result.Add(FString{ Key }, MoveTemp(MaybeUnrealValue));
 		}
 		else
 		{
-			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary value type: %s"),
+			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary value type for key '%s': %s"), *FString{ Key },
 				*FString{ NSStringFromClass([Value class]) });
 		}
 	}
@@ -415,6 +438,23 @@ public:
 											 andItems:ConvertToNSArray(Items)];
 	}
 
+	TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) override
+	{
+		check(NativeInstance != nil);
+
+		id ProfileValue = [NativeInstance profileGet:Key.GetNSString()];
+
+		FCleverTapPropertyValue MaybeValue;
+		if (!TryConvertFromNSValue(ProfileValue, &MaybeValue))
+		{
+			UE_CLOG(ProfileValue != nil, LogCleverTap, Warning, TEXT("Unknown property value type: %s"),
+				*FString{ NSStringFromClass([ProfileValue class]) });
+			return TOptional<FCleverTapPropertyValue>{};
+		}
+
+		return TOptional<FCleverTapPropertyValue>{ MoveTemp(MaybeValue) };
+	}
+
 	void DecrementValue(const FString& Key, int Amount) override
 	{
 		check(NativeInstance != nil);
@@ -437,6 +477,42 @@ public:
 	{
 		check(NativeInstance != nil);
 		[NativeInstance profileIncrementValueBy:[NSNumber numberWithDouble:Amount] forKey:Key.GetNSString()];
+	}
+
+	void AddMultiValueForKey(const FString& Key, const FString& Value) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileAddMultiValue:Value.GetNSString() forKey:Key.GetNSString()];
+	}
+
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileAddMultiValues:ConvertToNSArray(Values) forKey:Key.GetNSString()];
+	}
+
+	void RemoveMultiValueForKey(const FString& Key, const FString& Value) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileRemoveMultiValue:Value.GetNSString() forKey:Key.GetNSString()];
+	}
+
+	void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileRemoveMultiValues:ConvertToNSArray(Values) forKey:Key.GetNSString()];
+	}
+
+	void RemoveValueForKey(const FString& Key) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileRemoveValueForKey:Key.GetNSString()];
+	}
+
+	void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance profileSetMultiValues:ConvertToNSArray(Values) forKey:Key.GetNSString()];
 	}
 
 	ECleverTapPushPermissionStatus GetPushPermissionStatus() override
