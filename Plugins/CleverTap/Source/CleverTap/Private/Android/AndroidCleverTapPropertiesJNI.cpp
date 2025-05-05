@@ -632,9 +632,14 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 	static jmethodID HasNextMethod = GetMethodID(Env, IteratorClass, "hasNext", "()Z");
 	static jmethodID NextMethod = GetMethodID(Env, IteratorClass, "next", "()Ljava/lang/Object;");
 
+	// JSONArray support
+	static jclass JSONArrayClass = CacheClass(Env, "org/json/JSONArray");
+	static jmethodID JSONArrayLengthMethod = GetMethodID(Env, JSONArrayClass, "length", "()I");
+	static jmethodID JSONArrayGetMethod = GetMethodID(Env, JSONArrayClass, "getString", "(I)Ljava/lang/String;");
+
 	// Make sure we got everything
 	if (!GetIntValue || !GetLongValue || !GetDoubleValue || !GetFloatValue || !GetBooleanValue || !StringClass
-		|| !CollectionIteratorMethod || !HasNextMethod || !NextMethod)
+		|| !CollectionIteratorMethod || !HasNextMethod || !NextMethod || !JSONArrayLengthMethod || !JSONArrayGetMethod)
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("Missing Vital Methods!"));
 		return FCleverTapPropertyValue();
@@ -714,6 +719,31 @@ FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, j
 			Env->DeleteLocalRef(Element);
 		}
 		Env->DeleteLocalRef(Iterator);
+		return FCleverTapPropertyValue(StringArray);
+	}
+
+	if (Env->IsInstanceOf(JavaValue, JSONArrayClass))
+	{
+		// JSONArray doesn't implement Collection & needs special handling
+		TArray<FString> StringArray;
+		jint Length = Env->CallIntMethod(JavaValue, JSONArrayLengthMethod);
+		if (HandleException(Env, TEXT("JSONArray.length()")))
+		{
+			return FCleverTapPropertyValue(StringArray);
+		}
+		for (jint i = 0; i < Length; ++i)
+		{
+			jstring Element = static_cast<jstring>(Env->CallObjectMethod(JavaValue, JSONArrayGetMethod, i));
+			if (HandleExceptionOrError(Env, !Element, TEXT("JSONArray.getString()")))
+			{
+				continue;
+			}
+			const char* UTFChars = Env->GetStringUTFChars(Element, nullptr);
+			StringArray.Add(FString(UTF8_TO_TCHAR(UTFChars)));
+			Env->ReleaseStringUTFChars(Element, UTFChars);
+			Env->DeleteLocalRef(Element);
+		}
+
 		return FCleverTapPropertyValue(StringArray);
 	}
 
