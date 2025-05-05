@@ -82,6 +82,9 @@ public:
 	 * Returns the user profile property value for the given key, or an empty optional if not found.
 	 *
 	 * NOTE: May not reflect recent changes immediately due to asynchronous updates in the SDK.
+	 *
+	 * NOTE: Date related property values are returned as number of seconds since January 1, 1970, 00:00:00 GMT,
+	 *       not the FCleverTapDate type used to set them.
 	 */
 	virtual TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) = 0;
 
