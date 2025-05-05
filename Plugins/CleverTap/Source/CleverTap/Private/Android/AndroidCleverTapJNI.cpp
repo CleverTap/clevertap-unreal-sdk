@@ -67,12 +67,124 @@ static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FS
 	Env->DeleteLocalRef(KeyArray);
 }
 
+static jobject JavaEncryptionLevelFromString(JNIEnv* Env, const char* LevelName)
+{
+	static jclass EncryptionLevelClass = CacheClass(Env, "com/clevertap/android/sdk/cryption/EncryptionLevel");
+	static jmethodID ValueOfMethod = GetStaticMethodID(Env, EncryptionLevelClass, "valueOf",
+		"(Ljava/lang/String;)Lcom/clevertap/android/sdk/cryption/EncryptionLevel;");
+	if (!ValueOfMethod)
+	{
+		return nullptr;
+	}
+	// Get the enum constant from the name
+	jstring JavaLevelName = Env->NewStringUTF(LevelName);
+	jobject LevelEnumValue = Env->CallStaticObjectMethod(EncryptionLevelClass, ValueOfMethod, JavaLevelName);
+	if (ExceptionThrown(Env) || !LevelEnumValue)
+	{
+		HandleExceptionOrError(
+			Env, !LevelEnumValue, FString::Printf(TEXT("Failed to get EncryptionLevel enum for: %s"), *LevelName));
+		LevelEnumValue = nullptr;
+		// fall through
+	}
+	Env->DeleteLocalRef(JavaLevelName);
+	return LevelEnumValue;
+}
+
+/** returns the Java string for the corresponding enum value, so we can ask java for its value */
+static const char* CleverTapEncryptionLevelJavaName(ECleverTapEncryptionLevel Level)
+{
+	switch (Level)
+	{
+		case ECleverTapEncryptionLevel::None:
+			return "NONE";
+		case ECleverTapEncryptionLevel::Medium:
+			return "MEDIUM";
+		default:
+		{
+			UE_LOG(LogCleverTap, Error,
+				TEXT("Unhandled ECleverTapEncryptionLevel value. Defaulting to ECleverTapEncryptionLevel::None"));
+			return "NONE";
+		}
+	}
+}
+
+static jobject CleverTapEncryptionLevelToJava(JNIEnv* Env, ECleverTapEncryptionLevel EncryptionLevel)
+{
+	return JavaEncryptionLevelFromString(Env, CleverTapEncryptionLevelJavaName(EncryptionLevel));
+}
+
+/** Returns the name of each ECleverTapLogLevel value in the Java */
+static const char* CleverTapLogLevelJavaName(ECleverTapLogLevel LogLevel)
+{
+	switch (LogLevel)
+	{
+		case ECleverTapLogLevel::Off:
+			return "OFF";
+		case ECleverTapLogLevel::Info:
+			return "INFO";
+		case ECleverTapLogLevel::Debug:
+			return "DEBUG";
+		case ECleverTapLogLevel::Verbose:
+			return "VERBOSE";
+		default:
+		{
+			UE_LOG(
+				LogCleverTap, Error, TEXT("Unhandled ECleverTapLogLevel value. Defaulting to ECleverTapLogLevel::Off"));
+			return "OFF";
+		}
+	}
+}
+
+static jobject CleverTapLogLevelToJava(JNIEnv* Env, ECleverTapLogLevel LogLevel)
+{
+	static jclass LogLevelClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
+	static jmethodID ValueOfMethod = GetStaticMethodID(
+		Env, LogLevelClass, "valueOf", "(Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;");
+	if (!ValueOfMethod)
+	{
+		return nullptr;
+	}
+	jstring JavaLevelName = Env->NewStringUTF(CleverTapLogLevelJavaName(LogLevel));
+	jobject LogLevelEnumValue = Env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLevelName);
+	if (ExceptionThrown(Env) || !LogLevelEnumValue)
+	{
+		HandleExceptionOrError(Env, !LogLevelEnumValue,
+			FString::Printf(TEXT("Failed to get LogLevel enum for: %s"), *CleverTapLogLevelJavaName(LogLevel)));
+		LogLevelEnumValue = nullptr;
+		// fall through
+	}
+	Env->DeleteLocalRef(JavaLevelName);
+	return LogLevelEnumValue;
+}
+
+static int CleverTapLogLevelToJavaInt(JNIEnv* Env, ECleverTapLogLevel Level)
+{
+	static jclass LogLevelClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
+	static jmethodID OrdinalMethod = Env->GetMethodID(LogLevelClass, "ordinal", "()I");
+
+	jobject EnumObject = CleverTapLogLevelToJava(Env, Level);
+	if (!EnumObject)
+	{
+		return 0;
+	}
+	jint Ordinal = Env->CallIntMethod(EnumObject, OrdinalMethod);
+	if (HandleException(Env, "LogLevel.ordinal()"))
+	{
+		// fall through
+	}
+	Env->DeleteLocalRef(EnumObject);
+	return Ordinal;
+}
+
 static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
 {
 	static jclass ConfigClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
 	static jmethodID CreateMethod = GetStaticMethodID(Env, ConfigClass, "createInstance",
 		"(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
-	if (!CreateMethod)
+	static jmethodID SetEncryptionMethod =
+		GetMethodID(Env, ConfigClass, "setEncryptionLevel", "(Lcom/clevertap/android/sdk/cryption/EncryptionLevel;)V");
+	static jmethodID SetDebugLevelMethod = GetMethodID(Env, ConfigClass, "setDebugLevel", "(I)V");
+	if (!CreateMethod || !SetEncryptionMethod || !SetDebugLevelMethod)
 	{
 		return nullptr;
 	}
@@ -93,9 +205,24 @@ static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstan
 	Env->DeleteLocalRef(JAccountId);
 	Env->DeleteLocalRef(JAccountToken);
 	Env->DeleteLocalRef(JAccountRegion);
+	if (!ConfigInstance)
+	{
+		return nullptr;
+	}
 
 	// install the identity keys
 	SetIdentityKeys(Env, ConfigInstance, Config.GetIdentityKeys());
+
+	// set the encryption level
+	jobject JavaEncryption = CleverTapEncryptionLevelToJava(Env, Config.EncryptionLevel);
+	Env->CallVoidMethod(ConfigInstance, SetEncryptionMethod, JavaEncryption);
+	HandleException(Env, TEXT("CleverTapInstanceConfig.setEncryptionLevel() failed!"));
+	Env->DeleteLocalRef(JavaEncryption);
+
+	// set the log level; this version needs the java-side int value instead of the enum
+	int JavaLevelInt = CleverTapLogLevelToJavaInt(Env, Config.LogLevel);
+	Env->CallVoidMethod(ConfigInstance, SetDebugLevelMethod, JavaLevelInt);
+	HandleException(Env, TEXT("CleverTapInstanceConfig.setDebugLevel() failed!"));
 
 	return ConfigInstance;
 }
@@ -171,53 +298,9 @@ jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId)
 	return CleverTapInstance;
 }
 
-static jobject JavaLogLevelFromString(JNIEnv* Env, const char* LogLevelName)
-{
-	static jclass LogLevelClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapAPI$LogLevel");
-	static jmethodID ValueOfMethod = GetStaticMethodID(
-		Env, LogLevelClass, "valueOf", "(Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;");
-	if (!ValueOfMethod)
-	{
-		return nullptr;
-	}
-	// Get the enum constant from the name
-	jstring JavaLogLevelName = Env->NewStringUTF(LogLevelName);
-	jobject LogLevelEnumValue = Env->CallStaticObjectMethod(LogLevelClass, ValueOfMethod, JavaLogLevelName);
-	if (ExceptionThrown(Env) || !LogLevelEnumValue)
-	{
-		HandleExceptionOrError(
-			Env, !LogLevelEnumValue, FString::Printf(TEXT("Failed to get LogLevel enum for: %s"), *LogLevelName));
-		LogLevelEnumValue = nullptr;
-		// fall through
-	}
-	Env->DeleteLocalRef(JavaLogLevelName);
-	return LogLevelEnumValue;
-}
-
-static const char* CleverTapLogLevelName(ECleverTapLogLevel Level)
-{
-	switch (Level)
-	{
-		case ECleverTapLogLevel::Off:
-			return "OFF";
-		case ECleverTapLogLevel::Info:
-			return "INFO";
-		case ECleverTapLogLevel::Debug:
-			return "DEBUG";
-		case ECleverTapLogLevel::Verbose:
-			return "VERBOSE";
-		default:
-		{
-			UE_LOG(
-				LogCleverTap, Error, TEXT("Unhandled ECleverTapLogLevel value. Defaulting to ECleverTapLogLevel::Off"));
-			return "OFF";
-		}
-	}
-}
-
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level)
 {
-	const char* LevelName = CleverTapLogLevelName(Level);
+	const char* LevelName = CleverTapLogLevelJavaName(Level);
 	UE_LOG(LogCleverTap, Log, TEXT("CleverTapSDK::Android::JNI::SetDebugLevel(%hs)"), LevelName);
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	static jmethodID SetDebugLogLevelMethod = GetStaticMethodID(
@@ -227,7 +310,7 @@ bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level)
 		return false;
 	}
 
-	jobject JavaLogLevel = JavaLogLevelFromString(Env, LevelName);
+	jobject JavaLogLevel = CleverTapLogLevelToJava(Env, Level);
 	if (!JavaLogLevel)
 	{
 		return false;
@@ -865,5 +948,4 @@ void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConf
 		// fall through
 	}
 }
-
 }}} // namespace CleverTapSDK::Android::JNI

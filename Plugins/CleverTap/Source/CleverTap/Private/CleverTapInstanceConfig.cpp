@@ -16,6 +16,7 @@ FCleverTapInstanceConfig FCleverTapInstanceConfig::FromCleverTapConfig(const UCl
 	InstanceConfig.ProjectToken = Config->ProjectToken;
 	InstanceConfig.RegionCode = Config->RegionCode;
 	InstanceConfig.IdentityKeys = Config->IdentityKeys;
+	InstanceConfig.EncryptionLevel = Config->EncryptionLevel;
 	InstanceConfig.LogLevel = Config->GetActiveLogLevel();
 	return InstanceConfig;
 }

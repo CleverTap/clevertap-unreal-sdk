@@ -1,6 +1,7 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapEncryptionLevel.h"
 #include "CleverTapLogLevel.h"
 #include "CoreMinimal.h"
 
@@ -40,6 +41,11 @@ struct FCleverTapInstanceConfig
 	 * Returns the IdentityKeys field as an array.
 	 */
 	TArray<FString> GetIdentityKeys() const;
+
+	/**
+	 * The encryption level to use for PII
+	 */
+	ECleverTapEncryptionLevel EncryptionLevel = ECleverTapEncryptionLevel::None;
 
 	/**
 	 * The platform SDK log level to use

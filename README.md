@@ -50,8 +50,24 @@ will automatically initialize the CleverTap SDK and the default shared instance.
 > Config.ProjectToken = /*Your project token*/;
 > Config.RegionCode = /*Region code*/;
 > Config.LogLevel = /*ECleverTapLogLevel enum specifying your desired CleverTap SDK log verbosity*/;
+> Config.EncryptionLevel  = /* ECleverTapEncryptionLevel enum setting the PII encrytion level */
 > GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
 > ```
+
+## Encryption of PII Data
+PII data is stored across the SDK and could be sensitive information. 
+You can enable encryption for PII data such as Email, Identity, Name, and Phone.
+Currently, two levels of encryption are supported:
+- None: All stored data is in plaintext (the default)
+- Medium: PII data is encrypted completely
+
+The only way to set the encryption level for the default instance is from `Config/DefaultEngine.ini`:
+```ini
+[/Script/CleverTap.CleverTapConfig]
+EncryptionLevel=Medium
+```
+
+Different instances can have different encryption levels. To set an encryption level for an additional instance, set the `EncryptionLevel` field in the `FCleverTapInstanceConfig` used to create it.
 
 
 ## Push Notification Configuration
