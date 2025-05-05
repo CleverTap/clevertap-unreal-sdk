@@ -367,4 +367,33 @@ FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array)
 	return Output;
 }
 
+jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArray)
+{
+	static jclass ArrayListClass = CacheClass(Env, "java/util/ArrayList");
+	static jmethodID ArrayListConstructor = GetMethodID(Env, ArrayListClass, "<init>", "()V");
+	static jmethodID ArrayListAddMethod = GetMethodID(Env, ArrayListClass, "add", "(Ljava/lang/Object;)Z");
+	if (!ArrayListConstructor || !ArrayListAddMethod)
+	{
+		return nullptr;
+	}
+
+	jobject JavaArrayList = Env->NewObject(ArrayListClass, ArrayListConstructor);
+	if (HandleExceptionOrError(Env, !JavaArrayList, "Constructing ArrayList"))
+	{
+		return nullptr;
+	}
+
+	for (const FString& Item : StringArray)
+	{
+		jstring JavaItem = Env->NewStringUTF(TCHAR_TO_UTF8(*Item));
+		Env->CallBooleanMethod(JavaArrayList, ArrayListAddMethod, JavaItem);
+		if (HandleException(Env, "ArrayList.add()"))
+		{
+			// failed but logged; keep going
+		}
+		Env->DeleteLocalRef(JavaItem);
+	}
+	return JavaArrayList;
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

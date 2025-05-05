@@ -117,5 +117,8 @@ using FCleverTapProperties = TMap<FString, FCleverTapPropertyValue>;
 /** Returns a debug string describing the property's value and type. */
 CLEVERTAP_API FString ToDebugString(const FCleverTapPropertyValue& Value);
 
+/** Returns a debug string describing the property's value and type, or "<not set>" if not set. */
+CLEVERTAP_API FString ToDebugString(const TOptional<FCleverTapPropertyValue>& OptionalValue);
+
 /** Returns a debug string listing all properties with their keys, types, and values. */
 CLEVERTAP_API FString ToDebugString(const FCleverTapProperties& Properties);

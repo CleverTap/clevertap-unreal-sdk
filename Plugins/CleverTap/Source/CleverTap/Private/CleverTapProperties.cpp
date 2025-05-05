@@ -155,6 +155,18 @@ FString ToDebugString(const FCleverTapPropertyValue& Value)
 	return Value.GetDebugString();
 }
 
+FString ToDebugString(const TOptional<FCleverTapPropertyValue>& OptionalValue)
+{
+	if (OptionalValue.IsSet())
+	{
+		return ToDebugString(OptionalValue.GetValue());
+	}
+	else
+	{
+		return TEXT("<not set>");
+	}
+}
+
 FString ToDebugString(const FCleverTapProperties& Properties)
 {
 	FString Result = TEXT("{ ");

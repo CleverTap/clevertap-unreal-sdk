@@ -417,6 +417,29 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushProfile(Profile);
+
+	// can increment/decrement number properties
+	CleverTap.IncrementValue("Test_Long", 3);
+	CleverTap.DecrementValue("Test_Long", 1);
+	CleverTap.IncrementValue("Test_Double", 3.3);
+	CleverTap.DecrementValue("Test_Double", 1.1);
+
+	// exercise the multi-value methods;
+	// should result in an array holding just "four", but it's async!
+	CleverTap.RemoveValueForKey("Test_MVM");
+	CleverTap.AddMultiValueForKey("Test_MVM", "one");
+	CleverTap.AddMultiValuesForKey("Test_MVM", { "two", "three", "four" });
+	CleverTap.RemoveMultiValueForKey("Test_MVM", "three");
+	CleverTap.RemoveMultiValuesForKey("Test_MVM", { "one", "two" });
+
+	// Exercise GetProperty() on each type.
+	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new profile values.
+	// The below will likely only show the correct output on the second call to this function.
+	for (const auto Pair : Profile)
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("%s=%s"), *Pair.Key, *ToDebugString(CleverTap.GetProperty(Pair.Key)));
+	}
+	UE_LOG(LogCleverTapSample, Log, TEXT("Test_MVM=%s"), *ToDebugString(CleverTap.GetProperty("Test_MVM")));
 }
 
 void USampleMainMenu::RecordEvent(const FString& EventName, const TArray<FCleverTapSampleKeyValuePair>& Params)
