@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CleverTapEncryptionLevel.h"
 #include "CleverTapLogLevel.h"
 #include "CleverTapConfig.generated.h"
 
@@ -63,6 +64,12 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
 	bool bUseCustomCleverTapId = false;
+
+	/**
+	 * The encryption level to use for PII
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	ECleverTapEncryptionLevel EncryptionLevel = ECleverTapEncryptionLevel::None;
 
 	/** Request internet permissions in the application manifest.
 	 *  Required for CleverTap to work.

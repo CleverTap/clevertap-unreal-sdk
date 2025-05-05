@@ -6,6 +6,7 @@
 		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default="" />
 		<setStringFromProperty result="CTRegionCode" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="RegionCode" default="" />
 		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone" />
+		<setStringFromProperty result="CTEncryptionLevel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="EncryptionLevel" default="None" />
 		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false" />
 		<setBoolFromProperty result="CTRequestInternetPermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestInternetPermissions" default="true" />
 		<setBoolFromProperty result="CTRequestGeoFencePermissions" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bRequestGeoFencePermissions" default="false" />
@@ -87,6 +88,39 @@
 				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:name" value="CLEVERTAP_IDENTIFIER" />
 				<addAttribute tag="$CLEVERTAP_IDENTIFIER" name="android:value" value="$S(CTIdentityKeys)" />
 				<addElement tag="application" name="CLEVERTAP_IDENTIFIER" />
+
+				<setBoolIsEqual result="EncryptionLevelIsEmpty" arg1="$S(CTEncryptionLevel)" arg2="" />
+				<if condition="EncryptionLevelIsEmpty">
+					<false>
+						<setBool result="EncryptionValusIsKnown" value="false" />
+						<setBoolIsEqual result="EncryptionLevelIsNone" arg1="$S(CTEncryptionLevel)" arg2="None" />
+						<if condition="EncryptionLevelIsNone">
+							<true>
+								<setString result="EncryptionLevelValue" value="0" />
+								<setBool result="EncryptionValusIsKnown" value="true" />
+							</true>
+						</if>
+						<setBoolIsEqual result="EncryptionLevelIsMedium" arg1="$S(CTEncryptionLevel)" arg2="Medium" />
+						<if condition="EncryptionLevelIsMedium">
+							<true>
+								<setString result="EncryptionLevelValue" value="1" />
+								<setBool result="EncryptionValusIsKnown" value="true" />
+							</true>
+						</if>
+
+						<if condition="EncryptionValusIsKnown">
+							<true>
+								<setElement result="CLEVERTAP_ENCRYPTION_LEVEL" xml="&lt;meta-data/&gt;" />
+								<addAttribute tag="$CLEVERTAP_ENCRYPTION_LEVEL" name="android:name" value="CLEVERTAP_ENCRYPTION_LEVEL" />
+								<addAttribute tag="$CLEVERTAP_ENCRYPTION_LEVEL" name="android:value" value="$S(EncryptionLevelValue)" />
+								<addElement tag="application" name="CLEVERTAP_ENCRYPTION_LEVEL" />
+							</true>
+							<false>
+								<log text="Error: Unknown Encryption level $S(CTEncryptionLevel)!" />
+							</false>
+						</if>
+					</false>
+				</if>
 
 				<if condition="CTEnableBackgroundSync">
 					<true>

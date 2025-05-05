@@ -67,12 +67,60 @@ static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FS
 	Env->DeleteLocalRef(KeyArray);
 }
 
+static jobject JavaEncryptionLevelFromString(JNIEnv* Env, const char* LevelName)
+{
+	static jclass EncryptionLevelClass = CacheClass(Env, "com/clevertap/android/sdk/cryption/EncryptionLevel");
+	static jmethodID ValueOfMethod = GetStaticMethodID(Env, EncryptionLevelClass, "valueOf",
+		"(Ljava/lang/String;)Lcom/clevertap/android/sdk/cryption/EncryptionLevel;");
+	if (!ValueOfMethod)
+	{
+		return nullptr;
+	}
+	// Get the enum constant from the name
+	jstring JavaLevelName = Env->NewStringUTF(LevelName);
+	jobject LevelEnumValue = Env->CallStaticObjectMethod(EncryptionLevelClass, ValueOfMethod, JavaLevelName);
+	if (ExceptionThrown(Env) || !LevelEnumValue)
+	{
+		HandleExceptionOrError(
+			Env, !LevelEnumValue, FString::Printf(TEXT("Failed to get EncryptionLevel enum for: %s"), *LevelName));
+		LevelEnumValue = nullptr;
+		// fall through
+	}
+	Env->DeleteLocalRef(JavaLevelName);
+	return LevelEnumValue;
+}
+
+/** returns the Java string for the corresponding enum value, so we can ask java for its value */
+static const char* CleverTapEncryptionLevelJavaName(ECleverTapEncryptionLevel Level)
+{
+	switch (Level)
+	{
+		case ECleverTapEncryptionLevel::None:
+			return "NONE";
+		case ECleverTapEncryptionLevel::Medium:
+			return "MEDIUM";
+		default:
+		{
+			UE_LOG(LogCleverTap, Error,
+				TEXT("Unhandled ECleverTapEncryptionLevel value. Defaulting to ECleverTapEncryptionLevel::None"));
+			return "NONE";
+		}
+	}
+}
+
+static jobject CleverTapEncryptionLevelToJava(JNIEnv* Env, ECleverTapEncryptionLevel EncryptionLevel)
+{
+	return JavaEncryptionLevelFromString(Env, CleverTapEncryptionLevelJavaName(EncryptionLevel));
+}
+
 static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config)
 {
 	static jclass ConfigClass = CacheClass(Env, "com/clevertap/android/sdk/CleverTapInstanceConfig");
 	static jmethodID CreateMethod = GetStaticMethodID(Env, ConfigClass, "createInstance",
 		"(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;");
-	if (!CreateMethod)
+	static jmethodID SetEncryptionMethod =
+		GetMethodID(Env, ConfigClass, "setEncryptionLevel", "(Lcom/clevertap/android/sdk/cryption/EncryptionLevel;)V");
+	if (!CreateMethod || !SetEncryptionMethod)
 	{
 		return nullptr;
 	}
@@ -93,9 +141,22 @@ static jobject CreateCleverTapInstanceConfig(JNIEnv* Env, const FCleverTapInstan
 	Env->DeleteLocalRef(JAccountId);
 	Env->DeleteLocalRef(JAccountToken);
 	Env->DeleteLocalRef(JAccountRegion);
+	if (!ConfigInstance)
+	{
+		return nullptr;
+	}
 
 	// install the identity keys
 	SetIdentityKeys(Env, ConfigInstance, Config.GetIdentityKeys());
+
+	// set the encryption level
+	jobject JavaEncryption = CleverTapEncryptionLevelToJava(Env, Config.EncryptionLevel);
+	Env->CallVoidMethod(ConfigInstance, SetEncryptionMethod, JavaEncryption);
+	HandleException(Env, TEXT("CleverTapInstanceConfig.setEncryptionLevel() failed!"));
+	Env->DeleteLocalRef(JavaEncryption);
+
+	// set the log level
+	// --> todo <<---
 
 	return ConfigInstance;
 }
