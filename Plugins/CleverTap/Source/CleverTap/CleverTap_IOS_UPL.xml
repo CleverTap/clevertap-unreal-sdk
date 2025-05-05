@@ -14,6 +14,7 @@
 
 		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
 		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
+		<setStringFromProperty result="CTEncryptionLevel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="EncryptionLevel" default="None" />
 	</init>
 
 	<iosPListUpdates>
@@ -51,6 +52,39 @@
 				<setElement result="UseCustomIdValue" value="string" text="1"/>
 				<addElement tag="dict" once="true" name="UseCustomIdValue"/>
 			</true>
+		</if>
+
+		<setBoolIsEqual result="EncryptionLevelIsEmpty" arg1="$S(CTEncryptionLevel)" arg2="" />
+		<if condition="EncryptionLevelIsEmpty">
+			<false>
+				<setBool result="EncryptionValusIsKnown" value="false" />
+				<setBoolIsEqual result="EncryptionLevelIsNone" arg1="$S(CTEncryptionLevel)" arg2="None" />
+				<if condition="EncryptionLevelIsNone">
+					<true>
+						<setElement result="EncryptionLevelKey" value="key" text="CleverTapEncryptionLevel"/>
+						<addElement tag="dict" once="true" name="EncryptionLevelKey"/>
+						<setElement result="EncryptionLevelValue" value="string" text="0"/>
+						<addElement tag="dict" once="true" name="EncryptionLevelValue"/>
+						<setBool result="EncryptionValusIsKnown" value="true" />
+					</true>
+				</if>
+				<setBoolIsEqual result="EncryptionLevelIsMedium" arg1="$S(CTEncryptionLevel)" arg2="Medium" />
+				<if condition="EncryptionLevelIsMedium">
+					<true>
+						<setElement result="EncryptionLevelKey" value="key" text="CleverTapEncryptionLevel"/>
+						<addElement tag="dict" once="true" name="EncryptionLevelKey"/>
+						<setElement result="EncryptionLevelValue" value="string" text="1"/>
+						<addElement tag="dict" once="true" name="EncryptionLevelValue"/>
+						<setBool result="EncryptionValusIsKnown" value="true" />
+					</true>
+				</if>
+
+				<if condition="EncryptionValusIsKnown">
+					<false>
+						<log text="Error: Unknown Encryption level $S(CTEncryptionLevel)!" />
+					</false>
+				</if>
+			</false>
 		</if>
 
 		<setBool result="CTAddedPlistKeysArray" value="false"/>
