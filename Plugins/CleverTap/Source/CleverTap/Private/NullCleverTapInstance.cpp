@@ -135,3 +135,8 @@ void FNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FS
 {
 	CleverTapSDK::Ignore(UrlHandler);
 }
+
+void FNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter)
+{
+	CleverTapSDK::Ignore(Filter);
+}

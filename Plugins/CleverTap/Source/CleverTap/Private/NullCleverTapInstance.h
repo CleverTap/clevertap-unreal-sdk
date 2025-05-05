@@ -50,4 +50,6 @@ public:
 	bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) override;
 
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override;
+
+	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override;
 };

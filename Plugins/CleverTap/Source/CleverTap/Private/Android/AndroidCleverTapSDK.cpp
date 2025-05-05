@@ -266,6 +266,11 @@ public:
 	{
 		CleverTapSDK::Ignore(UrlHandler);
 	}
+
+	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override
+	{
+		CleverTapSDK::Ignore(Filter);
+	}
 };
 
 TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;

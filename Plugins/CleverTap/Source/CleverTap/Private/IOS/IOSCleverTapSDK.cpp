@@ -8,6 +8,7 @@
 #include "Misc/CoreDelegates.h"
 
 #import <CleverTapSDK/CleverTap.h>
+#import <CleverTapSDK/CleverTapInAppNotificationDelegate.h>
 #import <CleverTapSDK/CleverTapPushNotificationDelegate.h>
 #import <CleverTapSDK/CleverTapURLDelegate.h>
 #import <CleverTapSDK/CTLocalInApp.h>
@@ -26,7 +27,8 @@ FDelegateHandle RemoteNotificationListenerHandle = [] {
 
 // TODO: Not exposed
 @interface CleverTapSDKListener :
-	NSObject <CleverTapPushNotificationDelegate, CleverTapURLDelegate /*, CleverTapPushPermissionDelegate*/>
+	NSObject <CleverTapInAppNotificationDelegate, CleverTapPushNotificationDelegate,
+		CleverTapURLDelegate /*, CleverTapPushPermissionDelegate*/>
 - (instancetype)initWithCppInstance:(FIOSCleverTapInstance*)Instance;
 @end
 
@@ -380,6 +382,8 @@ public:
 	{
 		if (NativeInstance != nil)
 		{
+			[NativeInstance setInAppNotificationDelegate:SDKListener];
+
 			// TODO: Not exposed
 			// [NativeInstance setPushPermissionDelegate:SDKListener];
 
@@ -662,6 +666,11 @@ public:
 
 		UrlHandler = MoveTemp(InUrlHandler);
 	}
+
+	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override
+	{
+		InAppNotificationFilter = MoveTemp(Filter);
+	}
 	// </ICleverTapInstance>
 
 	bool IsRegisteredForPushNotificationClicked() const
@@ -711,10 +720,31 @@ public:
 		return true;
 	}
 
+	bool ShouldShowInAppNotification(const FCleverTapProperties& Extras) const
+	{
+		if (InAppNotificationFilter)
+		{
+			return InAppNotificationFilter(Extras);
+		}
+
+		return true;
+	}
+
+	void HandleInAppNotificationDismissed(const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras)
+	{
+		OnInAppNotificationDismissed.Broadcast(Extras, ActionExtras);
+	}
+
+	void HandleInAppNotificationShown(const FCleverTapProperties& Notification)
+	{
+		OnInAppNotificationShown.Broadcast(Notification);
+	}
+
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
 	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
+	TUniqueFunction<bool(const FCleverTapProperties&)> InAppNotificationFilter;
 	FDelegateHandle ReplayedNotificationDelegateHandle;
 	TAtomic<uint8> PushPermissionStatus;
 	uint8 StateFlags{};
@@ -769,6 +799,29 @@ private:
 	FCleverTapProperties Extras = ConvertFromNSDictionary(CustomExtras);
 	AsyncTask(ENamedThreads::GameThread,
 		[Extras = MoveTemp(Extras), Inst = CppInstance]() { Inst->HandlePushNotificationTapped(Extras); });
+}
+
+- (BOOL)shouldShowInAppNotificationWithExtras:(NSDictionary*)Extras
+{
+	return CppInstance->ShouldShowInAppNotification(ConvertFromNSDictionary(Extras)) ? YES : NO;
+}
+
+- (void)inAppNotificationDismissedWithExtras:(NSDictionary*)InExtras andActionExtras:(NSDictionary*)InActionExtras
+{
+	FCleverTapProperties Extras = ConvertFromNSDictionary(InExtras);
+	FCleverTapProperties ActionExtras = ConvertFromNSDictionary(InActionExtras);
+	AsyncTask(ENamedThreads::GameThread,
+		[Extras = MoveTemp(Extras), ActionExtras = MoveTemp(ActionExtras), Inst = CppInstance]() {
+			Inst->HandleInAppNotificationDismissed(Extras, ActionExtras);
+		});
+}
+
+- (void)inAppNotificationDidShow:(NSDictionary*)InNotification
+{
+	FCleverTapProperties Notification = ConvertFromNSDictionary(InNotification);
+	AsyncTask(ENamedThreads::GameThread, [Notification = MoveTemp(Notification), Inst = CppInstance]() {
+		Inst->HandleInAppNotificationShown(Notification);
+	});
 }
 
 @end

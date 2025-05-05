@@ -17,6 +17,17 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
 
 /**
+ * Delegate type used to broadcast in-app notifications when they are shown to the user.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationShown, const FCleverTapProperties& NotificationPayload);
+
+/**
+ * Delegate type used to broadcast in-app notifications when the user dismissed them.
+ */
+DECLARE_MULTICAST_DELEGATE_TwoParams(
+	FOnInAppNotificationDismissed, const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+
+/**
  * Status of if the user has granted permission to send push notifications.
  */
 enum class ECleverTapPushPermissionStatus : uint8
@@ -287,4 +298,22 @@ public:
 	 *  handler is called on.
 	 */
 	virtual void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) = 0;
+
+	/**
+	 * Called when an in-app notification is shown to the user.
+	 */
+	FOnInAppNotificationShown OnInAppNotificationShown;
+
+	/**
+	 * Called when an in-app notification is dismissed by the user.
+	 */
+	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
+
+	/**
+	 * Called before an in-app notification is shown to the user to determine if it should actually be shown. The
+	 *  first parameter of this filter is the key/value pairs of the notification set from the CleverTap dashboard.
+	 *  The filter should return true if the in-app notification should be shown and false when it should be
+	 *  surppressed. Note that there is no guarantee what thread the filter function is invoked on.
+	 */
+	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
 };
