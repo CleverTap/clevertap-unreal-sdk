@@ -226,6 +226,16 @@ void USampleMainMenu::ConfigureSharedInstance()
 	// if we were launched in response to clicking on a notification, this will generate a
 	// call to the OnPushNotificationClicked() we just registered
 	CleverTap.EnableOnPushNotificationClicked();
+
+	// In-App Callbacks
+	CleverTap.OnInAppNotificationShown.AddUObject(this, &USampleMainMenu::OnInAppNotificationShown);
+	CleverTap.OnInAppNotificationDismissed.AddUObject(this, &USampleMainMenu::OnInAppNotificationDismissed);
+
+	// In-App Messaging Filter
+	CleverTap.RegisterInAppNotificationFilter([](const FCleverTapProperties& Payload) {
+		UE_LOG(LogCleverTapSample, Log, TEXT("InAppNotificationFilter(Payload=%s)"), *ToDebugString(Payload));
+		return true;
+	});
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
@@ -255,6 +265,48 @@ void USampleMainMenu::OnPushNotificationClicked(const FCleverTapProperties& Noti
 	}
 
 	// Switch to the tab with the PushNotificationClickedText
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
+	}
+}
+
+void USampleMainMenu::OnInAppNotificationShown(const FCleverTapProperties& NotificationPayload)
+{
+	FString PayloadString = ToDebugString(NotificationPayload);
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnInAppNotificationShown(NotificationPayload=%s)"), *PayloadString);
+
+	if (InAppShownText)
+	{
+		InAppShownText->SetText(FText::FromString(PayloadString));
+	}
+
+	// Switch to the tab with the InAppShownText
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
+	}
+}
+
+void USampleMainMenu::OnInAppNotificationDismissed(
+	const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras)
+{
+	FString ExtrasString = ToDebugString(Extras);
+	FString ActionExtrasString = ToDebugString(ActionExtras);
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnInAppNotificationDismissed(Extras=%s, ActionExtras=%s)"), *ExtrasString,
+		*ActionExtrasString);
+
+	if (InAppDismissedText)
+	{
+		InAppDismissedText->SetText(FText::FromString(ExtrasString));
+	}
+
+	if (InAppDismissedActionText)
+	{
+		InAppDismissedActionText->SetText(FText::FromString(ActionExtrasString));
+	}
+
+	// Switch to the tab with the text boxes
 	if (TabSwitcher)
 	{
 		TabSwitcher->SetActiveWidgetIndex(0);
@@ -433,8 +485,8 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	CleverTap.RemoveMultiValuesForKey("Test_MVM", { "one", "two" });
 
 	// Exercise GetProperty() on each type.
-	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new profile values.
-	// The below will likely only show the correct output on the second call to this function.
+	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new
+	// profile values. The below will likely only show the correct output on the second call to this function.
 	for (const auto Pair : Profile)
 	{
 		UE_LOG(LogCleverTapSample, Log, TEXT("%s=%s"), *Pair.Key, *ToDebugString(CleverTap.GetProperty(Pair.Key)));

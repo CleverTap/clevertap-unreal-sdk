@@ -97,6 +97,8 @@ private:
 	void ConfigureSharedInstance();
 	void OnPushPermissionResponse(bool bGranted);
 	void OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload);
+	void OnInAppNotificationShown(const FCleverTapProperties& NotificationPayload);
+	void OnInAppNotificationDismissed(const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
 
 private:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
@@ -119,4 +121,13 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* DeepLinkText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* InAppShownText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* InAppDismissedText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* InAppDismissedActionText;
 };
