@@ -140,3 +140,8 @@ void FNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<boo
 {
 	CleverTapSDK::Ignore(Filter);
 }
+
+void FNullCleverTapInstance::SetOptOut(bool bIsOptingOut)
+{
+	CleverTapSDK::Ignore(bIsOptingOut);
+}

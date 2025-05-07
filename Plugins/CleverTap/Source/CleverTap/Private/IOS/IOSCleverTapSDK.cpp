@@ -671,6 +671,12 @@ public:
 	{
 		InAppNotificationFilter = MoveTemp(Filter);
 	}
+
+	void SetOptOut(bool bIsOptingOut) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance setOptOut:bIsOptingOut ? YES : NO];
+	}
 	// </ICleverTapInstance>
 
 	bool IsRegisteredForPushNotificationClicked() const

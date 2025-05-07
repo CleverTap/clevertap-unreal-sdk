@@ -271,6 +271,8 @@ public:
 	{
 		CleverTapSDK::Ignore(Filter);
 	}
+
+	void SetOptOut(bool bIsOptingOut) override { CleverTapSDK::Ignore(bIsOptingOut); }
 };
 
 TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;

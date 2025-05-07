@@ -52,4 +52,6 @@ public:
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override;
 
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override;
+
+	void SetOptOut(bool bIsOptingOut) override;
 };

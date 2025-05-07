@@ -86,6 +86,10 @@ public:
 	void RecordChargedEvent(
 		const TArray<FCleverTapSampleKeyValuePair>& Params, const UCleverTapSampleProductList* Products);
 
+	// TODO: Move to ICleverTapInstance blueprint wrapper
+	UFUNCTION(BlueprintCallable)
+	void SetOptOut(bool bIsOptingOut);
+
 	// <FTickableGameObject>
 	void Tick(float DeltaTime) override;
 	TStatId GetStatId() const override;

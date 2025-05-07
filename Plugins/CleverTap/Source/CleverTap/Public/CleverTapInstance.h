@@ -316,4 +316,11 @@ public:
 	 *  surppressed. Note that there is no guarantee what thread the filter function is invoked on.
 	 */
 	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
+
+	/**
+	 * Can be used to stop sending events to CleverTap for GDPR compliance. Calling this method with bIsOptingOut
+	 *  set to false will resume sending events to CleverTap. This value is not remembered across app sessions so
+	 *  it is best practice to call this method with the correct state as early as possible after initialization.
+	 */
+	virtual void SetOptOut(bool bIsOptingOut) = 0;
 };

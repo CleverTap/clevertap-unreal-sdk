@@ -111,13 +111,13 @@ static FText FormatPushPermissionText(ECleverTapPushPermissionStatus Status)
 
 bool USampleMainMenu::Initialize()
 {
+	CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+	check(CleverTapSys != nullptr);
+
 	if (!Super::Initialize())
 	{
 		return false;
 	}
-
-	CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-	check(CleverTapSys != nullptr);
 
 	if (CleverTapSys->IsSharedInstanceInitialized())
 	{
@@ -540,6 +540,16 @@ void USampleMainMenu::RecordChargedEvent(
 	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushChargedEvent with %d products"), Items.Num());
 	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushChargedEvent(ChargeDetails, Items);
+}
+
+void USampleMainMenu::SetOptOut(bool bIsOptingOut)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	UE_LOG(LogCleverTapSample, Log, TEXT("Setting GDPR OptOut to %s"), bIsOptingOut ? TEXT("TRUE") : TEXT("FALSE"));
+
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	CleverTap.SetOptOut(bIsOptingOut);
 }
 
 void USampleMainMenu::Tick(float DeltaTime)
