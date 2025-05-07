@@ -90,6 +90,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetOptOut(bool bIsOptingOut);
 
+	// TODO: Move to ICleverTapInstance blueprint wrapper
+	UFUNCTION(BlueprintCallable)
+	void SetNetworkInformationRecording(bool bEnableCollection);
+
 	// <FTickableGameObject>
 	void Tick(float DeltaTime) override;
 	TStatId GetStatId() const override;

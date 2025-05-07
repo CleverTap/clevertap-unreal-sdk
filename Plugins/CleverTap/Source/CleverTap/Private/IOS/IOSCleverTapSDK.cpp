@@ -677,6 +677,12 @@ public:
 		check(NativeInstance != nil);
 		[NativeInstance setOptOut:bIsOptingOut ? YES : NO];
 	}
+
+	void SetNetworkInformationRecording(bool bEnableCollection) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance enableDeviceNetworkInfoReporting:bEnableCollection ? YES : NO];
+	}
 	// </ICleverTapInstance>
 
 	bool IsRegisteredForPushNotificationClicked() const

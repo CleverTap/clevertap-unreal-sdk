@@ -54,4 +54,5 @@ public:
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override;
 
 	void SetOptOut(bool bIsOptingOut) override;
+	void SetNetworkInformationRecording(bool bEnableCollection) override;
 };

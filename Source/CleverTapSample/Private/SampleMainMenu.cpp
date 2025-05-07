@@ -552,6 +552,17 @@ void USampleMainMenu::SetOptOut(bool bIsOptingOut)
 	CleverTap.SetOptOut(bIsOptingOut);
 }
 
+void USampleMainMenu::SetNetworkInformationRecording(bool bEnableCollection)
+{
+	check(CleverTapSys != nullptr);
+	check(CleverTapSys->IsSharedInstanceInitialized());
+	UE_LOG(LogCleverTapSample, Log, TEXT("Setting network information recording to %s"),
+		bEnableCollection ? TEXT("TRUE") : TEXT("FALSE"));
+
+	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	CleverTap.SetNetworkInformationRecording(bEnableCollection);
+}
+
 void USampleMainMenu::Tick(float DeltaTime)
 {
 	if (CleverTapSys == nullptr || !CleverTapSys->IsSharedInstanceInitialized())

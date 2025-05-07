@@ -323,4 +323,10 @@ public:
 	 *  it is best practice to call this method with the correct state as early as possible after initialization.
 	 */
 	virtual void SetOptOut(bool bIsOptingOut) = 0;
+
+	/**
+	 * CleverTap does not track network information by default for GDPR compliance. Enabling collection will
+	 *  collection personal information like Wifi, network information, and user IP.
+	 */
+	virtual void SetNetworkInformationRecording(bool bEnableCollection) = 0;
 };

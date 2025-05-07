@@ -145,3 +145,8 @@ void FNullCleverTapInstance::SetOptOut(bool bIsOptingOut)
 {
 	CleverTapSDK::Ignore(bIsOptingOut);
 }
+
+void FNullCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollection)
+{
+	CleverTapSDK::Ignore(bEnableCollection);
+}

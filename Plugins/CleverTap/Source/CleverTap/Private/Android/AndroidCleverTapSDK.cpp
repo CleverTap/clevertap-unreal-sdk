@@ -273,6 +273,7 @@ public:
 	}
 
 	void SetOptOut(bool bIsOptingOut) override { CleverTapSDK::Ignore(bIsOptingOut); }
+	void SetNetworkInformationRecording(bool bEnableCollection) override { CleverTapSDK::Ignore(bEnableCollection); }
 };
 
 TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;
