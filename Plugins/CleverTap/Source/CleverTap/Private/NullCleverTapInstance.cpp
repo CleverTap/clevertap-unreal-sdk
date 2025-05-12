@@ -141,6 +141,11 @@ void FNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<boo
 	CleverTapSDK::Ignore(Filter);
 }
 
+void FNullCleverTapInstance::SetOffline(bool bIsOffline)
+{
+	CleverTapSDK::Ignore(bIsOffline);
+}
+
 void FNullCleverTapInstance::SetOptOut(bool bIsOptingOut)
 {
 	CleverTapSDK::Ignore(bIsOptingOut);

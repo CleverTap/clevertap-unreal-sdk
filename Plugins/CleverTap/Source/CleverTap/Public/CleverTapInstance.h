@@ -317,6 +317,17 @@ public:
 	 */
 	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
 
+	/** Disables or enables sending events to the server.
+	 *
+	 * To stop recorded events from being sent to the server, use this method to set the SDK instance to
+	 * offline. Once offline, events will be recorded and queued locally but will not be sent to the server until
+	 * offline is disabled.
+	 *
+	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
+	 * the SDK instance will immediately attempt to send events that have been queued while offline.
+	 */
+	virtual void SetOffline(bool bIsOffline) = 0;
+
 	/**
 	 * Can be used to stop sending events to CleverTap for GDPR compliance. Calling this method with bIsOptingOut
 	 *  set to false will resume sending events to CleverTap. This value is not remembered across app sessions so
