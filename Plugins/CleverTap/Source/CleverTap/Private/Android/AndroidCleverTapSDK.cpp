@@ -272,8 +272,17 @@ public:
 		CleverTapSDK::Ignore(Filter);
 	}
 
-	void SetOptOut(bool bIsOptingOut) override { CleverTapSDK::Ignore(bIsOptingOut); }
-	void SetNetworkInformationRecording(bool bEnableCollection) override { CleverTapSDK::Ignore(bEnableCollection); }
+	void SetOffline(bool bIsOffline) override { JNI::SetOffline(JNI::GetJNIEnv(), JavaCleverTapInstance, bIsOffline); }
+
+	void SetOptOut(bool bIsOptingOut) override
+	{
+		JNI::SetOptOut(JNI::GetJNIEnv(), JavaCleverTapInstance, bIsOptingOut);
+	}
+
+	void SetNetworkInformationRecording(bool bEnableCollection) override
+	{
+		JNI::EnableDeviceNetworkInfoReporting(JNI::GetJNIEnv(), JavaCleverTapInstance, bEnableCollection);
+	}
 };
 
 TSet<FAndroidCleverTapInstance*> FAndroidCleverTapInstance::Instances;

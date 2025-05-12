@@ -948,4 +948,41 @@ void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConf
 		// fall through
 	}
 }
+
+void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetMethod = GetMethodID(Env, CleverTapAPIClass, "setOffline", "(Z)V");
+	if (!SetMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, SetMethod, bIsOffline);
+	HandleException(Env, "setOffline()");
+}
+
+void SetOptOut(JNIEnv* Env, jobject CleverTapInstance, bool bIsOptingOut)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetMethod = GetMethodID(Env, CleverTapAPIClass, "setOptOut", "(Z)V");
+	if (!SetMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, SetMethod, bIsOptingOut);
+	HandleException(Env, "setOptOut()");
+}
+
+void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bool bEnableCollection)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetMethod = GetMethodID(Env, CleverTapAPIClass, "enableDeviceNetworkInfoReporting", "(Z)V");
+	if (!SetMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, SetMethod, bEnableCollection);
+	HandleException(Env, "enableDeviceNetworkInfoReporting()");
+}
+
 }}} // namespace CleverTapSDK::Android::JNI
