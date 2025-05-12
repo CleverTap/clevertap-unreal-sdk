@@ -133,4 +133,11 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
 	bool bAndroidEnablePullNotifications = true;
+
+	/**
+	 * iOS Only: If true then show push notifications as a badge and in the notification center while the app is in the
+	 *  foreground
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "IOS")
+	bool bIOSPresentPushNotificationsInForeground = false;
 };
