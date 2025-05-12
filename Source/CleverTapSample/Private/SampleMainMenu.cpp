@@ -207,6 +207,9 @@ void USampleMainMenu::ConfigureSharedInstance()
 	// simple test of the OnPushNotificationClicked notification
 	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
 
+	// simple test of the OnOpenUrl notification
+	CleverTap.OnOpenUrl.AddUObject(this, &USampleMainMenu::OnOpenUrl);
+
 	CleverTap.RegisterCleverTapUrlHandler(
 		[WeakThis = TSoftObjectPtr<USampleMainMenu>{ this }](FString Url, ECleverTapChannel Channel) {
 			// Make sure to do the update on the game thread
@@ -307,6 +310,18 @@ void USampleMainMenu::OnInAppNotificationDismissed(
 	}
 
 	// Switch to the tab with the text boxes
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
+	}
+}
+
+void USampleMainMenu::OnOpenUrl(const FString& Url)
+{
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnOpenUrl(%s)"), *Url);
+	DeepLinkText->SetText(FText::FromString(Url));
+
+	// Switch to the tab with the DeepLinkText display
 	if (TabSwitcher)
 	{
 		TabSwitcher->SetActiveWidgetIndex(0);

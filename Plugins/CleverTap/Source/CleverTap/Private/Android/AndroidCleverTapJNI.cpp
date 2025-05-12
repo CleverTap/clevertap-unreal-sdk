@@ -948,4 +948,18 @@ void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConf
 		// fall through
 	}
 }
+
+void EnableIntentNotifications(JNIEnv* Env)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID EnableMethod = GetStaticMethodID(Env, BridgeClass, "enableIntentNotifications", "()V");
+	if (!EnableMethod)
+	{
+		return;
+	}
+
+	Env->CallStaticVoidMethod(BridgeClass, EnableMethod);
+	HandleException(Env, "enableIntentNotifications()");
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

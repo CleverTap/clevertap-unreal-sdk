@@ -60,4 +60,6 @@ jobject CreatePushPrimerConfigJSON(
 	JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig);
 void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConfigJSON);
 
+void EnableIntentNotifications(JNIEnv* Env);
+
 }}} // namespace CleverTapSDK::Android::JNI

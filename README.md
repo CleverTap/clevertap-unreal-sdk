@@ -201,6 +201,44 @@ public class UnifiedMessagingService extends SomeOtherPluginMessagingService {
 
 For more information, see [Custom Android Push Notification Handling](https://developer.clevertap.com/docs/android-push#custom-android-push-notification-handling) 
 
+
+### Android OpenUrl Configuration
+To handle incoming app links, enable `bAndroidIntegrateOpenUrlActivity` and define up to four slot-based URL filters in your project’s `.ini` file.
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+bAndroidIntegrateOpenUrlActivity=True
+
+; Example Slot1 - catches clevertap-unreal-sample://
+AndroidIntentFilterSlot1_Scheme=clevertap-unreal-sample 
+
+; Example Slot2 - catches clevertap://unreal.com/sample
+AndroidIntentFilterSlot2_Scheme=clevertap
+AndroidIntentFilterSlot2_Host=unreal.com
+AndroidIntentFilterSlot2_PathPrefix=/sample
+
+; Example Slot3 - catches http://clevertap.com/unreal-sample, 
+; but requires digital verification that the app is approved for this domain
+; See https://developer.android.com/training/app-links/verify-android-applinks
+AndroidIntentFilterSlot3_Scheme=http
+AndroidIntentFilterSlot3_Host=clevertap.com
+AndroidIntentFilterSlot3_PathPrefix=/unreal-sample
+AndroidIntentFilterSlot3_AutoVerify=True
+```
+
+> [!NOTE] Http/Https schemes require digital verification via `assetlinks.json` hosted on the target domain.
+> See: https://developer.android.com/training/app-links/verify-android-applinks
+
+You can simulate clicking on a deep link with `adb`:
+```
+adb shell am start -a android.intent.action.VIEW -d "clevertap-unreal-sample://test/path"
+```
+
+Disable OpenUrlActivity integration if you need full control over your app’s deep link handling, and plan to define your own activity with complex intent filters via custom UPL rules. 
+If your custom activity forwards the intent to the `GameActivity`, it will still be routed to the `OnOpenURL` delegate.
+
+
+
 ### iOS - Configuring Apple Push Notifications (APNs)
 1. Follow the [CleverTap guide](https://developer.clevertap.com/docs/push-notifications-ios#step-1-configure-push-notifications) to set up APNs for your app.
 2. In your project's `Config/DefaultEngine.ini` ensure `bEnableRemoteNotificationsSupport` is `True` in the `[/Script/IOSRuntimeSettings.IOSRuntimeSettings]` section.

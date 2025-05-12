@@ -7,6 +7,11 @@
 #include "CoreMinimal.h"
 
 /**
+ * Delegate type that broadcasts URLS the application should open.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnOpenUrl, const FString& Url);
+
+/**
  * Delegate type that broadcasts the eventual user response to PromptForPushPermission()
  */
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
@@ -250,6 +255,18 @@ public:
 	 * ready.
 	 */
 	FOnPushNotificationClicked OnPushNotificationClicked;
+
+	/**
+	 * Called when the application should open a URL (e.g. from clicking a deep link in a notification).
+	 *
+	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
+	 * ready.
+	 *
+	 * Android: For the operating system to route URLs to your application the schemes need to be
+	 *          registered as intent filters in the application manifest.
+	 *          See `bAndroidIntegrateOpenUrlActivity`
+	 */
+	FOnOpenUrl OnOpenUrl;
 
 	/**
 	 * Enables delivery of push notification click events.

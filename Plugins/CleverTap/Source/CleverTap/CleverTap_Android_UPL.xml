@@ -13,6 +13,8 @@
 		<setBoolFromProperty result="CTEnableBackgroundSync" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidEnablePullNotifications" default="true" />
 
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
+		<setBoolFromProperty result="CTIntegrateOpenUrlActivity" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateOpenUrlActivity" default="true" />
+
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 		<setStringFromProperty result="CTDefaultNotificationChannel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidDefaultNotificationChannel" default="" />
 		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default='ID="default"| Name="General"| Description="General Notifications"| Importance=IMPORTANCE_DEFAULT| bShowBadge=True|' />
@@ -196,6 +198,82 @@
 				<addElement tag="application" name="CLEVERTAP_NOTIFICATION_ICON" />
 			</false>
 		</if>
+
+		<!-- OpenUrlActivity - Intent Filters for deep link handling
+
+		This block adds an OpenUrlActivity <activity> with <intent-filter>s 
+		using up to 4 slots defined in DefaultEngine.ini.
+
+			AndroidIntentFilterSlotN_Scheme=string
+			AndroidIntentFilterSlotN_Host=string
+			AndroidIntentFilterSlotN_PathPrefix=string
+			AndroidIntentFilterSlotN_AutoVerify=bool
+
+		The <intent-filter> is required to launch the app in response to matching URLs.
+
+		See https://developer.android.com/training/basics/intents/filters
+
+		-->
+		<if condition="CTIntegrateOpenUrlActivity">
+			<true>
+				<setElement result="OpenUrlActivity" value="activity" />
+				<addAttribute tag="$OpenUrlActivity" name="android:name" value="com.clevertap.android.unreal.OpenUrlActivity" />
+				<addAttribute tag="$OpenUrlActivity" name="android:label" value="@string/app_name" />
+				<addAttribute tag="$OpenUrlActivity" name="android:exported" value="true" />
+				<addAttribute tag="$OpenUrlActivity" name="android:launchMode" value="singleTop" />
+				<addAttribute tag="$OpenUrlActivity" name="android:noHistory" value="true" />
+				<addAttribute tag="$OpenUrlActivity" name="android:theme" value="@style/UE4SplashTheme" />
+
+				<setInt result="index" value="1" />
+				<setBool result="loopRun" value="true" />
+				<while condition="loopRun">
+					<setStringFromProperty result="Slot_$I(index)_Scheme" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_Scheme" default="" />
+					<setBoolIsEqual result="Slot_$I(index)_Scheme_IsEmpty" arg1="$S(Slot_$I(index)_Scheme)" arg2="" />
+					<if condition="Slot_$I(index)_Scheme_IsEmpty">
+						<false>
+							<setElement result="IntentFilter_$I(index)" value="intent-filter" />
+							<addElements tag="$IntentFilter_$I(index)">
+								<action android:name="android.intent.action.VIEW" />
+								<category android:name="android.intent.category.DEFAULT" />
+								<category android:name="android.intent.category.BROWSABLE" />
+							</addElements>
+							<setElement result="FilterData_$I(index)" value="data" />
+							<addAttribute tag="$FilterData_$I(index)" name="android:scheme" value="$S(Slot_$I(index)_Scheme)" />
+
+							<setStringFromProperty result="Slot_$I(index)_Host" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_Host" default="" />
+							<setBoolIsEqual result="Slot_$I(index)_Host_IsEmpty" arg1="$S(Slot_$I(index)_Host)" arg2="" />
+							<if condition="Slot_$I(index)_Host_IsEmpty">
+								<false>
+									<addAttribute tag="$FilterData_$I(index)" name="android:host" value="$S(Slot_$I(index)_Host)" />
+								</false>
+							</if>
+
+							<setStringFromProperty result="Slot_$I(index)_PathPrefix" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_PathPrefix" default="" />
+							<setBoolIsEqual result="Slot_$I(index)_PathPrefix_IsEmpty" arg1="$S(Slot_$I(index)_PathPrefix)" arg2="" />
+							<if condition="Slot_$I(index)_Host_IsEmpty">
+								<false>
+									<addAttribute tag="$FilterData_$I(index)" name="android:pathPrefix" value="$S(Slot_$I(index)_PathPrefix)" />
+								</false>
+							</if>
+
+							<setBoolFromProperty result="Slot_$I(index)_AutoVerify" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_AutoVerify" default="false" />
+							<if condition="Slot_$I(index)_AutoVerify">
+								<true>
+									<addAttribute tag="$IntentFilter_$I(index)" name="android:autoVerify" value="true" />
+								</true>
+							</if>
+
+							<addElement tag="$IntentFilter_$I(index)" name="FilterData_$I(index)" />
+							<addElement tag="$OpenUrlActivity" name="IntentFilter_$I(index)" />
+						</false>
+					</if>
+					<setIntAdd result="index" arg1="$I(index)" arg2="1" />
+					<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="4" />
+				</while>
+				<addElement tag="application" name="OpenUrlActivity" />
+			</true>
+		</if>
+
 	</androidManifestUpdates>
 
 
@@ -363,4 +441,18 @@
 			}
 		</insert>
 	</gameApplicationOnCreateAdditions>
+
+	<!-- intent handling -->
+	<gameActivityOnCreateAdditions>
+		<insert>
+			com.clevertap.android.unreal.UECleverTapBridge.onNewIntent(getIntent());
+		</insert>
+	</gameActivityOnCreateAdditions>
+
+	<gameActivityOnNewIntentAdditions>
+		<insert>
+			com.clevertap.android.unreal.UECleverTapBridge.onNewIntent(newIntent);
+		</insert>
+	</gameActivityOnNewIntentAdditions>
+
 </root>
