@@ -399,7 +399,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_clevertap_android_unreal_UECleverTapB
 {
 	if (!Env)
 	{
-		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnNotificationClicked callback!"));
+		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnOpenUrl callback!"));
 		return;
 	}
 
