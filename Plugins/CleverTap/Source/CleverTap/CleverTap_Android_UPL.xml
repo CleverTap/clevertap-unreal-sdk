@@ -19,8 +19,12 @@
 		<setStringFromProperty result="CTDefaultNotificationChannel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidDefaultNotificationChannel" default="" />
 		<setStringFromProperty result="CTNotificationChannelSlot1" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidNotificationChannelSlot1" default='ID="default"| Name="General"| Description="General Notifications"| Importance=IMPORTANCE_DEFAULT| bShowBadge=True|' />
 
+		<setStringFromProperty result="CTAndroidImagesDir" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidImagesDir" default="" />
+		<setStringFromProperty result="CTAndroidSoundsDir" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSoundsDir" default="" />
+
 		<setStringFromProperty result="CTSmallNotificationIconPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSmallNotificationIconPath" default="" />
 		<setBoolIsEqual result="HaveNoSmallNotificationIcon" arg1="$S(CTSmallNotificationIconPath)" arg2="" />
+
 		<if condition="HaveNoSmallNotificationIcon">
 			<false>
 				<!-- We need to strip the path to get the base filename; Start with the full path -->
@@ -64,6 +68,22 @@
 			<false>
 				<copyFile src="$S(PluginDir)/../../../../$S(CTSmallNotificationIconPath)"
 					dst="$S(BuildDir)/res/drawable/$S(SmallIconFilename)" />
+			</false>
+		</if>
+
+		<setBoolIsEqual result="HaveNoAndroidImagesDir" arg1="$S(CTAndroidImagesDir)" arg2="" />
+		<if condition="HaveNoAndroidImagesDir">
+			<false>
+				<copyDir src="$S(PluginDir)/../../../../$S(CTAndroidImagesDir)"
+					dst="$S(BuildDir)/res/drawable/" />
+			</false>
+		</if>
+
+		<setBoolIsEqual result="HaveNoAndroidSoundsDir" arg1="$S(CTAndroidSoundsDir)" arg2="" />
+		<if condition="HaveNoAndroidSoundsDir">
+			<false>
+				<copyDir src="$S(PluginDir)/../../../../$S(CTAndroidSoundsDir)"
+					dst="$S(BuildDir)/res/raw/" />
 			</false>
 		</if>
 	</prebuildCopies>
@@ -410,10 +430,11 @@
 			String Description;
 			int Importance = IMPORTANCE_DEFAULT;
 			boolean bShowBadge = true;
+			String Sound;
 		</insert>
 
-		<setString result="SetNotificationChannelDefaults" value='ID=""; Group=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True;' />
-		<setString result="CreateNotificationChannel" value='com.clevertap.android.unreal.UECleverTapBridge.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, Group, bShowBadge);' />
+		<setString result="SetNotificationChannelDefaults" value='ID=""; Group=""; Name=""; Description=""; Importance=IMPORTANCE_DEFAULT; bShowBadge=True; Sound="";' />
+		<setString result="CreateNotificationChannel" value='com.clevertap.android.unreal.UECleverTapBridge.createNotificationChannel( getApplicationContext(), ID, Name, Description, Importance, Group, bShowBadge, Sound);' />
 
 		<setInt result="index" value="1" />
 		<setBool result="loopRun" value="true" />

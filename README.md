@@ -102,9 +102,12 @@ Define up to 100 channels in your DefaultEngine.ini. Only the ID field is requir
 ```ini
 [/Script/CleverTap.CleverTapConfig]
 AndroidNotificationChannelSlot1=ID="general" | Name="General" | Description="General Notifications" | Importance=IMPORTANCE_DEFAULT | bShowBadge=True
-AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="Important news and alerts" | Importance=IMPORTANCE_HIGH | bShowBadge=True
+AndroidNotificationChannelSlot2=ID="news" | Name="News Updates" | Description="Important news and alerts" | Importance=IMPORTANCE_HIGH | bShowBadge=True | Sound="news_alert.wav"
 ```
 Valid Importance values: `IMPORTANCE_NONE`, `IMPORTANCE_MIN`, `IMPORTANCE_LOW`, `IMPORTANCE_DEFAULT`, `IMPORTANCE_HIGH`, `IMPORTANCE_MAX`.
+
+The sound files must be included in the APK's `res/raw`; see the `AndroidSoundsDir` setting for more information.
+
 
 > [!NOTE]
 > - The plugin’s `CleverTap_Android_UPL.xml` reads these entries and injects the required Java into `GameApplication.onCreate()`. Errors in the `ini` syntax will cause the compilation of `GameApplication.java` to fail.
@@ -171,8 +174,18 @@ Note that the base filename must contain only lowercase letters (`a`-`z`), digit
 
 For more information about the image requirements, see https://developer.clevertap.com/docs/android-push#set-the-small-notification-icon
 
-> [!NOTE]
-> If you're using `ico=...` in push payloads, your project must ensure the specified image is copied into `res/drawable/` using your own UPL step.
+### Android Sound and Image Resources
+Additional Images and Sounds can be included in the APK for direct use by Android & CleverTap.
+
+These are not part of Unreal's regular asset system. They are copied directly into the APK and must follow Android resource rules. Filenames must contain only lowercase letters (`a`-`z`), digits (`0`-`9`), or underscores (`_`).
+
+Android supports .mp3, .ogg, and .wav files for playing custom sounds.
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidImagesDir=Config/Android/Images
+AndroidSoundsDir=Config/Android/Sounds
+```
 
 ### Custom Android Notification Handling
 Due to Android’s restriction of allowing only one `FirebaseMessagingService`, it cannot coexist cleanly with other Unreal plugins that declare their own FCM service (e.g. the Unreal Firebase plugin).

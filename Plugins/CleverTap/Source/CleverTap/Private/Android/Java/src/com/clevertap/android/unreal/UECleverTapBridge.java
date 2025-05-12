@@ -45,7 +45,7 @@ public class UECleverTapBridge {
     // Needs to happen during onCreate() to be reliable.
     public static void createNotificationChannel(Context context, String channelId,
             CharSequence name, String description, int importance, String groupId,
-            boolean showBadge) {
+            boolean showBadge, String sound) {
 
         // default the name to the id if none provided
         if (name == null || name.isEmpty()) {
@@ -53,12 +53,24 @@ public class UECleverTapBridge {
         }
 
         if (groupId != null && !groupId.isEmpty()) {
-            // create channel assigned to group
-            CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, groupId,
-                    showBadge);
+            if (sound != null && !sound.isEmpty()) {
+                // create channel assigned to group with sound
+                CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, groupId,
+                        showBadge, sound);
+            } else {
+                // create channel assigned to group
+                CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, groupId,
+                        showBadge);
+            }
         } else {
-            // create channel with no group
-            CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, showBadge);
+            if (sound != null && !sound.isEmpty()) {
+                // create channel with sound and no group
+                CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, showBadge,
+                        sound);
+            } else {
+                // create channel with no group
+                CleverTapAPI.createNotificationChannel(context, channelId, name, description, importance, showBadge);
+            }
         }
     }
 

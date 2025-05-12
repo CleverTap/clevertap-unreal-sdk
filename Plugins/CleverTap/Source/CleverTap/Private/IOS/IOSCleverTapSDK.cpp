@@ -1,6 +1,7 @@
 // Copyright CleverTap All Rights Reserved.
 #include "IOS/IOSCleverTapSDK.h"
 
+#include "CleverTapConfig.h"
 #include "CleverTapInstance.h"
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
@@ -12,16 +13,13 @@
 #import <CleverTapSDK/CleverTapPushNotificationDelegate.h>
 #import <CleverTapSDK/CleverTapURLDelegate.h>
 #import <CleverTapSDK/CTLocalInApp.h>
+#import <objc/runtime.h>
+#import <UserNotifications/UserNotifications.h>
 
 namespace {
 class FIOSCleverTapInstance;
 
-// Need to listen to and handle remote notifications that happen while the engine is initializing
-FString SavedRemoteNotificationString;
-FDelegateHandle RemoteNotificationListenerHandle = [] {
-	return FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.AddLambda(
-		[](FString UserInfo, int AppState) { SavedRemoteNotificationString = MoveTemp(UserInfo); });
-}();
+void EnsurePushNotificationMonitoring();
 
 } // namespace
 
@@ -375,11 +373,29 @@ class FIOSCleverTapInstance : public ICleverTapInstance
 	static constexpr int8 PUSH_PERM_STATUS_DENIED = 2;
 
 public:
+	static void HandleWillPresentNotification(NSDictionary* UserInfo)
+	{
+		for (FIOSCleverTapInstance* Inst : AllInstances)
+		{
+			[Inst->NativeInstance handleNotificationWithData:UserInfo openDeepLinksInForeground:YES];
+		}
+	}
+
+	static void HandleDidReceiveNotificationResponse(NSDictionary* UserInfo)
+	{
+		for (FIOSCleverTapInstance* Inst : AllInstances)
+		{
+			[Inst->NativeInstance handleNotificationWithData:UserInfo];
+		}
+	}
+
 	explicit FIOSCleverTapInstance(CleverTap* InNativeInstance)
 		: NativeInstance{ InNativeInstance }
 		, SDKListener{ [[CleverTapSDKListener alloc] initWithCppInstance:this] }
 		, PushPermissionStatus{ static_cast<uint8>(ECleverTapPushPermissionStatus::Unknown) }
 	{
+		AllInstances.Add(this);
+
 		if (NativeInstance != nil)
 		{
 			[NativeInstance setInAppNotificationDelegate:SDKListener];
@@ -394,9 +410,15 @@ public:
 			//   CachePushPermissionStatus(bIsGranted);
 			// }];
 		}
+
+		EnsurePushNotificationMonitoring();
 	}
 
-	~FIOSCleverTapInstance() { [SDKListener release]; }
+	~FIOSCleverTapInstance()
+	{
+		[SDKListener release];
+		AllInstances.RemoveSingleSwap(this);
+	}
 
 	// <ICleverTapInstance>
 	FString GetCleverTapId() override
@@ -603,42 +625,6 @@ public:
 		SetIsRegisteredForPushNotificationClicked();
 
 		[NativeInstance setPushNotificationDelegate:SDKListener];
-
-		// Handle saved notifications
-		if (!SavedRemoteNotificationString.IsEmpty())
-		{
-			NSData* JsonStringData =
-				[SavedRemoteNotificationString.GetNSString() dataUsingEncoding:NSUTF8StringEncoding];
-			NSError* Err = nil;
-			id JsonData = [NSJSONSerialization JSONObjectWithData:JsonStringData
-														  options:NSJSONReadingMutableContainers
-															error:&Err];
-			if (JsonData)
-			{
-				[NativeInstance handleNotificationWithData:JsonData];
-			}
-
-			SavedRemoteNotificationString.Empty();
-		}
-		if (RemoteNotificationListenerHandle.IsValid())
-		{
-			FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Remove(RemoteNotificationListenerHandle);
-		}
-
-		// Handle a window where replayed notifications can happen through the Unreal delegate but not through the
-		//  swizzled IOSAppDelegate method
-		ReplayedNotificationDelegateHandle = FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.AddLambda(
-			[this](FString UserInfo, int AppState) {
-				NSData* JsonStringData = [UserInfo.GetNSString() dataUsingEncoding:NSUTF8StringEncoding];
-				NSError* Err = nil;
-				id JsonData = [NSJSONSerialization JSONObjectWithData:JsonStringData
-															  options:NSJSONReadingMutableContainers
-																error:&Err];
-				if (JsonData)
-				{
-					[NativeInstance handleNotificationWithData:JsonData];
-				}
-			});
 	}
 
 	bool LocalizeAndroidNotificationChannel(
@@ -712,12 +698,6 @@ public:
 
 	void HandlePushNotificationTapped(const FCleverTapProperties& Extras)
 	{
-		// Remove the replay catch delegate when we get a push notification through this path
-		if (ReplayedNotificationDelegateHandle.IsValid())
-		{
-			FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Remove(ReplayedNotificationDelegateHandle);
-		}
-
 		// Broadcast the tap
 		this->OnPushNotificationClicked.Broadcast(Extras);
 	}
@@ -757,10 +737,127 @@ private:
 	CleverTapSDKListener* SDKListener{};
 	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
 	TUniqueFunction<bool(const FCleverTapProperties&)> InAppNotificationFilter;
-	FDelegateHandle ReplayedNotificationDelegateHandle;
 	TAtomic<uint8> PushPermissionStatus;
 	uint8 StateFlags{};
+
+	static TArray<FIOSCleverTapInstance*> AllInstances;
 };
+
+TArray<FIOSCleverTapInstance*> FIOSCleverTapInstance::AllInstances{};
+
+void EnsurePushNotificationMonitoring()
+{
+#if !PLATFORM_TVOS
+	static TAtomic<bool> bHasBeenInitialized{ false };
+	if (bHasBeenInitialized.Load())
+	{
+		return;
+	}
+
+	bool bExpectFalse{ false };
+	if (!bHasBeenInitialized.CompareExchange(bExpectFalse, true))
+	{
+		return;
+	}
+
+	UIApplication* SharedApp = [UIApplication sharedApplication];
+	if (SharedApp == nil)
+	{
+		UE_LOG(LogCleverTap, Fatal, TEXT("Unable to access the shared UIApplication"));
+		return;
+	}
+
+	id<UIApplicationDelegate> AppDelegate = SharedApp.delegate;
+	Class AppDelegateClass = [AppDelegate class];
+
+	// Swizzle willPresentNotification and didReceiveNotificationResponse
+	Class NotifCenterDelClass = [[UNUserNotificationCenter currentNotificationCenter].delegate class];
+
+	SEL PresentSel = @selector(userNotificationCenter:willPresentNotification:withCompletionHandler:);
+	Method OriginalPresentMethod = class_getInstanceMethod(AppDelegateClass, PresentSel);
+	if (OriginalPresentMethod)
+	{
+		UNNotificationPresentationOptions PresentOptions = UNNotificationPresentationOptionNone;
+
+		const UCleverTapConfig* const DefaultConfig =
+			UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
+		if (DefaultConfig && DefaultConfig->bIOSPresentPushNotificationsInForeground)
+		{
+			PresentOptions = UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionList;
+		}
+
+		const char* OrigMethodArgs = method_getTypeEncoding(OriginalPresentMethod);
+		NSMethodSignature* OrigSig = [NSMethodSignature signatureWithObjCTypes:OrigMethodArgs];
+		NSInvocation* OrigInvocation = [NSInvocation invocationWithMethodSignature:OrigSig];
+
+		id NewPresentBlock = ^(id Obj, UNUserNotificationCenter* Center, UNNotification* Notification,
+			void (^CompletionHandler)(UNNotificationPresentationOptions Options)) {
+		  FIOSCleverTapInstance::HandleWillPresentNotification(Notification.request.content.userInfo);
+
+		  // Forward onto the original implementation, but make the completion handler a no-op
+		  void (^EmptyHandler)(UNNotificationPresentationOptions Options) =
+			  ^(UNNotificationPresentationOptions IgnoredOpts) {};
+
+		  [OrigInvocation setArgument:&Center atIndex:2];
+		  [OrigInvocation setArgument:&Notification atIndex:3];
+		  [OrigInvocation setArgument:&EmptyHandler atIndex:4];
+		  [OrigInvocation invokeWithTarget:Obj];
+
+		  // Invoke the actual completion handler with the options we want
+		  CompletionHandler(PresentOptions);
+		};
+		IMP NewPresentImp = imp_implementationWithBlock(NewPresentBlock);
+
+		SEL NewPresentSel = sel_registerName("_ct_willPresentNotification_swizzled");
+		class_addMethod(NotifCenterDelClass, NewPresentSel, NewPresentImp, OrigMethodArgs);
+
+		OrigInvocation.selector = NewPresentSel;
+
+		method_exchangeImplementations(
+			OriginalPresentMethod, class_getInstanceMethod(NotifCenterDelClass, NewPresentSel));
+	}
+	else
+	{
+		UE_LOG(LogCleverTap, Error,
+			TEXT(
+				"Failed to find instance method 'userNotificationCenter:willPresentNotification:withCompletionHandler'. Push notifications may not be correctly handled for CleverTap"));
+	}
+
+	SEL ReceiveSel = @selector(userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:);
+	Method OriginalReceiveMethod = class_getInstanceMethod(AppDelegateClass, ReceiveSel);
+	if (OriginalReceiveMethod)
+	{
+		const char* OrigMethodArgs = method_getTypeEncoding(OriginalReceiveMethod);
+		NSMethodSignature* OrigSig = [NSMethodSignature signatureWithObjCTypes:OrigMethodArgs];
+		NSInvocation* OrigInvocation = [NSInvocation invocationWithMethodSignature:OrigSig];
+
+		id NewReceiveBlock = ^(
+			id Obj, UNUserNotificationCenter* Center, UNNotificationResponse* Response, void (^CompletionHandler)()) {
+		  FIOSCleverTapInstance::HandleDidReceiveNotificationResponse(Response.notification.request.content.userInfo);
+
+		  [OrigInvocation setArgument:&Center atIndex:2];
+		  [OrigInvocation setArgument:&Response atIndex:3];
+		  [OrigInvocation setArgument:&CompletionHandler atIndex:4];
+		  [OrigInvocation invokeWithTarget:Obj];
+		};
+		IMP NewReceiveImp = imp_implementationWithBlock(NewReceiveBlock);
+
+		SEL NewReceiveSel = sel_registerName("_ct_didReceiveNotificationResponse_swizzled");
+		class_addMethod(NotifCenterDelClass, NewReceiveSel, NewReceiveImp, OrigMethodArgs);
+
+		OrigInvocation.selector = NewReceiveSel;
+
+		method_exchangeImplementations(
+			OriginalReceiveMethod, class_getInstanceMethod(NotifCenterDelClass, NewReceiveSel));
+	}
+	else
+	{
+		UE_LOG(LogCleverTap, Error,
+			TEXT(
+				"Failed to find instance method 'userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler'. Push notifications may not be correctly handled for CleverTap"));
+	}
+#endif
+}
 
 } // namespace
 
@@ -875,7 +972,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(const FCle
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap autoIntegrate];
+	CleverTap* const SharedInst = [CleverTap sharedInstance];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 
@@ -889,7 +986,7 @@ TUniquePtr<ICleverTapInstance> FPlatformSDK::InitializeSharedInstance(
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
-	CleverTap* const SharedInst = [CleverTap autoIntegrateWithCleverTapID:CleverTapId.GetNSString()];
+	CleverTap* const SharedInst = [CleverTap sharedInstanceWithCleverTapID:CleverTapId.GetNSString()];
 	return MakeUnique<FIOSCleverTapInstance>(SharedInst);
 }
 

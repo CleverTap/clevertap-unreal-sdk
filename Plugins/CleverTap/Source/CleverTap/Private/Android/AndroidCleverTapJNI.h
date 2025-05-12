@@ -60,6 +60,10 @@ jobject CreatePushPrimerConfigJSON(
 	JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig);
 void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConfigJSON);
 
+void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline);
+void SetOptOut(JNIEnv* Env, jobject CleverTapInstance, bool bIsOptingOut);
+void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bool bEnableCollection);
+
 void EnableIntentNotifications(JNIEnv* Env);
 
 }}} // namespace CleverTapSDK::Android::JNI

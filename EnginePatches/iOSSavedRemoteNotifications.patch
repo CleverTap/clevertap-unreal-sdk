@@ -1,6 +1,6 @@
 --- a/Engine/Source/Runtime/ApplicationCore/Private/IOS/IOSAppDelegate.cpp	2025-04-24 15:20:59.251822100 -0500
-+++ b/Engine/Source/Runtime/ApplicationCore/Private/IOS/IOSAppDelegate.cpp	2025-04-24 15:33:43.319085900 -0500
-@@ -86,6 +86,38 @@
++++ b/Engine/Source/Runtime/ApplicationCore/Private/IOS/IOSAppDelegate.cpp	2025-05-12 14:28:11.152778700 -0500
+@@ -86,6 +86,44 @@
  		TEXT("How long to block main IOS thread to make sure gamethread gets time.\n"),
  		ECVF_Default);
  
@@ -11,25 +11,31 @@
 +
 +struct FRemoteNotificationMomento
 +{
-+	FString JsonString;
-+	int AppState{};
++  UNUserNotificationCenter* Center{ nil };
++  UNNotificationResponse* Response{ nil };
 +};
 +
 +FRemoteNotificationMomento SavedRemoteNotificationMomento;
 +
 +void HandleSavedRemoteNotificationIfAvailable()
 +{
-+	if (SavedRemoteNotificationMomento.JsonString.IsEmpty())
++	if (SavedRemoteNotificationMomento.Response == nil)
 +	{
 +		return;
 +	}
 +
-+	FFunctionGraphTask::CreateAndDispatchWhenReady([]
-+		{
-+			FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Broadcast(
-+				MoveTemp(SavedRemoteNotificationMomento.JsonString), SavedRemoteNotificationMomento.AppState
-+			);
-+		}, TStatId(), NULL, ENamedThreads::GameThread);
++	void (^EmptyHandler)() = ^() {
++		// Intentional no-op
++	};
++
++	id Delegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
++	[Delegate userNotificationCenter:SavedRemoteNotificationMomento.Center
++	  didReceiveNotificationResponse:SavedRemoteNotificationMomento.Response
++	           withCompletionHandler:EmptyHandler];
++
++	[SavedRemoteNotificationMomento.Center release];
++	[SavedRemoteNotificationMomento.Response release];
++	SavedRemoteNotificationMomento = FRemoteNotificationMomento{};
 +}
 +
 +}
@@ -39,7 +45,7 @@
  
  static void SignalHandler(int32 Signal, struct __siginfo* Info, void* Context)
  {
-@@ -372,6 +404,12 @@
+@@ -372,6 +410,12 @@
  	});
  #endif
  
@@ -52,60 +58,20 @@
      while( !IsEngineExitRequested() )
  	{
          if (self.bIsSuspended)
-@@ -1545,7 +1583,7 @@
- {
- 	bool IsLocal = false;
- 	
--	if ([IOSAppDelegate GetDelegate].bEngineInit)
-+	// [CleverTap] Begin
- 	{
- 		NSString* NotificationType = (NSString*)[notification.request.content.userInfo objectForKey: @"NotificationType"];
- 		if(NotificationType != nullptr)
-@@ -1571,7 +1609,7 @@
- 			AppState = 3; // EApplicationState::Active;
- 		}
- 		
--		if(IsLocal)
-+		if(IsLocal && [IOSAppDelegate GetDelegate].bEngineInit)
- 		{
- 			NSString*	activationEvent = (NSString*)[notification.request.content.userInfo objectForKey: @"ActivationEvent"];
- 			if(activationEvent != nullptr)
-@@ -1585,7 +1623,7 @@
- 															   }, TStatId(), NULL, ENamedThreads::GameThread);
- 			}
- 		}
--		else
-+		else if (!IsLocal)
- 		{
- 			NSString* JsonString = @"{}";
- 			NSError* JsonError;
-@@ -1598,14 +1636,23 @@
- 				JsonString = [[[NSString alloc] initWithData:JsonData encoding : NSUTF8StringEncoding] autorelease];
- 			}
- 			
--			FString	jsonFString(JsonString);
--			
--			FFunctionGraphTask::CreateAndDispatchWhenReady([jsonFString, AppState]()
--														   {
--															   FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Broadcast(jsonFString, AppState);
--														   }, TStatId(), NULL, ENamedThreads::GameThread);
-+			if ([IOSAppDelegate GetDelegate].bEngineInit)
-+			{
-+				FString	jsonFString(JsonString);
-+				
-+				FFunctionGraphTask::CreateAndDispatchWhenReady([jsonFString, AppState]()
-+															   {
-+																   FCoreDelegates::ApplicationReceivedRemoteNotificationDelegate.Broadcast(jsonFString, AppState);
-+															   }, TStatId(), NULL, ENamedThreads::GameThread);
-+			}
-+			else
-+			{
-+				SavedRemoteNotificationMomento.JsonString = FString{ JsonString };
-+				SavedRemoteNotificationMomento.AppState = AppState;
-+			}
- 		}
+@@ -1639,6 +1683,16 @@
  	}
-+	// [CleverTap] End
+ 	
+ 	HandleReceivedNotification(response.notification);
++
++// [CleverTap] Begin
++#if !PLATFORM_TVOS
++	if (!([IOSAppDelegate GetDelegate].bEngineInit))
++	{
++		SavedRemoteNotificationMomento.Center = [center retain];
++		SavedRemoteNotificationMomento.Response = [response retain];
++	}
++#endif
++// [CleverTap End]
+ 	
+ 	completionHandler();
  }
- 
- - (void)userNotificationCenter:(UNUserNotificationCenter *)center
