@@ -323,7 +323,7 @@ public:
 	 * offline. Once offline, events will be recorded and queued locally but will not be sent to the server until
 	 * offline is disabled.
 	 *
-	 * Calling this method again with offline set to False will allow events to be sent to server and
+	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
 	 * the SDK instance will immediately attempt to send events that have been queued while offline.
 	 */
 	virtual void SetOffline(bool bIsOffline) = 0;
