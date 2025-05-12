@@ -129,8 +129,41 @@ public:
 	FString AndroidSmallNotificationIconPath;
 
 	/**
+	 * Android Only: Project-relative path to a directory of extra images to include in the application bundle's
+	 * `res/drawable`.
+	 *
+	 * These are not part of Unreal's regular asset system. They are copied directly into the APK and must follow
+	 * Android resource rules. Filenames must contain only lowercase letters (`a`-`z`), digits (`0`-`9`), or
+	 * underscores (`_`).
+	 *
+	 * Used for push notifications and other assets referenced outside of Unreal, such as from the CleverTap dashboard.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	FString AndroidImagesDir;
+
+	/**
+	 * Android Only: Project-relative path to a directory of extra sounds to include in the application bundle's
+	 * 'res/raw'.
+	 *
+	 * These are not part of Unreal's regular asset system. They are copied directly into the APK and must follow
+	 * Android resource rules. Filenames must contain only lowercase letters (`a`-`z`), digits (`0`-`9`), or
+	 * underscores (`_`).
+	 *
+	 * Used for push notifications and other assets referenced outside of Unreal.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	FString AndroidSoundsDir;
+
+	/**
 	 * Android Only: Provides the capability to reach users on devices that suppress notifications via GCM/FCM.
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
 	bool bAndroidEnablePullNotifications = true;
+
+	/**
+	 * iOS Only: If true then show push notifications as a badge and in the notification center while the app is in the
+	 *  foreground
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "IOS")
+	bool bIOSPresentPushNotificationsInForeground = false;
 };

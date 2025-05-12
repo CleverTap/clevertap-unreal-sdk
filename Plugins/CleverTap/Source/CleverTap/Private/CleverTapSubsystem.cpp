@@ -63,12 +63,7 @@ void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		InitializeSharedInstance(Config);
 	}
 
-	// If we didn't initialize the shared instance then we need to liten for the remote notification token just in case
-	//  that's done before the shared instance is initialized.
-	if (!IsSharedInstanceInitialized())
-	{
-		AddRemoteNotificationTokenListener();
-	}
+	AddRemoteNotificationTokenListener();
 }
 
 ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverTapConfig* Config)
@@ -213,4 +208,9 @@ void UCleverTapSubsystem::AddRemoteNotificationTokenListener()
 void UCleverTapSubsystem::OnRegisteredForRemoteNotifications(TArray<uint8> Token)
 {
 	SavedRemoteNotificationToken = MoveTemp(Token);
+
+	if (SharedInstanceImpl)
+	{
+		FCleverTapPlatformSDK::SetRemoteNotificationToken(*SharedInstanceImpl, SavedRemoteNotificationToken);
+	}
 }
