@@ -402,17 +402,17 @@ jclass GetBridgeClass(JNIEnv* Env)
 	return BridgeClass;
 }
 
-jobject ConvertJavaJsonObjectToMap(JNIEnv* Env, jobject JavaJsonObject)
+jobject ConvertJavaJsonObjectToFlatMap(JNIEnv* Env, jobject JavaJsonObject)
 {
 	static jclass BridgeClass = GetBridgeClass(Env);
 	static jmethodID ConvertMethod =
-		GetStaticMethodID(Env, BridgeClass, "jsonObjectToMap", "(Lorg/json/JSONObject;)Ljava/util/Map;");
+		GetStaticMethodID(Env, BridgeClass, "jsonObjectToFlatMap", "(Lorg/json/JSONObject;)Ljava/util/Map;");
 	if (!ConvertMethod)
 	{
 		return nullptr;
 	}
 	jobject JavaMap = Env->CallStaticObjectMethod(BridgeClass, ConvertMethod, JavaJsonObject);
-	HandleExceptionOrError(Env, !JavaMap, "jsonObjectToMap()");
+	HandleExceptionOrError(Env, !JavaMap, "jsonObjectToFlatMap()");
 	return JavaMap;
 }
 

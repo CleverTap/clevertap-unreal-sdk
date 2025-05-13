@@ -615,7 +615,7 @@ FCleverTapProperties ConvertJavaCTInAppNotificationToCleverTapProperties(JNIEnv*
 		return {};
 	}
 
-	jobject JavaMap = ConvertJavaJsonObjectToMap(Env, JavaJsonObject);
+	jobject JavaMap = ConvertJavaJsonObjectToFlatMap(Env, JavaJsonObject);
 	Env->DeleteLocalRef(JavaJsonObject);
 	if (!JavaMap)
 	{

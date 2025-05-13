@@ -8,10 +8,13 @@ import android.content.Intent;
 import android.os.Build;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -170,16 +173,46 @@ public class UECleverTapBridge {
                 .build();
     }
 
-    public static Map<String, Object> jsonObjectToMap(JSONObject json) throws JSONException {
-        Map<String, Object> map = new HashMap<>();
+    /// Converts a Java JSONObject to a flattened Map<String, Object>.
+    //
+    // Nested objects are flattened using dot-separated keys (e.g., "foo.bar").
+    // Arrays are converted to ArrayList<String> where possible.
+    // Preserves native Java types (String, Number, Boolean)
+    public static Map<String, Object> jsonObjectToFlatMap(JSONObject json) throws JSONException {
+        Map<String, Object> result = new HashMap<>();
+        flattenJSONObject("", json, result);
+        return result;
+    }
+
+    private static void flattenJSONObject(String prefix, JSONObject json, Map<String, Object> result)
+            throws JSONException {
         Iterator<String> keys = json.keys();
         while (keys.hasNext()) {
             String key = keys.next();
             Object value = json.get(key);
-            // todo flatten nested dictionaries
-            map.put(key, value);
+            String fullKey = prefix.isEmpty() ? key : prefix + "." + key;
+
+            if (value instanceof JSONObject) {
+                flattenJSONObject(fullKey, (JSONObject) value, result); // Recurse
+            } else if (value instanceof JSONArray) {
+                result.put(fullKey, jsonArrayToStringList((JSONArray) value)); // ArrayList<String>
+            } else {
+                result.put(fullKey, value); // Preserve original type (String, Integer, Boolean, etc.)
+            }
         }
-        return map;
+    }
+
+    private static ArrayList<String> jsonArrayToStringList(JSONArray array) throws JSONException {
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i < array.length(); i++) {
+            Object element = array.get(i);
+            if (element instanceof String) {
+                list.add((String) element);
+            } else {
+                list.add(String.valueOf(element)); // Safe coercion of scalars like numbers
+            }
+        }
+        return list;
     }
 
 }

@@ -127,7 +127,12 @@ FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array);
 /** Converts an unreal TArray<FString> to a Java ArrayList<String> */
 jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArray);
 
-/** Converts a Java JsonObject to a Java Map<String,Object> */
-jobject ConvertJavaJsonObjectToMap(JNIEnv* Env, jobject JavaJsonObject);
+/** Converts a Java JSONObject to a flattened Map<String, Object>.
+ *
+ *  Nested objects are flattened using dot-separated keys (e.g., "foo.bar").
+ *  Arrays are converted to ArrayList<String> where possible.
+ *  Preserves native Java types (String, Number, Boolean)
+ */
+jobject ConvertJavaJsonObjectToFlatMap(JNIEnv* Env, jobject JavaJsonObject);
 
 }}} // namespace CleverTapSDK::Android::JNI
