@@ -658,6 +658,12 @@ public:
 		InAppNotificationFilter = MoveTemp(Filter);
 	}
 
+	void SetOffline(bool bIsOffline) override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance setOffline:bIsOffline ? YES : NO];
+	}
+
 	void SetOptOut(bool bIsOptingOut) override
 	{
 		check(NativeInstance != nil);
