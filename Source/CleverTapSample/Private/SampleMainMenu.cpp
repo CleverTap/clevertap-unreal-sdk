@@ -207,6 +207,9 @@ void USampleMainMenu::ConfigureSharedInstance()
 	// simple test of the OnPushNotificationClicked notification
 	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
 
+	// simple test of the OnOpenUrl notification
+	CleverTap.OnOpenUrl.AddUObject(this, &USampleMainMenu::OnOpenUrl);
+
 	CleverTap.RegisterCleverTapUrlHandler(
 		[WeakThis = TSoftObjectPtr<USampleMainMenu>{ this }](FString Url, ECleverTapChannel Channel) {
 			// Make sure to do the update on the game thread
@@ -222,11 +225,6 @@ void USampleMainMenu::ConfigureSharedInstance()
 			return true;
 		});
 
-	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
-	// if we were launched in response to clicking on a notification, this will generate a
-	// call to the OnPushNotificationClicked() we just registered
-	CleverTap.EnableOnPushNotificationClicked();
-
 	// In-App Callbacks
 	CleverTap.OnInAppNotificationShown.AddUObject(this, &USampleMainMenu::OnInAppNotificationShown);
 	CleverTap.OnInAppNotificationDismissed.AddUObject(this, &USampleMainMenu::OnInAppNotificationDismissed);
@@ -236,6 +234,16 @@ void USampleMainMenu::ConfigureSharedInstance()
 		UE_LOG(LogCleverTapSample, Log, TEXT("InAppNotificationFilter(Payload=%s)"), *ToDebugString(Payload));
 		return true;
 	});
+
+	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
+	// if we were launched in response to clicking on a notification, this will generate a
+	// call to the OnPushNotificationClicked() we just registered
+	CleverTap.EnableOnPushNotificationClicked();
+
+	// we're now ready to handle the OnOpenUrl notifications, enable them.
+	// if we were launched in response to clicking on a registered URL scheme,
+	// this will queue a broadcast of OnOpenUrl
+	CleverTap.EnableOnOpenUrl();
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)
@@ -307,6 +315,18 @@ void USampleMainMenu::OnInAppNotificationDismissed(
 	}
 
 	// Switch to the tab with the text boxes
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
+	}
+}
+
+void USampleMainMenu::OnOpenUrl(const FString& Url)
+{
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnOpenUrl(%s)"), *Url);
+	DeepLinkText->SetText(FText::FromString(Url));
+
+	// Switch to the tab with the DeepLinkText display
 	if (TabSwitcher)
 	{
 		TabSwitcher->SetActiveWidgetIndex(0);

@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
@@ -13,6 +14,32 @@ import org.json.JSONObject;
 
 // Utilities to make it easier to use the CleverTapAPI from Unreal/C++ 
 public class UECleverTapBridge {
+    private static String pendingIntentUri = null;
+    private static boolean areIntentNotificationsEnabled = false;
+
+    public static void onNewIntent(Intent intent) {
+        android.net.Uri intentData = intent.getData();
+        if (intentData == null) {
+            return;
+        }
+        String uri = intentData.toString();
+        if (areIntentNotificationsEnabled) {
+            nativeOnOpenUrl(uri);
+        } else {
+            pendingIntentUri = uri;
+        }
+    }
+
+    public static void enableIntentNotifications() {
+        areIntentNotificationsEnabled = true;
+        if (pendingIntentUri != null) {
+            nativeOnOpenUrl(pendingIntentUri);
+            pendingIntentUri = null;
+        }
+    }
+
+    // Implemented on the Unreal side
+    private static native void nativeOnOpenUrl(String uri);
 
     // Create a notification channel using the appropriate overload & defaults.
     // Needs to happen during onCreate() to be reliable.

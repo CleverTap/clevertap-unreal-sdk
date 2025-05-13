@@ -985,4 +985,17 @@ void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bo
 	HandleException(Env, "enableDeviceNetworkInfoReporting()");
 }
 
+void EnableIntentNotifications(JNIEnv* Env)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID EnableMethod = GetStaticMethodID(Env, BridgeClass, "enableIntentNotifications", "()V");
+	if (!EnableMethod)
+	{
+		return;
+	}
+
+	Env->CallStaticVoidMethod(BridgeClass, EnableMethod);
+	HandleException(Env, "enableIntentNotifications()");
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

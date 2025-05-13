@@ -262,6 +262,8 @@ public:
 		}
 	}
 
+	void EnableOnOpenUrl() { JNI::EnableIntentNotifications(JNI::GetJNIEnv()); }
+
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override
 	{
 		CleverTapSDK::Ignore(UrlHandler);
@@ -282,6 +284,15 @@ public:
 	void SetNetworkInformationRecording(bool bEnableCollection) override
 	{
 		JNI::EnableDeviceNetworkInfoReporting(JNI::GetJNIEnv(), JavaCleverTapInstance, bEnableCollection);
+	}
+
+	static void BroadcastOnOpenUrl(const FString& Url)
+	{
+		UE_LOG(LogCleverTap, Log, TEXT("BroadcastOnOpenUrl(%s)"), *Url);
+		for (auto& Instance : Instances)
+		{
+			Instance->OnOpenUrl.Broadcast(Url);
+		}
 	}
 };
 
@@ -390,4 +401,19 @@ Java_com_clevertap_android_unreal_UECleverTapListener_nativeOnNotificationClicke
 			GameThreadEnv->DeleteGlobalRef(NotificationPayloadRef);
 		}
 	});
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_clevertap_android_unreal_UECleverTapBridge_nativeOnOpenUrl(
+	JNIEnv* Env, jclass Class, jobject JavaUrl)
+{
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnOpenUrl callback!"));
+		return;
+	}
+
+	FString Url = CleverTapSDK::Android::JNI::JavaObjectToString(Env, JavaUrl);
+
+	AsyncTask(ENamedThreads::GameThread,
+		[Url]() { CleverTapSDK::Android::FAndroidCleverTapInstance::BroadcastOnOpenUrl(Url); });
 }

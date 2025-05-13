@@ -161,6 +161,57 @@ public:
 	bool bAndroidEnablePullNotifications = true;
 
 	/**
+	 * Android Only: Enables automatic generation of an OpenUrlActivity and associated `<intent-filter>` blocks,
+	 * routing matching URLs to the CleverTapInstance::OnOpenURL delegate.
+	 *
+	 * Configure up to 4 slots in your .ini file. Only the Scheme field is required:
+	 *
+	 *	AndroidIntentFilterSlot1_Scheme=http
+	 *	AndroidIntentFilterSlot1_Host=clevertap.com
+	 *	AndroidIntentFilterSlot1_PathPrefix=/unreal-sample
+	 *	AndroidIntentFilterSlot1_AutoVerify=True
+	 *
+	 * Note: Http/Https schemes require digital verification via assetlinks.json hosted on the target domain.
+	 * See: https://developer.android.com/training/app-links/verify-android-applinks
+	 *
+	 * Disable OpenUrlActivity integration if you need full control over your app’s deep link handling, and plan to
+	 * define your own activity with complex intent filters via custom UPL rules. If your custom activity forwards the
+	 * intent to the GameActivity, it will still be routed to the OnOpenURL delegate.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	bool bAndroidIntegrateOpenUrlActivity = true;
+
+	/** AndroidIntentFilterSlots
+	 *
+	 * Note: These settings are currently only used by Android_UPL and do not need to exist in this struct.
+	 *
+	 * However, if we implement a cross-platform deep link system, iOS will need runtime access
+	 * to this data in order to perform filtering logic &  At that point, these fields (with proper naming)
+	 * should be added as real members of this struct:
+	 *
+
+		FString AndroidIntentFilterSlot1_Scheme;
+		FString AndroidIntentFilterSlot1_Host;
+		FString AndroidIntentFilterSlot1_PathPrefix;
+		bool bAndroidIntentFilterSlot1_AutoVerify = true;
+
+		FString AndroidIntentFilterSlot2_Scheme;
+		FString AndroidIntentFilterSlot2_Host;
+		FString AndroidIntentFilterSlot2_PathPrefix;
+		bool bAndroidIntentFilterSlot2_AutoVerify = true;
+
+		FString AndroidIntentFilterSlot3_Scheme;
+		FString AndroidIntentFilterSlot3_Host;
+		FString AndroidIntentFilterSlot3_PathPrefix;
+		bool bAndroidIntentFilterSlot3_AutoVerify = true;
+
+		FString AndroidIntentFilterSlot4_Scheme;
+		FString AndroidIntentFilterSlot4_Host;
+		FString AndroidIntentFilterSlot4_PathPrefix;
+		bool bAndroidIntentFilterSlot4_AutoVerify = true;
+	**/
+
+	/**
 	 * iOS Only: If true then show push notifications as a badge and in the notification center while the app is in the
 	 *  foreground
 	 */
