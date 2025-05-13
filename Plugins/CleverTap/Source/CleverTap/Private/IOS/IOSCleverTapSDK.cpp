@@ -325,6 +325,51 @@ bool TryConvertFromNSValue(id Value, FCleverTapPropertyValue* OutValue)
 	return false;
 }
 
+bool TryFlattenNSDictionary(NSString* KeyPrefix, NSDictionary* Dict, FCleverTapProperties& ResultRef)
+{
+	check(Dict != nil);
+
+	const int32 NumElements = [Dict count];
+	if (NumElements == 0)
+	{
+		return true;
+	}
+	ResultRef.Reserve(ResultRef.Num() + NumElements);
+
+	bool bAllSuccessful = true;
+	for (NSString* KeyPart in Dict)
+	{
+		id Value = Dict[KeyPart];
+		if (Value == nil || [Value isEqual:[NSNull null]])
+		{
+			continue;
+		}
+
+		NSString* NewPrefix = (KeyPrefix == nil) ? KeyPart : [KeyPrefix stringByAppendingFormat:@".%@", KeyPart];
+
+		FCleverTapPropertyValue MaybeUnrealValue;
+		if (TryConvertFromNSValue(Value, &MaybeUnrealValue))
+		{
+			ResultRef.Add(FString{ NewPrefix }, MoveTemp(MaybeUnrealValue));
+		}
+		else if ([Value isKindOfClass:[NSDictionary class]])
+		{
+			if (!TryFlattenNSDictionary(NewPrefix, (NSDictionary*)Value, ResultRef))
+			{
+				bAllSuccessful = false;
+			}
+		}
+		else
+		{
+			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary entry for key '%s.%s': %s"),
+				*FString{ NewPrefix }, *FString{ NSStringFromClass([Value class]) });
+			bAllSuccessful = false;
+		}
+	}
+
+	return bAllSuccessful;
+}
+
 FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 {
 	FCleverTapProperties Result;
@@ -333,33 +378,7 @@ FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 		return Result;
 	}
 
-	const int32 NumElements = [Dict count];
-	if (NumElements == 0)
-	{
-		return Result;
-	}
-	Result.Reserve(NumElements);
-
-	for (NSString* Key in Dict)
-	{
-		id Value = Dict[Key];
-		if (Value == nil || [Value isEqual:[NSNull null]])
-		{
-			continue;
-		}
-
-		FCleverTapPropertyValue MaybeUnrealValue;
-		if (TryConvertFromNSValue(Value, &MaybeUnrealValue))
-		{
-			Result.Add(FString{ Key }, MoveTemp(MaybeUnrealValue));
-		}
-		else
-		{
-			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary value type for key '%s': %s"), *FString{ Key },
-				*FString{ NSStringFromClass([Value class]) });
-		}
-	}
-
+	TryFlattenNSDictionary(nil, Dict, Result);
 	return Result;
 }
 
