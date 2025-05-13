@@ -27,6 +27,11 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTap
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationShown, const FCleverTapProperties& NotificationPayload);
 
 /**
+ * Delegate type used to broadcast button presses on in-app notifications.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationButtonClicked, const FCleverTapProperties& ButtonPayload);
+
+/**
  * Delegate type used to broadcast in-app notifications when the user dismissed them.
  */
 DECLARE_MULTICAST_DELEGATE_TwoParams(
@@ -340,6 +345,11 @@ public:
 	 * connected and your application is prepared to handle the notifications.
 	 */
 	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
+
+	/**
+	 * Called when the user clicks on a Key/Value pair button in an in-app notification.
+	 */
+	FOnInAppNotificationButtonClicked OnInAppNotificationButtonClicked;
 
 	/**
 	 * Called before an in-app notification is shown to the user to determine if it should actually be shown. The

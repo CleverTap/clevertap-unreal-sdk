@@ -2,6 +2,7 @@ package com.clevertap.android.unreal;
 
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.InAppNotificationButtonListener;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.PushPermissionResponseListener;
@@ -12,7 +13,8 @@ import java.util.Map;
 // The C++ methods then (typically) forward the notifcations to the unreal main game thread for dispatch
 
 public class UECleverTapListener
-        implements CTPushNotificationListener, InAppNotificationListener, PushPermissionResponseListener {
+        implements CTPushNotificationListener, PushPermissionResponseListener,
+        InAppNotificationButtonListener, InAppNotificationListener {
     private final long nativeInstancePtr;
 
     public UECleverTapListener(long nativeInstancePtr) {
@@ -58,4 +60,13 @@ public class UECleverTapListener
 
     private static native void nativeOnInAppNotificationDismissed(long nativeInstancePtr, Object extras,
             Object actionExtras);
+
+    // Called when a Key-Value pair button in an in-app notification is clicked
+    @Override
+    public void onInAppButtonClick(HashMap<String, String> payload) {
+        nativeOnInAppButtonClick(nativeInstancePtr, payload);
+    }
+
+    private static native void nativeOnInAppButtonClick(long nativeInstancePtr, Object payload);
+
 }

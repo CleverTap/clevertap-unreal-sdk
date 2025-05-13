@@ -228,6 +228,7 @@ void USampleMainMenu::ConfigureSharedInstance()
 	// In-App Callbacks
 	CleverTap.OnInAppNotificationShown.AddUObject(this, &USampleMainMenu::OnInAppNotificationShown);
 	CleverTap.OnInAppNotificationDismissed.AddUObject(this, &USampleMainMenu::OnInAppNotificationDismissed);
+	CleverTap.OnInAppNotificationButtonClicked.AddUObject(this, &USampleMainMenu::OnInAppNotificationButtonClicked);
 
 	// In-App Messaging Filter
 	CleverTap.RegisterInAppNotificationFilter([](const FCleverTapProperties& Payload) {
@@ -317,6 +318,23 @@ void USampleMainMenu::OnInAppNotificationDismissed(
 	if (InAppDismissedActionText)
 	{
 		InAppDismissedActionText->SetText(FText::FromString(ActionExtrasString));
+	}
+
+	// Switch to the tab with the text boxes
+	if (TabSwitcher)
+	{
+		TabSwitcher->SetActiveWidgetIndex(0);
+	}
+}
+
+void USampleMainMenu::OnInAppNotificationButtonClicked(const FCleverTapProperties& Payload)
+{
+	FString PayloadString = ToDebugString(Payload);
+	UE_LOG(LogCleverTapSample, Log, TEXT("OnInAppNotificationButtonClicked(Payload=%s)"), *PayloadString);
+
+	if (InAppButtonClickedText)
+	{
+		InAppButtonClickedText->SetText(FText::FromString(PayloadString));
 	}
 
 	// Switch to the tab with the text boxes

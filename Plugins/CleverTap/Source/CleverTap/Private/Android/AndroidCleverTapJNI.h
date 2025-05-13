@@ -27,6 +27,7 @@ jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* 
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
 void SetPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
 void SetInAppNotificationListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetInAppNotificationButtonListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
 
 void DiscardInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
 void ResumeInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
