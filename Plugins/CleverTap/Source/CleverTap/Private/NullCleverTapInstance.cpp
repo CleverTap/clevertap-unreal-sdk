@@ -118,6 +118,8 @@ void FNullCleverTapInstance::PromptForPushPermission(
 
 void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}
 
+void FNullCleverTapInstance::EnableOnOpenUrl() {}
+
 bool FNullCleverTapInstance::LocalizeAndroidNotificationChannel(
 	const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
 {

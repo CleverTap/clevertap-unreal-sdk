@@ -257,9 +257,18 @@ public:
 	FOnPushNotificationClicked OnPushNotificationClicked;
 
 	/**
+	 * Enables delivery of push notification click events.
+	 *
+	 * Call this after binding to OnPushNotificationClicked and your systems are ready to handle incoming events.
+	 * If the game was launched by clicking on a push notification, it will be delivered immediately after this
+	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
+	 */
+	virtual void EnableOnPushNotificationClicked() = 0;
+
+	/**
 	 * Called when the application should open a URL (e.g. from clicking a deep link in a notification).
 	 *
-	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
+	 * Initially paused; call EnableOnOpenUrl() once event handlers are connected and game systems are
 	 * ready.
 	 *
 	 * Android: For the operating system to route URLs to your application the schemes need to be
@@ -269,13 +278,13 @@ public:
 	FOnOpenUrl OnOpenUrl;
 
 	/**
-	 * Enables delivery of push notification click events.
+	 * Enables delivery of OnOpenUrl events.
 	 *
-	 * Call this after binding to OnPushNotificationClicked and your systems are ready to handle incoming events.
-	 * If the game was launched by clicking on a push notification, it will be delivered immediately after this
-	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
+	 * Call this after binding to OnOpenUrl and your systems are ready to handle incoming events.
+	 * If the game was launched by clicking on a registerd URL scheme, OnOpenUrl will be delivered immediately after
+	 * this call. If multiple notifications are received before this call, only the most recent will be delivered.
 	 */
-	virtual void EnableOnPushNotificationClicked() = 0;
+	virtual void EnableOnOpenUrl() = 0;
 
 	/**
 	 * Android Only: Updates the name and description of an existing Notification Channel with localized text.
