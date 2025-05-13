@@ -18,12 +18,6 @@ jclass GetCleverTapAPIClass(JNIEnv* Env)
 	return CleverTapAPIClass;
 }
 
-static jclass GetBridgeClass(JNIEnv* Env)
-{
-	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
-	return BridgeClass;
-}
-
 static void SetIdentityKeys(JNIEnv* Env, jobject ConfigInstance, const TArray<FString>& IdentityKeys)
 {
 	static jclass StringClass = CacheClass(Env, "java/lang/String");
@@ -405,7 +399,7 @@ void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstan
 	HandleException(Env, "registerPushPermissionNotificationResponseListener()");
 }
 
-void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
+void SetPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	static jmethodID SetListenerMethod = GetMethodID(Env, CleverTapAPIClass, "setCTPushNotificationListener",
@@ -417,6 +411,56 @@ void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInsta
 
 	Env->CallVoidMethod(CleverTapInstance, SetListenerMethod, ListenerInstance);
 	HandleException(Env, "setCTPushNotificationListener()");
+}
+
+void SetInAppNotificationListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetListenerMethod = GetMethodID(Env, CleverTapAPIClass, "setInAppNotificationListener",
+		"(Lcom/clevertap/android/sdk/InAppNotificationListener;)V");
+	if (!SetListenerMethod)
+	{
+		return;
+	}
+
+	Env->CallVoidMethod(CleverTapInstance, SetListenerMethod, ListenerInstance);
+	HandleException(Env, "setInAppNotificationListener()");
+}
+
+void DiscardInAppNotifications(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID DiscardMethod = GetMethodID(Env, CleverTapAPIClass, "discardInAppNotifications", "()V");
+	if (!DiscardMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, DiscardMethod);
+	HandleException(Env, "discardInAppNotifications()");
+}
+
+void ResumeInAppNotifications(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID ResumeMethod = GetMethodID(Env, CleverTapAPIClass, "resumeInAppNotifications", "()V");
+	if (!ResumeMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, ResumeMethod);
+	HandleException(Env, "resumeInAppNotifications()");
+}
+
+void SuspendInAppNotifications(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID ResumeMethod = GetMethodID(Env, CleverTapAPIClass, "suspendInAppNotifications", "()V");
+	if (!ResumeMethod)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, ResumeMethod);
+	HandleException(Env, "suspendInAppNotifications()");
 }
 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance)

@@ -225,11 +225,6 @@ void USampleMainMenu::ConfigureSharedInstance()
 			return true;
 		});
 
-	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
-	// if we were launched in response to clicking on a notification, this will generate a
-	// call to the OnPushNotificationClicked() we just registered
-	CleverTap.EnableOnPushNotificationClicked();
-
 	// In-App Callbacks
 	CleverTap.OnInAppNotificationShown.AddUObject(this, &USampleMainMenu::OnInAppNotificationShown);
 	CleverTap.OnInAppNotificationDismissed.AddUObject(this, &USampleMainMenu::OnInAppNotificationDismissed);
@@ -239,6 +234,17 @@ void USampleMainMenu::ConfigureSharedInstance()
 		UE_LOG(LogCleverTapSample, Log, TEXT("InAppNotificationFilter(Payload=%s)"), *ToDebugString(Payload));
 		return true;
 	});
+
+	// we're now ready to handle InApp notifications.
+	// they start paused so that we don't miss any before we've connected our delegates
+	CleverTap.ResumeInAppNotifications();
+
+	// we're now ready to handle the OnPushNotificationClicked notifications, enable them.
+	// if we were launched in response to clicking on a notification, this will generate a
+	// call to the OnPushNotificationClicked() we just registered.
+	// if we were launched in response to clicking on a URL we are configured to open,
+	// this will generate the call to OnOpenUrl().
+	CleverTap.EnableOnPushNotificationClicked();
 }
 
 void USampleMainMenu::OnPushPermissionResponse(bool bGranted)

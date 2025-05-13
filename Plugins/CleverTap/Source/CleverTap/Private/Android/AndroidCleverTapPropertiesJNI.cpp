@@ -429,6 +429,10 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is nullptr!"));
 		return Properties;
 	}
+	if (!JavaMap)
+	{
+		return Properties;
+	}
 
 	jclass MapClass = Env->GetObjectClass(JavaMap);
 	if (HandleExceptionOrError(Env, !MapClass, TEXT("Getting class for Map!")))
@@ -593,6 +597,33 @@ jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TAr
 		Env->DeleteLocalRef(JavaItem);
 	}
 	return JavaArray;
+}
+
+FCleverTapProperties ConvertJavaCTInAppNotificationToCleverTapProperties(JNIEnv* Env, jobject JavaCTInAppNotification)
+{
+	static jclass NotificationClass = CacheClass(Env, "com/clevertap/android/sdk/inapp/CTInAppNotification");
+	static jmethodID GetJsonMethod =
+		GetMethodID(Env, NotificationClass, "getJsonDescription", "()Lorg/json/JSONObject;");
+	if (!GetJsonMethod)
+	{
+		return {};
+	}
+
+	jobject JavaJsonObject = Env->CallObjectMethod(JavaCTInAppNotification, GetJsonMethod);
+	if (HandleExceptionOrError(Env, !JavaJsonObject, "getJsonDescription()"))
+	{
+		return {};
+	}
+
+	jobject JavaMap = ConvertJavaJsonObjectToMap(Env, JavaJsonObject);
+	Env->DeleteLocalRef(JavaJsonObject);
+	if (!JavaMap)
+	{
+		return {};
+	}
+	FCleverTapProperties Properties = ConvertJavaMapToCleverTapProperties(Env, JavaMap);
+	Env->DeleteLocalRef(JavaMap);
+	return Properties;
 }
 
 FCleverTapPropertyValue ConvertJavaObjectToCleverTapPropertyValue(JNIEnv* Env, jobject JavaValue)

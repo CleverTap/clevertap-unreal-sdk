@@ -318,11 +318,17 @@ public:
 
 	/**
 	 * Called when an in-app notification is shown to the user.
+	 *
+	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
+	 * connected and your application is prepared to handle the notifications.
 	 */
 	FOnInAppNotificationShown OnInAppNotificationShown;
 
 	/**
 	 * Called when an in-app notification is dismissed by the user.
+	 *
+	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
+	 * connected and your application is prepared to handle the notifications.
 	 */
 	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
 
@@ -333,6 +339,23 @@ public:
 	 *  surppressed. Note that there is no guarantee what thread the filter function is invoked on.
 	 */
 	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
+
+	/**
+	 * Disables the display of InApp notifications and discards any new incoming.
+	 *
+	 * The InApp Notifications will be displayed again only once ResumeInAppNotifications() is called.
+	 */
+	virtual void DiscardInAppNotifications() = 0;
+
+	/** Resumes displaying in-app notifications.
+	 *
+	 *  Any notifacations queued by SuspendInAppNotifications() will be instantly shown.
+	 */
+	virtual void ResumeInAppNotifications() = 0;
+
+	/** Suspends and saves in-app notifications until ResumeInAppNotifications() is called.
+	 */
+	virtual void SuspendInAppNotifications() = 0;
 
 	/** Disables or enables sending events to the server.
 	 *

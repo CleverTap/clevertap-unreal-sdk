@@ -354,6 +354,7 @@
 			<true>
 				<insert>
 					com.clevertap.android.sdk.CleverTapAPI CleverTapAPI = com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					CleverTapAPI.suspendInAppNotifications();
 					CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
 				</insert>
 			</true>

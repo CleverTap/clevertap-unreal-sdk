@@ -115,6 +115,9 @@ jfieldID GetStaticFieldID(JNIEnv* Env, jclass Class, const char* Name, const cha
  */
 jobject GetJavaApplication(JNIEnv* Env);
 
+/** Access to the java bridge class that provides java based helpers */
+jclass GetBridgeClass(JNIEnv* Env);
+
 /** Converts any Java object to its default string representation as an Unreal FString */
 FString JavaObjectToString(JNIEnv* Env, jobject JavaObject);
 
@@ -123,5 +126,8 @@ FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array);
 
 /** Converts an unreal TArray<FString> to a Java ArrayList<String> */
 jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArray);
+
+/** Converts a Java JsonObject to a Java Map<String,Object> */
+jobject ConvertJavaJsonObjectToMap(JNIEnv* Env, jobject JavaJsonObject);
 
 }}} // namespace CleverTapSDK::Android::JNI

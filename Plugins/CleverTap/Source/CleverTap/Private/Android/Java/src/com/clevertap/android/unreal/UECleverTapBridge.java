@@ -8,8 +8,11 @@ import android.content.Intent;
 import android.os.Build;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 // Utilities to make it easier to use the CleverTapAPI from Unreal/C++ 
@@ -165,6 +168,18 @@ public class UECleverTapBridge {
                 .setBtnBackgroundColor((String) params.get("ButtonBackgroundColor"))
                 .setBtnBorderRadius((String) params.get("ButtonBorderRadius"))
                 .build();
+    }
+
+    public static Map<String, Object> jsonObjectToMap(JSONObject json) throws JSONException {
+        Map<String, Object> map = new HashMap<>();
+        Iterator<String> keys = json.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object value = json.get(key);
+            // todo flatten nested dictionaries
+            map.put(key, value);
+        }
+        return map;
     }
 
 }

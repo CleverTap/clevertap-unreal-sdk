@@ -15,6 +15,7 @@ enum class ETimeZone
 
 jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapProperties& Properties);
 FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject JavaMap);
+FCleverTapProperties ConvertJavaCTInAppNotificationToCleverTapProperties(JNIEnv* Env, jobject JavaCTInAppNotification);
 
 jobject ConvertArrayOfCleverTapPropertiesToJavaArrayOfMap(JNIEnv* Env, const TArray<FCleverTapProperties>& Array);
 

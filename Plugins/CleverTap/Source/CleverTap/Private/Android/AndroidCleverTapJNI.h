@@ -25,7 +25,12 @@ bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const
 
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
-void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetInAppNotificationListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+
+void DiscardInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
+void ResumeInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
+void SuspendInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 

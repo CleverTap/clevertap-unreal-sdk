@@ -25,6 +25,9 @@ public:
 	static bool IsValid(const FAndroidCleverTapInstance* Instance) { return Instances.Contains(Instance); }
 
 	jobject JavaCleverTapInstance;
+	TUniqueFunction<bool(const FCleverTapProperties&)> InAppNotificationFilter = [](const FCleverTapProperties&) {
+		return true;
+	};
 
 	FAndroidCleverTapInstance(JNIEnv* Env, jobject JavaCleverTapInstanceIn)
 	{
@@ -36,10 +39,12 @@ public:
 		}
 
 		JavaCleverTapInstance = Env->NewGlobalRef(JavaCleverTapInstanceIn);
+		JNI::SuspendInAppNotifications(Env, JavaCleverTapInstance);
 
 		jobject ListenerInstance = JNI::CreateUECleverTapListener(Env, JavaCleverTapInstance, this);
 		JNI::RegisterPushPermissionResponseListener(Env, JavaCleverTapInstance, ListenerInstance);
-		JNI::RegisterPushNotificationClickedListener(Env, JavaCleverTapInstance, ListenerInstance);
+		JNI::SetPushNotificationClickedListener(Env, JavaCleverTapInstance, ListenerInstance);
+		JNI::SetInAppNotificationListener(Env, JavaCleverTapInstance, ListenerInstance);
 	}
 
 	~FAndroidCleverTapInstance()
@@ -271,8 +276,14 @@ public:
 
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override
 	{
-		CleverTapSDK::Ignore(Filter);
+		InAppNotificationFilter = MoveTemp(Filter);
 	}
+
+	void DiscardInAppNotifications() { JNI::DiscardInAppNotifications(JNI::GetJNIEnv(), JavaCleverTapInstance); }
+
+	void ResumeInAppNotifications() { JNI::ResumeInAppNotifications(JNI::GetJNIEnv(), JavaCleverTapInstance); }
+
+	void SuspendInAppNotifications() { JNI::SuspendInAppNotifications(JNI::GetJNIEnv(), JavaCleverTapInstance); }
 
 	void SetOffline(bool bIsOffline) override { JNI::SetOffline(JNI::GetJNIEnv(), JavaCleverTapInstance, bIsOffline); }
 
@@ -416,4 +427,99 @@ extern "C" JNIEXPORT void JNICALL Java_com_clevertap_android_unreal_UECleverTapB
 
 	AsyncTask(ENamedThreads::GameThread,
 		[Url]() { CleverTapSDK::Android::FAndroidCleverTapInstance::BroadcastOnOpenUrl(Url); });
+}
+
+extern "C" JNIEXPORT bool JNICALL
+Java_com_clevertap_android_unreal_UECleverTapListener_nativeBeforeShowInAppNotification(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jobject Extras)
+{
+	using namespace CleverTapSDK::Android::JNI;
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnOpenUrl callback!"));
+		return true;
+	}
+	UE_LOG(LogCleverTap, Log, TEXT("nativeBeforeShowInAppNotification(%s)"), *JavaObjectToString(Env, Extras));
+
+	// todo we need to make this threadsafe
+	auto* Instance = CheckedInstancePtr(NativeInstancePtr);
+	if (Instance == nullptr)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("nativeBeforeShowInAppNotification received for invalid native instance!"));
+		return true;
+	}
+
+	FCleverTapProperties Payload = ConvertJavaMapToCleverTapProperties(Env, Extras);
+	return Instance->InAppNotificationFilter(Payload);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_clevertap_android_unreal_UECleverTapListener_nativeOnShowInAppNotification(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jobject ctInAppNotification)
+{
+	using namespace CleverTapSDK::Android::JNI;
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnOpenUrl callback!"));
+		return;
+	}
+	jobject InAppNotificationRef = ctInAppNotification ? Env->NewGlobalRef(ctInAppNotification) : nullptr;
+	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr, InAppNotificationRef]() {
+		JNIEnv* GameThreadEnv = GetJNIEnv();
+		auto* Instance = CheckedInstancePtr(NativeInstancePtr);
+		if (Instance == nullptr)
+		{
+			UE_LOG(LogCleverTap, Warning, TEXT("OnInAppNotificationShown received for invalid native instance!"));
+		}
+		else
+		{
+			FCleverTapProperties Payload =
+				ConvertJavaCTInAppNotificationToCleverTapProperties(GameThreadEnv, InAppNotificationRef);
+
+			UE_LOG(LogCleverTap, Log, TEXT("OnInAppNotificationShown(%s)"), *ToDebugString(Payload));
+			Instance->OnInAppNotificationShown.Broadcast(Payload);
+		}
+		if (InAppNotificationRef)
+		{
+			GameThreadEnv->DeleteGlobalRef(InAppNotificationRef);
+		}
+	});
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_clevertap_android_unreal_UECleverTapListener_nativeOnInAppNotificationDismissed(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jobject Extras, jobject ActionExtras)
+{
+	using namespace CleverTapSDK::Android::JNI;
+	if (!Env)
+	{
+		UE_LOG(LogCleverTap, Error, TEXT("JNI Error: Env is null in nativeOnInAppNotificationDismissed callback!"));
+		return;
+	}
+	jobject ExtrasRef = Extras ? Env->NewGlobalRef(Extras) : nullptr;
+	jobject ActionExtrasRef = ActionExtras ? Env->NewGlobalRef(ActionExtras) : nullptr;
+	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr, ExtrasRef, ActionExtrasRef]() {
+		JNIEnv* GameThreadEnv = GetJNIEnv();
+		auto* Instance = CheckedInstancePtr(NativeInstancePtr);
+		if (Instance == nullptr)
+		{
+			UE_LOG(LogCleverTap, Warning, TEXT("OnInAppNotificationShown received for invalid native instance!"));
+		}
+		else
+		{
+			FCleverTapProperties ExtrasPayload = ConvertJavaMapToCleverTapProperties(GameThreadEnv, ExtrasRef);
+			FCleverTapProperties ActionExtrasPayload =
+				ConvertJavaMapToCleverTapProperties(GameThreadEnv, ActionExtrasRef);
+			UE_LOG(LogCleverTap, Log, TEXT("OnInAppNotificationDismissed(%s, %s)"), *ToDebugString(ExtrasPayload),
+				*ToDebugString(ActionExtrasPayload));
+			Instance->OnInAppNotificationDismissed.Broadcast(ExtrasPayload, ActionExtrasPayload);
+		}
+		if (ExtrasRef)
+		{
+			GameThreadEnv->DeleteGlobalRef(ExtrasRef);
+		}
+		if (ActionExtrasRef)
+		{
+			GameThreadEnv->DeleteGlobalRef(ActionExtrasRef);
+		}
+	});
 }
