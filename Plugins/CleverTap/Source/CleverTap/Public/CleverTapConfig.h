@@ -212,6 +212,22 @@ public:
 	**/
 
 	/**
+	 * Android Only: Comma seperated list of Activities that shouldn't display InApp Notifications
+	 *
+	 * This is necessary to prevent in-app notifications from being briefly displayed on transitory screens
+	 * like splash screens; when the splash screen ends so would the notification's display.
+	 *
+	 * The default setting is the standard Unreal SplashActivity; you should only need to change this if you've
+	 * added additional custom activities.
+	 *
+	 * Explicit control is available via calls to SuspendInAppNotifications() and ResumeInAppNotifications()
+	 *
+	 * See https://developer.clevertap.com/docs/android-in-app-notifications#exclude-in-app-from-android-activity
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	FString AndroidSuspendInAppForActivities = TEXT("com.epicgames.ue4.SplashActivity");
+
+	/**
 	 * iOS Only: If true then show push notifications as a badge and in the notification center while the app is in the
 	 *  foreground
 	 */
