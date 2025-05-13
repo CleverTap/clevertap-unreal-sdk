@@ -248,8 +248,6 @@ public:
 
 	void EnableOnPushNotificationClicked() override
 	{
-		JNI::EnableIntentNotifications(JNI::GetJNIEnv());
-
 		if (bEnableOnPushNotificationClicked)
 		{
 			// already on, nothing to do
@@ -263,6 +261,8 @@ public:
 			BufferedPushNotificationPayload.Reset();
 		}
 	}
+
+	void EnableOnOpenUrl() { JNI::EnableIntentNotifications(JNI::GetJNIEnv()); }
 
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override
 	{
