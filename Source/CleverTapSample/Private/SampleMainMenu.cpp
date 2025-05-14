@@ -527,6 +527,10 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	CleverTap.RemoveMultiValueForKey("Test_MVM", "three");
 	CleverTap.RemoveMultiValuesForKey("Test_MVM", { "one", "two" });
 
+	// make sure set overwrites
+	CleverTap.AddMultiValuesForKey("Test_MVM_2", { "two", "three", "four" });
+	CleverTap.SetMultiValuesForKey("Test_MVM_2", { "one", "two" });
+
 	// Exercise GetProperty() on each type.
 	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new
 	// profile values. The below will likely only show the correct output on the second call to this function.
