@@ -609,6 +609,11 @@ FCleverTapProperties ConvertJavaCTInAppNotificationToCleverTapProperties(JNIEnv*
 		return {};
 	}
 
+	if (JavaCTInAppNotification == nullptr)
+	{
+		return {};
+	}
+
 	jobject JavaJsonObject = Env->CallObjectMethod(JavaCTInAppNotification, GetJsonMethod);
 	if (HandleExceptionOrError(Env, !JavaJsonObject, "getJsonDescription()"))
 	{
