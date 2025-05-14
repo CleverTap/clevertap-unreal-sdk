@@ -23,8 +23,11 @@
 		<setStringFromProperty result="CTAndroidSoundsDir" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSoundsDir" default="" />
 
 		<setStringFromProperty result="CTSmallNotificationIconPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSmallNotificationIconPath" default="" />
-		<setBoolIsEqual result="HaveNoSmallNotificationIcon" arg1="$S(CTSmallNotificationIconPath)" arg2="" />
 
+		<setStringFromProperty result="CTSuspendInAppForActivities" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSuspendInAppForActivities" default="com.epicgames.ue4.SplashActivity" />
+
+
+		<setBoolIsEqual result="HaveNoSmallNotificationIcon" arg1="$S(CTSmallNotificationIconPath)" arg2="" />
 		<if condition="HaveNoSmallNotificationIcon">
 			<false>
 				<!-- We need to strip the path to get the base filename; Start with the full path -->
@@ -294,6 +297,15 @@
 			</true>
 		</if>
 
+		<setBoolIsEqual result="InAppExcludeIsEmpty" arg1="$S(CTSuspendInAppForActivities)" arg2="" />
+		<if condition="InAppExcludeIsEmpty">
+			<false>
+				<setElement result="CLEVERTAP_INAPP_EXCLUDE" value="meta-data" />
+				<addAttribute tag="$CLEVERTAP_INAPP_EXCLUDE" name="android:name" value="CLEVERTAP_INAPP_EXCLUDE" />
+				<addAttribute tag="$CLEVERTAP_INAPP_EXCLUDE" name="android:value" value="$S(CTSuspendInAppForActivities)" />
+				<addElement tag="application" name="CLEVERTAP_INAPP_EXCLUDE" />
+			</false>
+		</if>
 	</androidManifestUpdates>
 
 
@@ -342,6 +354,7 @@
 			<true>
 				<insert>
 					com.clevertap.android.sdk.CleverTapAPI CleverTapAPI = com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
+					CleverTapAPI.suspendInAppNotifications();
 					CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
 				</insert>
 			</true>

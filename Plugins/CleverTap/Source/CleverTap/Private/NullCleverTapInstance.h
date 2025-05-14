@@ -30,7 +30,7 @@ public:
 	void IncrementValue(const FString& Key, double Amount) override;
 
 	void AddMultiValueForKey(const FString& Key, const FString& Value) override;
-	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override;
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override;
 	void RemoveMultiValueForKey(const FString& Key, const FString& Value) override;
 	void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override;
 	void RemoveValueForKey(const FString& Key) override;
@@ -53,6 +53,10 @@ public:
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override;
 
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override;
+
+	void DiscardInAppNotifications() override;
+	void ResumeInAppNotifications() override;
+	void SuspendInAppNotifications() override;
 
 	void SetOffline(bool bIsOffline) override;
 	void SetOptOut(bool bIsOptingOut) override;

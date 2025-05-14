@@ -27,6 +27,11 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTap
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationShown, const FCleverTapProperties& NotificationPayload);
 
 /**
+ * Delegate type used to broadcast button presses on in-app notifications.
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationButtonClicked, const FCleverTapProperties& ButtonPayload);
+
+/**
  * Delegate type used to broadcast in-app notifications when the user dismissed them.
  */
 DECLARE_MULTICAST_DELEGATE_TwoParams(
@@ -150,7 +155,7 @@ public:
 	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
 	 * with the current value cast to a string and the new value(s) added
 	 */
-	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) = 0;
+	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) = 0;
 
 	/**
 	 * Remove a unique value from a multi-value user profile property.
@@ -327,13 +332,24 @@ public:
 
 	/**
 	 * Called when an in-app notification is shown to the user.
+	 *
+	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
+	 * connected and your application is prepared to handle the notifications.
 	 */
 	FOnInAppNotificationShown OnInAppNotificationShown;
 
 	/**
 	 * Called when an in-app notification is dismissed by the user.
+	 *
+	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
+	 * connected and your application is prepared to handle the notifications.
 	 */
 	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
+
+	/**
+	 * Called when the user clicks on a Key/Value pair button in an in-app notification.
+	 */
+	FOnInAppNotificationButtonClicked OnInAppNotificationButtonClicked;
 
 	/**
 	 * Called before an in-app notification is shown to the user to determine if it should actually be shown. The
@@ -342,6 +358,23 @@ public:
 	 *  surppressed. Note that there is no guarantee what thread the filter function is invoked on.
 	 */
 	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
+
+	/**
+	 * Disables the display of InApp notifications and discards any new incoming.
+	 *
+	 * The InApp Notifications will be displayed again only once ResumeInAppNotifications() is called.
+	 */
+	virtual void DiscardInAppNotifications() = 0;
+
+	/** Resumes displaying in-app notifications.
+	 *
+	 *  Any notifacations queued by SuspendInAppNotifications() will be instantly shown.
+	 */
+	virtual void ResumeInAppNotifications() = 0;
+
+	/** Suspends and saves in-app notifications until ResumeInAppNotifications() is called.
+	 */
+	virtual void SuspendInAppNotifications() = 0;
 
 	/** Disables or enables sending events to the server.
 	 *

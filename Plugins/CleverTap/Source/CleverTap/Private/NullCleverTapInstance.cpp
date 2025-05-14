@@ -70,7 +70,7 @@ void FNullCleverTapInstance::AddMultiValueForKey(const FString& Key, const FStri
 	CleverTapSDK::Ignore(Key, Value);
 }
 
-void FNullCleverTapInstance::AddMultiValuesForKey(const FString& Key, const TArray<FString> Values)
+void FNullCleverTapInstance::AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
 {
 	CleverTapSDK::Ignore(Key, Values);
 }
@@ -142,6 +142,10 @@ void FNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<boo
 {
 	CleverTapSDK::Ignore(Filter);
 }
+
+void FNullCleverTapInstance::DiscardInAppNotifications() {}
+void FNullCleverTapInstance::ResumeInAppNotifications() {}
+void FNullCleverTapInstance::SuspendInAppNotifications() {}
 
 void FNullCleverTapInstance::SetOffline(bool bIsOffline)
 {

@@ -16,6 +16,7 @@ void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
 jobject GetDefaultInstance(JNIEnv* Env);
 jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
 
+const char* CleverTapLogLevelJavaName(ECleverTapLogLevel LogLevel);
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
 
 bool LocalizeNotificationChannel(
@@ -25,7 +26,13 @@ bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const
 
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
-void RegisterPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetPushNotificationClickedListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetInAppNotificationListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+void SetInAppNotificationButtonListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
+
+void DiscardInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
+void ResumeInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
+void SuspendInAppNotifications(JNIEnv* Env, jobject CleverTapInstance);
 
 FString GetCleverTapID(JNIEnv* Env, jobject CleverTapInstance);
 
@@ -46,7 +53,7 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
 
 void AddMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
-void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values);
+void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values);
 void RemoveMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
 void RemoveMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values);
 void RemoveValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key);

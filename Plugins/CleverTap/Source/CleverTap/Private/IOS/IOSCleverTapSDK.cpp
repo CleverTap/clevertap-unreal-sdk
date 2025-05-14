@@ -536,7 +536,7 @@ public:
 		[NativeInstance profileAddMultiValue:Value.GetNSString() forKey:Key.GetNSString()];
 	}
 
-	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override
 	{
 		check(NativeInstance != nil);
 		[NativeInstance profileAddMultiValues:ConvertToNSArray(Values) forKey:Key.GetNSString()];

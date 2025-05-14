@@ -396,4 +396,24 @@ jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArr
 	return JavaArrayList;
 }
 
+jclass GetBridgeClass(JNIEnv* Env)
+{
+	static jclass BridgeClass = CacheClass(Env, "com/clevertap/android/unreal/UECleverTapBridge");
+	return BridgeClass;
+}
+
+jobject ConvertJavaJsonObjectToFlatMap(JNIEnv* Env, jobject JavaJsonObject)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID ConvertMethod =
+		GetStaticMethodID(Env, BridgeClass, "jsonObjectToFlatMap", "(Lorg/json/JSONObject;)Ljava/util/Map;");
+	if (!ConvertMethod)
+	{
+		return nullptr;
+	}
+	jobject JavaMap = Env->CallStaticObjectMethod(BridgeClass, ConvertMethod, JavaJsonObject);
+	HandleExceptionOrError(Env, !JavaMap, "jsonObjectToFlatMap()");
+	return JavaMap;
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

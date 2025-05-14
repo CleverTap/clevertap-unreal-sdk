@@ -182,3 +182,19 @@ FString ToDebugString(const FCleverTapProperties& Properties)
 	Result += TEXT(" }");
 	return Result;
 }
+
+FString ToDebugString(const TArray<FCleverTapProperties>& PropertiesArray)
+{
+	FString Result = TEXT("[ ");
+	int Count = 0;
+	for (const auto& Properties : PropertiesArray)
+	{
+		if (Count++)
+		{
+			Result += TEXT(", ");
+		}
+		Result += ToDebugString(Properties);
+	}
+	Result += TEXT(" ]");
+	return Result;
+}

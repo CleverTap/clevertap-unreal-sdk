@@ -107,6 +107,7 @@ private:
 	void OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload);
 	void OnInAppNotificationShown(const FCleverTapProperties& NotificationPayload);
 	void OnInAppNotificationDismissed(const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+	void OnInAppNotificationButtonClicked(const FCleverTapProperties& NotificationPayload);
 	void OnOpenUrl(const FString& Url);
 
 private:
@@ -139,4 +140,7 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UTextBlock* InAppDismissedActionText;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget, AllowPrivateAccess = "true"))
+	UTextBlock* InAppButtonClickedText;
 };
