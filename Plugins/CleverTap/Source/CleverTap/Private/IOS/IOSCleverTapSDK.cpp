@@ -13,6 +13,7 @@
 #import <CleverTapSDK/CleverTapInAppNotificationDelegate.h>
 #import <CleverTapSDK/CleverTapPushNotificationDelegate.h>
 #import <CleverTapSDK/CleverTapURLDelegate.h>
+#import <CleverTapSDK/CleverTap+InAppNotifications.h>
 #import <CleverTapSDK/CTLocalInApp.h>
 #import <objc/runtime.h>
 #import <UserNotifications/UserNotifications.h>
@@ -691,6 +692,24 @@ public:
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override
 	{
 		InAppNotificationFilter = MoveTemp(Filter);
+	}
+
+	void DiscardInAppNotifications() override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance discardInAppNotifications];
+	}
+
+	void ResumeInAppNotifications() override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance resumeInAppNotifications];
+	}
+
+	void SuspendInAppNotifications() override
+	{
+		check(NativeInstance != nil);
+		[NativeInstance suspendInAppNotifications];
 	}
 
 	void SetOffline(bool bIsOffline) override
