@@ -809,7 +809,7 @@ public:
 	}
 
 private:
-	FCriticalSection CriticalSection;
+	mutable FCriticalSection CriticalSection;
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
 	FDelegateHandle OnURLOpenHandle;
