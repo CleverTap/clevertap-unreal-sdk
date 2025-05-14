@@ -800,6 +800,11 @@ public:
 		OnInAppNotificationShown.Broadcast(Notification);
 	}
 
+	void HandleInAppNotificationButtonClicked(const FCleverTapProperties& ButtonProperties)
+	{
+		OnInAppNotificationButtonClicked.Broadcast(ButtonProperties);
+	}
+
 	void HandleOnOpenURL(UIApplication* App, NSURL* URL, NSString* Source, id Annotation)
 	{
 		CleverTapSDK::Ignore(App, Source, Annotation);
@@ -1008,6 +1013,13 @@ void EnsurePushNotificationMonitoring()
 	FCleverTapProperties Notification = ConvertFromNSDictionary(InNotification);
 	AsyncTask(ENamedThreads::GameThread, [Notification = MoveTemp(Notification), Inst = CppInstance]() {
 		Inst->HandleInAppNotificationShown(Notification);
+	});
+}
+
+- (void)inAppNotificationButtonTappedWithCustomExtras:(NSDictionary*)CustomExtras
+{
+	AsyncTask(ENamedThreads::GameThread, [Extras = ConvertFromNSDictionary(CustomExtras), Inst = CppInstance]() {
+		Inst->HandleInAppNotificationButtonClicked(Extras);
 	});
 }
 
