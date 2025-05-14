@@ -6,6 +6,7 @@
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapLog.h"
 #include "CleverTapUtilities.h"
+#include "IOS/IOSAppDelegate.h"
 #include "Misc/CoreDelegates.h"
 
 #import <CleverTapSDK/CleverTap.h>
@@ -435,6 +436,11 @@ public:
 
 	~FIOSCleverTapInstance()
 	{
+		if (OnURLOpenHandle.IsValid())
+		{
+			FIOSCoreDelegates::OnOpenURL.Remove(OnURLOpenHandle);
+		}
+
 		[SDKListener release];
 		AllInstances.RemoveSingleSwap(this);
 	}
@@ -646,6 +652,16 @@ public:
 		[NativeInstance setPushNotificationDelegate:SDKListener];
 	}
 
+	void EnableOnOpenUrl() override
+	{
+		if (OnURLOpenHandle.IsValid())
+		{
+			return;
+		}
+
+		OnURLOpenHandle = FIOSCoreDelegates::OnOpenURL.AddRaw(this, &FIOSCleverTapInstance::HandleOnOpenURL);
+	}
+
 	bool LocalizeAndroidNotificationChannel(
 		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override
 	{
@@ -757,9 +773,18 @@ public:
 		OnInAppNotificationShown.Broadcast(Notification);
 	}
 
+	void HandleOnOpenURL(UIApplication* App, NSURL* URL, NSString* Source, id Annotation)
+	{
+		CleverTapSDK::Ignore(App, Source, Annotation);
+
+		AsyncTask(ENamedThreads::GameThread,
+			[this, URLStr = FString{ URL.absoluteString }]() { OnOpenUrl.Broadcast(URLStr); });
+	}
+
 private:
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
+	FDelegateHandle OnURLOpenHandle;
 	TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
 	TUniqueFunction<bool(const FCleverTapProperties&)> InAppNotificationFilter;
 	TAtomic<uint8> PushPermissionStatus;
