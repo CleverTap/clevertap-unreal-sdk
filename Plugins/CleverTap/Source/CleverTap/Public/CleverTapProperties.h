@@ -122,3 +122,6 @@ CLEVERTAP_API FString ToDebugString(const TOptional<FCleverTapPropertyValue>& Op
 
 /** Returns a debug string listing all properties with their keys, types, and values. */
 CLEVERTAP_API FString ToDebugString(const FCleverTapProperties& Properties);
+
+/** Returns a debug string listing all properties with their keys, types, and values. */
+CLEVERTAP_API FString ToDebugString(const TArray<FCleverTapProperties>& PropertiesArray);
