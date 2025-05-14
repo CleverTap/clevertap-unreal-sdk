@@ -686,11 +686,15 @@ public:
 			SetIsRegisteredForDeepLinkHandler();
 		}
 
-		UrlHandler = MoveTemp(InUrlHandler);
+		{
+			FScopeLock Lck{ &CriticalSection };
+			UrlHandler = MoveTemp(InUrlHandler);
+		}
 	}
 
 	void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) override
 	{
+		FScopeLock Lck{ &CriticalSection };
 		InAppNotificationFilter = MoveTemp(Filter);
 	}
 
@@ -764,6 +768,8 @@ public:
 
 	bool HandleUrl(FString Url, ECleverTapChannel Channel) const
 	{
+		FScopeLock Lck{ &CriticalSection };
+
 		if (UrlHandler)
 		{
 			return UrlHandler(MoveTemp(Url), Channel);
@@ -774,6 +780,8 @@ public:
 
 	bool ShouldShowInAppNotification(const FCleverTapProperties& Extras) const
 	{
+		FScopeLock Lck{ &CriticalSection };
+
 		if (InAppNotificationFilter)
 		{
 			return InAppNotificationFilter(Extras);
@@ -801,6 +809,7 @@ public:
 	}
 
 private:
+	FCriticalSection CriticalSection;
 	CleverTap* NativeInstance{};
 	CleverTapSDKListener* SDKListener{};
 	FDelegateHandle OnURLOpenHandle;
