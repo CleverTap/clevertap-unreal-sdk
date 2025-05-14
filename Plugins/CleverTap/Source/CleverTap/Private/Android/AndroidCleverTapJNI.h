@@ -16,6 +16,7 @@ void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
 jobject GetDefaultInstance(JNIEnv* Env);
 jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
 
+const char* CleverTapLogLevelJavaName(ECleverTapLogLevel LogLevel);
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);
 
 bool LocalizeNotificationChannel(

@@ -23,10 +23,10 @@ public class UECleverTapListener
 
     @Override
     public void onNotificationClickedPayloadReceived(HashMap<String, Object> notificationPayload) {
-        nativeOnNotificationClicked(nativeInstancePtr, notificationPayload);
+        nativeOnPushNotificationClicked(nativeInstancePtr, notificationPayload);
     }
 
-    private static native void nativeOnNotificationClicked(long nativeInstancePtr, Object notificationPayload);
+    private static native void nativeOnPushNotificationClicked(long nativeInstancePtr, Object notificationPayload);
 
     @Override
     public void onPushPermissionResponse(boolean granted) {
