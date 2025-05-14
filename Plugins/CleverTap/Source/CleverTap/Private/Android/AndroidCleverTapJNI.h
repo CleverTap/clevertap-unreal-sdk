@@ -52,7 +52,7 @@ void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, 
 void IncrementValue(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, double Amount);
 
 void AddMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
-void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values);
+void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values);
 void RemoveMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const FString& Value);
 void RemoveMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values);
 void RemoveValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key);

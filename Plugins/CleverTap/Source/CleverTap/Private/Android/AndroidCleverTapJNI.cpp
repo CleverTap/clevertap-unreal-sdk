@@ -792,7 +792,7 @@ void AddMultiValueForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& 
 	Env->DeleteLocalRef(JavaValue);
 }
 
-void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString> Values)
+void AddMultiValuesForKey(JNIEnv* Env, jobject CleverTapInstance, const FString& Key, const TArray<FString>& Values)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
 	static jmethodID AddMultiValuesMethod =

@@ -30,7 +30,7 @@ public:
 	void IncrementValue(const FString& Key, double Amount) override;
 
 	void AddMultiValueForKey(const FString& Key, const FString& Value) override;
-	void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) override;
+	void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override;
 	void RemoveMultiValueForKey(const FString& Key, const FString& Value) override;
 	void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) override;
 	void RemoveValueForKey(const FString& Key) override;

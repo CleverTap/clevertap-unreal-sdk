@@ -155,7 +155,7 @@ public:
 	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
 	 * with the current value cast to a string and the new value(s) added
 	 */
-	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString> Values) = 0;
+	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) = 0;
 
 	/**
 	 * Remove a unique value from a multi-value user profile property.
