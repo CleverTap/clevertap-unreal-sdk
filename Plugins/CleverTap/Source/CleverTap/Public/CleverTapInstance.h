@@ -276,9 +276,9 @@ public:
 	 * Initially paused; call EnableOnOpenUrl() once event handlers are connected and game systems are
 	 * ready.
 	 *
-	 * Android: For the operating system to route URLs to your application the schemes need to be
-	 *          registered as intent filters in the application manifest.
-	 *          See `bAndroidIntegrateOpenUrlActivity`
+	 * For the operating system to route URLs to your application the schemes need to be
+	 *          registered as intent filters on Android or in the plist for iOS.
+	 *          See `bIntegrateOpenUrl`
 	 */
 	FOnOpenUrl OnOpenUrl;
 

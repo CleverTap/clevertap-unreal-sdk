@@ -161,12 +161,17 @@ public:
 	bool bAndroidEnablePullNotifications = true;
 
 	/**
+	 * Deep links on both Android and iOS need to have their allowed schemes registered in the manifest or plist
+	 *  file. These are added by the respective platform's UPL file and as such appear in the INI configuration
+	 *  as 'DeepLinkSchemeFilterSlotN' variables where N is a one based index. Up to 4 slots can be configured
+	 *  this way.
+	 *
 	 * Android Only: Enables automatic generation of an OpenUrlActivity and associated `<intent-filter>` blocks,
 	 * routing matching URLs to the CleverTapInstance::OnOpenURL delegate.
 	 *
-	 * Configure up to 4 slots in your .ini file. Only the Scheme field is required:
+	 * Configure up to 4 slots in your .ini file. Only the cross platform Scheme field, as described above, is
+	 * required:
 	 *
-	 *	AndroidIntentFilterSlot1_Scheme=http
 	 *	AndroidIntentFilterSlot1_Host=clevertap.com
 	 *	AndroidIntentFilterSlot1_PathPrefix=/unreal-sample
 	 *	AndroidIntentFilterSlot1_AutoVerify=True
@@ -178,8 +183,32 @@ public:
 	 * define your own activity with complex intent filters via custom UPL rules. If your custom activity forwards the
 	 * intent to the GameActivity, it will still be routed to the OnOpenURL delegate.
 	 */
-	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
-	bool bAndroidIntegrateOpenUrlActivity = true;
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	bool bIntegrateOpenUrl = true;
+
+	/**
+	 * First allowed deep link scheme (example: https). Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkSchemeFilterSlot1;
+
+	/**
+	 * Second allowed deep link scheme (example: https). Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkSchemeFilterSlot2;
+
+	/**
+	 * Third allowed deep link scheme (example: https). Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkSchemeFilterSlot3;
+
+	/**
+	 * Fourth allowed deep link scheme (example: https). Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkSchemeFilterSlot4;
 
 	/** AndroidIntentFilterSlots
 	 *
@@ -190,22 +219,18 @@ public:
 	 * should be added as real members of this struct:
 	 *
 
-		FString AndroidIntentFilterSlot1_Scheme;
 		FString AndroidIntentFilterSlot1_Host;
 		FString AndroidIntentFilterSlot1_PathPrefix;
 		bool bAndroidIntentFilterSlot1_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot2_Scheme;
 		FString AndroidIntentFilterSlot2_Host;
 		FString AndroidIntentFilterSlot2_PathPrefix;
 		bool bAndroidIntentFilterSlot2_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot3_Scheme;
 		FString AndroidIntentFilterSlot3_Host;
 		FString AndroidIntentFilterSlot3_PathPrefix;
 		bool bAndroidIntentFilterSlot3_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot4_Scheme;
 		FString AndroidIntentFilterSlot4_Host;
 		FString AndroidIntentFilterSlot4_PathPrefix;
 		bool bAndroidIntentFilterSlot4_AutoVerify = true;

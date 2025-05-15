@@ -13,7 +13,7 @@
 		<setBoolFromProperty result="CTEnableBackgroundSync" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidEnablePullNotifications" default="true" />
 
 		<setBoolFromProperty result="CTIntegrateFirebase" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateFirebase" default="true" />
-		<setBoolFromProperty result="CTIntegrateOpenUrlActivity" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAndroidIntegrateOpenUrlActivity" default="true" />
+		<setBoolFromProperty result="CTIntegrateOpenUrl" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bIntegrateOpenUrl" default="true" />
 
 		<setStringFromProperty result="CTAndroidGoogleServicesJsonPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidGoogleServicesJsonPath" default="Config/google-services.json" />
 		<setStringFromProperty result="CTDefaultNotificationChannel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidDefaultNotificationChannel" default="" />
@@ -227,7 +227,7 @@
 		This block adds an OpenUrlActivity <activity> with <intent-filter>s 
 		using up to 4 slots defined in DefaultEngine.ini.
 
-			AndroidIntentFilterSlotN_Scheme=string
+			DeepLinkSchemeFilterSlotN=string
 			AndroidIntentFilterSlotN_Host=string
 			AndroidIntentFilterSlotN_PathPrefix=string
 			AndroidIntentFilterSlotN_AutoVerify=bool
@@ -237,7 +237,7 @@
 		See https://developer.android.com/training/basics/intents/filters
 
 		-->
-		<if condition="CTIntegrateOpenUrlActivity">
+		<if condition="CTIntegrateOpenUrl">
 			<true>
 				<setElement result="OpenUrlActivity" value="activity" />
 				<addAttribute tag="$OpenUrlActivity" name="android:name" value="com.clevertap.android.unreal.OpenUrlActivity" />
@@ -250,7 +250,7 @@
 				<setInt result="index" value="1" />
 				<setBool result="loopRun" value="true" />
 				<while condition="loopRun">
-					<setStringFromProperty result="Slot_$I(index)_Scheme" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_Scheme" default="" />
+					<setStringFromProperty result="Slot_$I(index)_Scheme" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="DeepLinkSchemeFilterSlot$I(index)" default="" />
 					<setBoolIsEqual result="Slot_$I(index)_Scheme_IsEmpty" arg1="$S(Slot_$I(index)_Scheme)" arg2="" />
 					<if condition="Slot_$I(index)_Scheme_IsEmpty">
 						<false>

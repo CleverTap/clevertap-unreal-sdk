@@ -15,6 +15,7 @@
 		<setStringFromProperty result="CTIdentityKeys" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="IdentityKeys" default="Identity,Email,Phone"/>
 		<setBoolFromProperty result="CTUseCustomId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bUseCustomCleverTapId" default="false"/>
 		<setStringFromProperty result="CTEncryptionLevel" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="EncryptionLevel" default="None" />
+		<setBoolFromProperty result="CTIntegrateOpenUrl" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bIntegrateOpenUrl" default="true" />
 	</init>
 
 	<iosPListUpdates>
@@ -132,6 +133,45 @@
 		<if condition="CTAddedPlistKeysArray">
 			<true>
 				<addElement tag="dict" once="true" name="KeysArrElem"/>
+			</true>
+		</if>
+
+		<if condition="CTIntegrateOpenUrl">
+			<true>
+				<setBool result="hasAnyUrlScheme" value="false" />
+
+				<setInt result="index" value="1" />
+				<setBool result="loopRun" value="true" />
+				<while condition="loopRun">
+					<setStringFromProperty result="Slot_$I(index)_Scheme" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="DeepLinkSchemeFilterSlot$I(index)" default="" />
+					<setBoolIsEqual result="Slot_$I(index)_Scheme_IsEmpty" arg1="$S(Slot_$I(index)_Scheme)" arg2="" />
+					<if condition="Slot_$I(index)_Scheme_IsEmpty">
+						<false>
+							<if condition="hasAnyUrlScheme">
+								<false>
+									<setBool result="hasAnyUrlScheme" value="true" />
+
+									<setElement result="SchemesArrKey" value="key" text="LSApplicationQueriesSchemes"/>
+									<addElement tag="dict" once="true" name="SchemesArrKey"/>
+
+									<setElement result="SchemesArrElem" value="array"/>
+								</false>
+							</if>
+
+							<setElement result="SchemesArrEntry" value="string" text="$S(Slot_$I(index)_Scheme)"/>
+							<addElement tag="$SchemesArrElem" name="SchemesArrEntry"/>
+						</false>
+					</if>
+
+					<setIntAdd result="index" arg1="$I(index)" arg2="1" />
+					<setBoolIsLessEqual result="loopRun" arg1="$I(index)" arg2="4" />
+				</while>
+
+				<if condition="hasAnyUrlScheme">
+					<true>
+						<addElement tag="dict" once="true" name="SchemesArrElem"/>
+					</true>
+				</if>
 			</true>
 		</if>
 	</iosPListUpdates>
