@@ -7,8 +7,8 @@
 
 UNullCleverTapInstance* UNullCleverTapInstance::Create()
 {
-	UNullCleverTapInstance *Instance = NewObject<UNullCleverTapInstance>(GEngine->GetEngineSubsystem<UCleverTapSubsystem>());
-	Instance->SetOptOut(false);
+	UNullCleverTapInstance* Instance =
+		NewObject<UNullCleverTapInstance>(GEngine->GetEngineSubsystem<UCleverTapSubsystem>());
 	return Instance;
 }
 
