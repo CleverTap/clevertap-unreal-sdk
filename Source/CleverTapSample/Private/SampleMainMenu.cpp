@@ -38,11 +38,11 @@ FString FCleverTapSampleKeyValuePairArrayToString(TArrayView<const FCleverTapSam
 FCleverTapProperties& PopulatePropertiesWith(
 	FCleverTapProperties& Properties, TArrayView<const FCleverTapSampleKeyValuePair> KeyValuePairs)
 {
-	Properties.Reserve(Properties.Num() + KeyValuePairs.Num());
+	Properties.Map.Reserve(Properties.Map.Num() + KeyValuePairs.Num());
 
 	for (const FCleverTapSampleKeyValuePair& Param : KeyValuePairs)
 	{
-		FCleverTapPropertyValue* const ExistingValue = Properties.Find(Param.Key);
+		FCleverTapPropertyValue* const ExistingValue = Properties.Map.Find(Param.Key);
 		if (ExistingValue)
 		{
 			UE_LOG(
@@ -51,7 +51,7 @@ FCleverTapProperties& PopulatePropertiesWith(
 		}
 		else
 		{
-			Properties.Add(Param.Key, Param.Value);
+			Properties.Map.Add(Param.Key, Param.Value);
 		}
 	}
 
@@ -159,7 +159,9 @@ void USampleMainMenu::ExplicitlyInitializeSharedInstance(
 void USampleMainMenu::ConfigureSharedInstance()
 {
 	check(CleverTapSys->IsSharedInstanceInitialized());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+
+	CleverTap.SetOptOut(false);
 
 	// Localize the names and descriptions of the android notification channels & groups
 	{
@@ -370,20 +372,20 @@ void USampleMainMenu::OnUserLoginWithCleverTapId(
 	FCleverTapProperties Profile;
 	if (!Name.IsEmpty())
 	{
-		Profile.Add("Name", Name);
+		Profile.Map.Add("Name", Name);
 	}
 
 	if (!Email.IsEmpty())
 	{
-		Profile.Add("Email", Email);
+		Profile.Map.Add("Email", Email);
 	}
 
 	if (!Identity.IsEmpty())
 	{
-		Profile.Add("Identity", Identity);
+		Profile.Map.Add("Identity", Identity);
 	}
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	if (CleverTapId.IsEmpty())
 	{
@@ -404,7 +406,7 @@ void USampleMainMenu::PromptForPushPermissionWithoutPrimer()
 {
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	bool bFallbackToSettings = true;
 	CleverTap.PromptForPushPermission(bFallbackToSettings);
@@ -414,7 +416,7 @@ void USampleMainMenu::PromptForPushPermissionWithAlertPrimer()
 {
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerAlertConfig PrimerConfig;
 	PrimerConfig.TitleText = NSLOCTEXT("CleverTapSample", "PushPrimerAlertTitle", "Alert Title Text");
@@ -429,7 +431,7 @@ void USampleMainMenu::PromptForPushPermissionWithHalfInterstitialPrimer()
 {
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	FCleverTapPushPrimerHalfInterstitialConfig PrimerConfig;
 	PrimerConfig.TitleText = NSLOCTEXT("CleverTapSample", "PushPrimerHalfInterstitialTitle", "Push Primer Title Text");
@@ -462,17 +464,17 @@ void USampleMainMenu::PushProfile(
 	FCleverTapProperties Profile;
 	if (!Name.IsEmpty())
 	{
-		Profile.Add("Name", Name);
+		Profile.Map.Add("Name", Name);
 	}
 
 	if (!Email.IsEmpty())
 	{
-		Profile.Add("Email", Email);
+		Profile.Map.Add("Email", Email);
 	}
 
 	if (!Phone.IsEmpty())
 	{
-		Profile.Add("Phone", Phone);
+		Profile.Map.Add("Phone", Phone);
 	}
 
 	PopulatePropertiesWith(Profile, Params);
@@ -480,7 +482,7 @@ void USampleMainMenu::PushProfile(
 	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushProfile with Name='%s', Email='%s', Phone='%s', Params=%s"),
 		*Name, *Email, *Phone, *FCleverTapSampleKeyValuePairArrayToString(Params));
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushProfile(Profile);
 }
 
@@ -489,35 +491,35 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushProfile with all the datatypes"));
 
 	FCleverTapProperties Profile;
-	Profile.Add("Test_String", "Jack Fish");
-	Profile.Add("Test_Int", int32(1332));
-	Profile.Add("Test_Long", int64(13320000123456789));
-	Profile.Add("Test_Float", 1.36f);
-	Profile.Add("Test_Double", 3.141592653589);
-	Profile.Add("Test_Bool", true);
-	Profile.Add("Test_Date", FCleverTapDate(1953, 3, 13));
+	Profile.Map.Add("Test_String", "Jack Fish");
+	Profile.Map.Add("Test_Int", int32(1332));
+	Profile.Map.Add("Test_Long", int64(13320000123456789));
+	Profile.Map.Add("Test_Float", 1.36f);
+	Profile.Map.Add("Test_Double", 3.141592653589);
+	Profile.Map.Add("Test_Bool", true);
+	Profile.Map.Add("Test_Date", FCleverTapDate(1953, 3, 13));
 
-	Profile.Add("Test_StringArray", TArray<FString>{ "one", "two", "three" });
+	Profile.Map.Add("Test_StringArray", TArray<FString>{ "one", "two", "three" });
 
 	// these get converted to arrays of strings:
-	Profile.Add("Test_IntArray", TArray<int32>{ 1, 2, 3 });
-	Profile.Add("Test_LongArray", TArray<int64>{ 1, 2, 3 });
-	Profile.Add("Test_DoubleArray", TArray<double>{ 1.1, 2.2, 3.3 });
-	Profile.Add("Test_FloatArray", TArray<float>{ 1.1f, 2.2f, 3.3f });
-	Profile.Add("Test_BoolArray", TArray<bool>{ true, false, true });
+	Profile.Map.Add("Test_IntArray", TArray<int32>{ 1, 2, 3 });
+	Profile.Map.Add("Test_LongArray", TArray<int64>{ 1, 2, 3 });
+	Profile.Map.Add("Test_DoubleArray", TArray<double>{ 1.1, 2.2, 3.3 });
+	Profile.Map.Add("Test_FloatArray", TArray<float>{ 1.1f, 2.2f, 3.3f });
+	Profile.Map.Add("Test_BoolArray", TArray<bool>{ true, false, true });
 
 	UE_LOG(LogCleverTapSample, Log, TEXT("Properties=%s"), *ToDebugString(Profile));
 
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushProfile(Profile);
 
 	// can increment/decrement number properties
 	CleverTap.IncrementValue("Test_Long", 3);
 	CleverTap.DecrementValue("Test_Long", 1);
-	CleverTap.IncrementValue("Test_Double", 3.3);
-	CleverTap.DecrementValue("Test_Double", 1.1);
+	CleverTap.IncrementValue("Test_Float", 3.3f);
+	CleverTap.DecrementValue("Test_Float", 1.1f);
 
 	// exercise the multi-value methods;
 	// should result in an array holding just "four", but it's async!
@@ -534,7 +536,7 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	// Exercise GetProperty() on each type.
 	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new
 	// profile values. The below will likely only show the correct output on the second call to this function.
-	for (const auto Pair : Profile)
+	for (const auto Pair : Profile.Map)
 	{
 		UE_LOG(LogCleverTapSample, Log, TEXT("%s=%s"), *Pair.Key, *ToDebugString(CleverTap.GetProperty(Pair.Key)));
 	}
@@ -546,7 +548,7 @@ void USampleMainMenu::RecordEvent(const FString& EventName, const TArray<FClever
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	if (Params.Num() == 0)
 	{
 		UE_LOG(LogCleverTapSample, Log, TEXT("Calling RecordEvent('%s')"), *EventName);
@@ -585,7 +587,7 @@ void USampleMainMenu::RecordChargedEvent(
 	}
 
 	UE_LOG(LogCleverTapSample, Log, TEXT("Calling PushChargedEvent with %d products"), Items.Num());
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.PushChargedEvent(ChargeDetails, Items);
 }
 
@@ -595,7 +597,7 @@ void USampleMainMenu::SetOptOut(bool bIsOptingOut)
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	UE_LOG(LogCleverTapSample, Log, TEXT("Setting GDPR OptOut to %s"), bIsOptingOut ? TEXT("TRUE") : TEXT("FALSE"));
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.SetOptOut(bIsOptingOut);
 }
 
@@ -606,7 +608,7 @@ void USampleMainMenu::SetNetworkInformationRecording(bool bEnableCollection)
 	UE_LOG(LogCleverTapSample, Log, TEXT("Setting network information recording to %s"),
 		bEnableCollection ? TEXT("TRUE") : TEXT("FALSE"));
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 	CleverTap.SetNetworkInformationRecording(bEnableCollection);
 }
 
@@ -618,7 +620,7 @@ void USampleMainMenu::Tick(float DeltaTime)
 	}
 
 	const bool bNeedsUIRefresh = [this]() {
-		ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+		UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 		if (LastSeenCleverTapId != CleverTap.GetCleverTapId())
 		{
 			return true;
@@ -649,7 +651,7 @@ void USampleMainMenu::PopulateUI()
 		return;
 	}
 
-	ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
 	if (CleverTapIdText)
 	{

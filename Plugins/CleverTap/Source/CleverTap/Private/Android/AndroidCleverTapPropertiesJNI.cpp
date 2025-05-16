@@ -242,7 +242,7 @@ jobject ConvertCleverTapPropertiesToJavaMap(JNIEnv* Env, const FCleverTapPropert
 	}
 
 	// Iterate through Unreal's profile Map
-	for (const auto& Property : Properties)
+	for (const auto& Property : Properties.Map)
 	{
 		const FString& Key = Property.Key;
 		const FCleverTapPropertyValue& Value = Property.Value;
@@ -544,9 +544,9 @@ FCleverTapProperties ConvertJavaMapToCleverTapProperties(JNIEnv* Env, jobject Ja
 		Env->DeleteLocalRef(JavaValue);
 
 		// Add to native Map if unique
-		if (!Properties.Contains(Key))
+		if (!Properties.Map.Contains(Key))
 		{
-			Properties.Add(Key, Value);
+			Properties.Map.Add(Key, Value);
 		}
 		else
 		{

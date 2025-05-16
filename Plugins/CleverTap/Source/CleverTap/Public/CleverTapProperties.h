@@ -3,25 +3,32 @@
 
 #include "CoreMinimal.h"
 #include "Misc/TVariant.h"
+#include "CleverTapProperties.generated.h"
 
 /**
  * Represents a date for CleverTap profile properties.
  */
+USTRUCT(BlueprintType)
 struct CLEVERTAP_API FCleverTapDate
 {
+	GENERATED_BODY()
+
 	/**
 	 * Numeric year, such as 2025
 	 */
+	UPROPERTY()
 	int32 Year;
 
 	/**
 	 * Numeric month between the values of [1, 12]
 	 */
+	UPROPERTY()
 	int32 Month;
 
 	/**
 	 * Numeric day for a given month
 	 */
+	UPROPERTY()
 	int32 Day;
 
 	FCleverTapDate() : Year(0), Month(0), Day(0) {}
@@ -42,9 +49,11 @@ struct CLEVERTAP_API FCleverTapDate
 /**
  * Variant type for allowed property value types.
  */
-class CLEVERTAP_API FCleverTapPropertyValue
+USTRUCT(BlueprintType)
+struct FCleverTapPropertyValue
 {
-public:
+	GENERATED_BODY()
+
 	using VariantType = TVariant<int32, int64, float, double, bool, FString, FCleverTapDate, TArray<int32>,
 		TArray<int64>, TArray<float>, TArray<double>, TArray<bool>, TArray<FString>>;
 
@@ -112,7 +121,14 @@ private:
 	VariantType Value;
 };
 
-using FCleverTapProperties = TMap<FString, FCleverTapPropertyValue>;
+USTRUCT(BlueprintType)
+struct FCleverTapProperties
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<FString, FCleverTapPropertyValue> Map;
+};
 
 /** Returns a debug string describing the property's value and type. */
 CLEVERTAP_API FString ToDebugString(const FCleverTapPropertyValue& Value);

@@ -171,7 +171,7 @@ FString ToDebugString(const FCleverTapProperties& Properties)
 {
 	FString Result = TEXT("{ ");
 	int Count = 0;
-	for (const auto& KVP : Properties)
+	for (const auto& KVP : Properties.Map)
 	{
 		if (Count++)
 		{

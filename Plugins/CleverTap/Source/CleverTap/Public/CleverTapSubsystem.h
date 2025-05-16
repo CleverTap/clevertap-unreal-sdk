@@ -13,7 +13,7 @@ class UCleverTapConfig;
 /**
  * A UEngineSubsystem for interaction with the CleverTap SDK.
  *  Note: UCleverTapSubsystem must be initialized before a call to FPlatformMisc::RegisterForRemoteNotifications() is
- *  made. If any of the ICleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
+ *  made. If any of the UCleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
  *  need to be called.
  */
 UCLASS(BlueprintType, ClassGroup = CleverTap)
@@ -25,27 +25,27 @@ public:
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig* Config = nullptr);
+	UCleverTapInstance& InitializeSharedInstance(const UCleverTapConfig* Config = nullptr);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
+	UCleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const FString& CleverTapId);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Returns true if the shared instance has been initialized.
@@ -63,13 +63,17 @@ public:
 	 * Get the shared CleverTap API instance. If the instance has not been initialized then
 	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
 	 */
-	ICleverTapInstance& SharedInstance();
+	UCleverTapInstance& SharedInstance();
 
 	// <UEngineSubsystem>
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	// </UEngineSubsystem>
 
 private:
+	/** Install the no-op implementation as the shared instance.
+	 *  Used when there's porblems with the platform-specific initialization */
+	UCleverTapInstance& InitializeSharedInstanceWithNullImplementation();
+
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
@@ -87,6 +91,9 @@ private:
 	void OnRegisteredForRemoteNotifications(TArray<uint8> Token);
 
 private:
-	TUniquePtr<ICleverTapInstance> SharedInstanceImpl;
+	UPROPERTY(Transient)
+	UCleverTapInstance* SharedInstanceImpl = nullptr;
+
+	UPROPERTY(Transient)
 	TArray<uint8> SavedRemoteNotificationToken;
 };

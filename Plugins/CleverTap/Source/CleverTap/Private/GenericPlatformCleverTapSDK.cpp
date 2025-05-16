@@ -3,6 +3,7 @@
 
 #include "CleverTapInstanceConfig.h"
 #include "CleverTapUtilities.h"
+#include "CleverTapSubsystem.h"
 #include "NullCleverTapInstance.h"
 
 namespace CleverTapSDK { namespace GenericPlatform {
@@ -12,20 +13,20 @@ void FGenericPlatformSDK::SetLogLevel(ECleverTapLogLevel Level)
 	CleverTapSDK::Ignore(Level);
 }
 
-TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
+UCleverTapInstance* FGenericPlatformSDK::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
 	CleverTapSDK::Ignore(Config);
-	return MakeUnique<FNullCleverTapInstance>();
+	return UNullCleverTapInstance::Create();
 }
 
-TUniquePtr<ICleverTapInstance> FGenericPlatformSDK::InitializeSharedInstance(
+UCleverTapInstance* FGenericPlatformSDK::InitializeSharedInstance(
 	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
 	CleverTapSDK::Ignore(Config, CleverTapId);
-	return MakeUnique<FNullCleverTapInstance>();
+	return UNullCleverTapInstance::Create();
 }
 
-void FGenericPlatformSDK::SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token)
+void FGenericPlatformSDK::SetRemoteNotificationToken(UCleverTapInstance& Instance, const TArray<uint8>& Token)
 {
 	CleverTapSDK::Ignore(Instance, Token);
 }
