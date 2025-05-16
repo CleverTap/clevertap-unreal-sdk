@@ -181,6 +181,15 @@ UCleverTapInstance& UCleverTapSubsystem::SharedInstance()
 	return *SharedInstanceImpl;
 }
 
+UCleverTapInstance* UCleverTapSubsystem::BlueprintSharedInstance()
+{
+	if (IsSharedInstanceInitialized() == false)
+	{
+		InitializeSharedInstance();
+	}
+	return SharedInstanceImpl;
+}
+
 void UCleverTapSubsystem::BlueprintInitializeSharedInstance(const UCleverTapConfig* Config)
 {
 	InitializeSharedInstance(Config);

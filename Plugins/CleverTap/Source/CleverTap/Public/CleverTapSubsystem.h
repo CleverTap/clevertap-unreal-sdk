@@ -87,6 +87,13 @@ private:
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"))
 	void BlueprintInitializeSharedInstanceWithId(const UCleverTapConfig* Config, const FString& CleverTapId);
 
+	/**
+	 * Get the shared CleverTap API instance. If the instance has not been initialized then
+	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
+	 */
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "SharedInstance"))
+	UCleverTapInstance* BlueprintSharedInstance();
+
 	void AddRemoteNotificationTokenListener();
 	void OnRegisteredForRemoteNotifications(TArray<uint8> Token);
 
