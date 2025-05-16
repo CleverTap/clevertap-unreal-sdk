@@ -161,8 +161,6 @@ void USampleMainMenu::ConfigureSharedInstance()
 	check(CleverTapSys->IsSharedInstanceInitialized());
 	UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 
-	CleverTap.SetOptOut(false);
-
 	// Localize the names and descriptions of the android notification channels & groups
 	{
 		CleverTap.LocalizeAndroidNotificationChannelGroup(
