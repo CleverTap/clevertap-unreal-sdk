@@ -71,7 +71,7 @@ UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverT
 	if (!IsValid(Config))
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
-		return InitializeSharedInstanceWithNullImplementation();
+		return NullInstance();
 	}
 
 	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(Config));
@@ -109,7 +109,7 @@ UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString&
 	if (!IsValid(Config))
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
-		return InitializeSharedInstanceWithNullImplementation();
+		return NullInstance();
 	}
 
 	return InitializeSharedInstance(*Config, CleverTapId);
@@ -156,10 +156,13 @@ UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	return *SharedInstanceImpl;
 }
 
-UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstanceWithNullImplementation()
+UCleverTapInstance& UCleverTapSubsystem::NullInstance()
 {
-	SharedInstanceImpl = UNullCleverTapInstance::Create();
-	return *SharedInstanceImpl;
+	if (!IsValid(NullInstanceImpl))
+	{
+		NullInstanceImpl = UNullCleverTapInstance::Create();
+	}
+	return *NullInstanceImpl;
 }
 
 bool UCleverTapSubsystem::IsSharedInstanceInitialized() const

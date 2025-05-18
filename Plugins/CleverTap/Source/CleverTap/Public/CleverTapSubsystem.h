@@ -70,9 +70,8 @@ public:
 	// </UEngineSubsystem>
 
 private:
-	/** Install the no-op implementation as the shared instance.
-	 *  Used when there's porblems with the platform-specific initialization */
-	UCleverTapInstance& InitializeSharedInstanceWithNullImplementation();
+	/** Access to the fallback no-op instance. Will be created if needed. */
+	UCleverTapInstance& NullInstance();
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
@@ -100,6 +99,9 @@ private:
 private:
 	UPROPERTY(Transient)
 	UCleverTapInstance* SharedInstanceImpl = nullptr;
+
+	UPROPERTY(Transient)
+	UCleverTapInstance* NullInstanceImpl = nullptr;
 
 	UPROPERTY(Transient)
 	TArray<uint8> SavedRemoteNotificationToken;
