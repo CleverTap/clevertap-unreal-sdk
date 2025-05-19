@@ -11,33 +11,36 @@
 /**
  * Delegate type that broadcasts URLS the application should open.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnOpenUrl, const FString& Url);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOpenUrl, const FString&, Url);
 
 /**
  * Delegate type that broadcasts the eventual user response to PromptForPushPermission()
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool, bGranted);
 
 /**
  * Delegate type used to broadcast notifications when the user taps on a Push Notification.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnPushNotificationClicked, const FCleverTapProperties&, NotificationPayload);
 
 /**
  * Delegate type used to broadcast in-app notifications when they are shown to the user.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationShown, const FCleverTapProperties& NotificationPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnInAppNotificationShown, const FCleverTapProperties&, NotificationPayload);
 
 /**
  * Delegate type used to broadcast button presses on in-app notifications.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationButtonClicked, const FCleverTapProperties& ButtonPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnInAppNotificationButtonClicked, const FCleverTapProperties&, ButtonPayload);
 
 /**
  * Delegate type used to broadcast in-app notifications when the user dismissed them.
  */
-DECLARE_MULTICAST_DELEGATE_TwoParams(
-	FOnInAppNotificationDismissed, const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnInAppNotificationDismissed, const FCleverTapProperties&, Extras, const FCleverTapProperties&, ActionExtras);
 
 /**
  * Status of if the user has granted permission to send push notifications.
@@ -400,6 +403,7 @@ public:
 	 *          registered as intent filters on Android or in the plist for iOS.
 	 *          See `bIntegrateOpenUrl`
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|System")
 	FOnOpenUrl OnOpenUrl;
 
 	/**
@@ -409,6 +413,7 @@ public:
 	 * If the game was launched by clicking on a registerd URL scheme, OnOpenUrl will be delivered immediately after
 	 * this call. If multiple notifications are received before this call, only the most recent will be delivered.
 	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void EnableOnOpenUrl() PURE_VIRTUAL(UCleverTapInstance::EnableOnOpenUrl, ;);
 
 	/**
@@ -461,6 +466,7 @@ public:
 	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
 	 * connected and your application is prepared to handle the notifications.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationShown OnInAppNotificationShown;
 
 	/**
@@ -469,11 +475,13 @@ public:
 	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
 	 * connected and your application is prepared to handle the notifications.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
 
 	/**
 	 * Called when the user clicks on a Key/Value pair button in an in-app notification.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationButtonClicked OnInAppNotificationButtonClicked;
 
 	/**

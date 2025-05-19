@@ -202,13 +202,13 @@ void USampleMainMenu::ConfigureSharedInstance()
 	}
 
 	// simple test of the OnPushPermissionResponse notification
-	CleverTap.OnPushPermissionResponse.AddUObject(this, &USampleMainMenu::OnPushPermissionResponse);
+	CleverTap.OnPushPermissionResponse.AddDynamic(this, &USampleMainMenu::OnPushPermissionResponse);
 
 	// simple test of the OnPushNotificationClicked notification
-	CleverTap.OnPushNotificationClicked.AddUObject(this, &USampleMainMenu::OnPushNotificationClicked);
+	CleverTap.OnPushNotificationClicked.AddDynamic(this, &USampleMainMenu::OnPushNotificationClicked);
 
 	// simple test of the OnOpenUrl notification
-	CleverTap.OnOpenUrl.AddUObject(this, &USampleMainMenu::OnOpenUrl);
+	CleverTap.OnOpenUrl.AddDynamic(this, &USampleMainMenu::OnOpenUrl);
 
 	CleverTap.RegisterCleverTapUrlHandler(
 		[WeakThis = TSoftObjectPtr<USampleMainMenu>{ this }](FString Url, ECleverTapChannel Channel) {
@@ -226,9 +226,9 @@ void USampleMainMenu::ConfigureSharedInstance()
 		});
 
 	// In-App Callbacks
-	CleverTap.OnInAppNotificationShown.AddUObject(this, &USampleMainMenu::OnInAppNotificationShown);
-	CleverTap.OnInAppNotificationDismissed.AddUObject(this, &USampleMainMenu::OnInAppNotificationDismissed);
-	CleverTap.OnInAppNotificationButtonClicked.AddUObject(this, &USampleMainMenu::OnInAppNotificationButtonClicked);
+	CleverTap.OnInAppNotificationShown.AddDynamic(this, &USampleMainMenu::OnInAppNotificationShown);
+	CleverTap.OnInAppNotificationDismissed.AddDynamic(this, &USampleMainMenu::OnInAppNotificationDismissed);
+	CleverTap.OnInAppNotificationButtonClicked.AddDynamic(this, &USampleMainMenu::OnInAppNotificationButtonClicked);
 
 	// In-App Messaging Filter
 	CleverTap.RegisterInAppNotificationFilter([](const FCleverTapProperties& Payload) {

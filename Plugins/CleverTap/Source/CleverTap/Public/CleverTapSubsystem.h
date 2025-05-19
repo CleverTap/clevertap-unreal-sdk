@@ -76,21 +76,22 @@ private:
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstance"))
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Shared Instance"), Category = "CleverTap|Instance")
 	void BlueprintInitializeSharedInstance(const UCleverTapConfig* Config);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with an optional custom CleverTap
 	 *  Id.
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"))
+	UFUNCTION(
+		BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"), Category = "CleverTap|Instance")
 	void BlueprintInitializeSharedInstanceWithId(const UCleverTapConfig* Config, const FString& CleverTapId);
 
 	/**
 	 * Get the shared CleverTap API instance. If the instance has not been initialized then
 	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "SharedInstance"))
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared CleverTap Instance"), Category = "CleverTap|Instance")
 	UCleverTapInstance* BlueprintSharedInstance();
 
 	void AddRemoteNotificationTokenListener();
