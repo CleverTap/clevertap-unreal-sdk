@@ -198,3 +198,251 @@ FString ToDebugString(const TArray<FCleverTapProperties>& PropertiesArray)
 	Result += TEXT(" ]");
 	return Result;
 }
+
+FCleverTapProperties FCleverTapProperties::MakeFromObject(const UObject* Source)
+{
+	check(Source);
+	FCleverTapProperties Out;
+	Out.LoadFromStruct(Source->GetClass(), Source);
+	return Out;
+}
+
+void FCleverTapProperties::LoadFromObject(const UObject* Source)
+{
+	check(Source);
+	LoadFromStruct(Source->GetClass(), Source);
+}
+
+void FCleverTapProperties::ApplyToObject(UObject* Target) const
+{
+	check(Target);
+	ApplyToStruct(Target->GetClass(), Target);
+}
+
+void FCleverTapProperties::MergeFrom(const FCleverTapProperties& Other)
+{
+	for (const auto& KVP : Other.Map)
+	{
+		Map.Emplace(KVP.Key, KVP.Value);
+	}
+}
+
+bool FCleverTapProperties::ShouldSkipProperty(const FProperty* Property) 
+{
+	constexpr EPropertyFlags SkipFlags = CPF_Transient | CPF_Deprecated | CPF_DisableEditOnInstance | CPF_EditorOnly;
+	return Property->HasAnyPropertyFlags(SkipFlags);
+}
+
+void FCleverTapProperties::LoadFromStruct(const UStruct* StructDef, const void* SourceStructInstance)
+{
+	check(StructDef);
+	check(SourceStructInstance);
+	for (TFieldIterator<FProperty> It(StructDef); It; ++It)
+	{
+		FProperty* Property = *It;
+		if (ShouldSkipProperty(Property))
+		{
+			continue;
+		}
+
+		const FString& Name = Property->GetName();
+		const void* ValuePtr = Property->ContainerPtrToValuePtr<void>(SourceStructInstance);
+
+		if (auto* BoolProp = CastField<FBoolProperty>(Property))
+		{
+			Map.Emplace(Name, BoolProp->GetPropertyValue(ValuePtr));
+		}
+		else if (auto* StringProp = CastField<FStrProperty>(Property))
+		{
+			Map.Emplace(Name, StringProp->GetPropertyValue(ValuePtr));
+		}
+		else if (auto* IntProp = CastField<FIntProperty>(Property))
+		{
+			Map.Emplace(Name, IntProp->GetPropertyValue(ValuePtr));
+		}
+		else if (auto* Int64Prop = CastField<FInt64Property>(Property))
+		{
+			Map.Emplace(Name, Int64Prop->GetPropertyValue(ValuePtr));
+		}
+		else if (auto* FloatProp = CastField<FFloatProperty>(Property))
+		{
+			Map.Emplace(Name, FloatProp->GetPropertyValue(ValuePtr));
+		}
+		else if (auto* DoubleProp = CastField<FDoubleProperty>(Property))
+		{
+			Map.Emplace(Name, DoubleProp->GetPropertyValue(ValuePtr));
+		}
+		else if (FStructProperty* StructProp = CastField<FStructProperty>(Property))
+		{
+			if (StructProp->Struct == FCleverTapDate::StaticStruct())
+			{
+				const FCleverTapDate* DatePtr = static_cast<const FCleverTapDate*>(ValuePtr);
+				Map.Emplace(Name, *DatePtr);
+			}
+			else
+			{
+				// todo log unsupported struct type in property
+			}
+		}
+		else if (FArrayProperty* ArrayProp = CastField<FArrayProperty>(Property))
+		{
+			if (FStrProperty* InnerStrProp = CastField<FStrProperty>(ArrayProp->Inner))
+			{
+				FScriptArrayHelper Helper(ArrayProp, ValuePtr);
+
+				TArray<FString> Values;
+				Values.Empty(Helper.Num());
+				for (int32 i = 0; i < Helper.Num(); ++i)
+				{
+					FString Element = InnerStrProp->GetPropertyValue(Helper.GetRawPtr(i));
+					Values.Add(Element);
+				}
+				Map.Emplace(Name, Values);
+			}
+			else
+			{
+				// todo: log unsupported array type
+			}
+		}
+		else
+		{
+			// todo: unsupported property type; log / maybe fallback to string if possible
+		}
+	}
+}
+
+void FCleverTapProperties::ApplyToStruct(const UStruct* StructDef, void* TargetStructInstance) const
+{
+	check(StructDef);
+	check(TargetStructInstance);
+	for (TFieldIterator<FProperty> It(StructDef); It; ++It)
+	{
+		FProperty* Property = *It;
+		ApplyPropertyToStruct(StructDef, Property, TargetStructInstance);
+	}
+}
+
+void FCleverTapProperties::ApplyPropertyToStruct(
+	const UStruct* StructDef, FProperty* Property, void* TargetStructInstance) const
+{
+	check(StructDef);
+	check(Property);
+	check(TargetStructInstance);
+
+	if (ShouldSkipProperty(Property))
+	{
+		// this property has been excluded from load/apply
+		return;
+	}
+
+	const FCleverTapPropertyValue* SourceValue = Map.Find(Property->GetName());
+	if (!SourceValue)
+	{
+		// we dont have an entry in the map for this property
+		return;
+	}
+
+	// The target Value
+	void* TargetValuePtr = Property->ContainerPtrToValuePtr<void>(TargetStructInstance);
+
+	// Each FProperty type needs custom handling
+	if (auto* BoolProp = CastField<FBoolProperty>(Property))
+	{
+		if (SourceValue->IsType<bool>())
+		{
+			BoolProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<bool>());
+			return;
+		}
+	}
+	else if (auto* StringProp = CastField<FStrProperty>(Property))
+	{
+		if (SourceValue->IsType<FString>())
+		{
+			StringProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<FString>());
+			return;
+		}
+	}
+	else if (auto* IntProp = CastField<FIntProperty>(Property))
+	{
+		if (SourceValue->IsType<int32>())
+		{
+			IntProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<int32>());
+			return;
+		}
+	}
+	else if (auto* Int64Prop = CastField<FInt64Property>(Property))
+	{
+		if (SourceValue->IsType<int64>())
+		{
+			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<int64>());
+			return;
+		}
+	}
+	else if (auto* FloatProp = CastField<FFloatProperty>(Property))
+	{
+		if (SourceValue->IsType<float>())
+		{
+			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<float>());
+			return;
+		}
+	}
+	else if (auto* DoubleProp = CastField<FFloatProperty>(Property))
+	{
+		if (SourceValue->IsType<double>())
+		{
+			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<double>());
+			return;
+		}
+	}
+	else if (FStructProperty* StructProp = CastField<FStructProperty>(Property))
+	{
+		if (StructProp->Struct == FCleverTapDate::StaticStruct())
+		{
+			FCleverTapDate* TargetDatePtr = static_cast<FCleverTapDate*>(TargetValuePtr);
+			if (SourceValue->IsType<FCleverTapDate>())
+			{
+				*TargetDatePtr = SourceValue->Get<FCleverTapDate>();
+				return;
+			}
+			else
+			{
+				// todo support setting a date from an int here
+			}
+		}
+		else
+		{
+			// todo: log unsupported struct property type
+		}
+	}
+	else if (FArrayProperty* ArrayProp = CastField<FArrayProperty>(Property))
+	{
+		if (FStrProperty* InnerStrProp = CastField<FStrProperty>(ArrayProp->Inner))
+		{
+			if (SourceValue->IsType<TArray<FString>>())
+			{
+				const TArray<FString>& Values = SourceValue->Get<TArray<FString>>();
+				FScriptArrayHelper Helper(ArrayProp, TargetValuePtr);
+				Helper.Resize(Values.Num());
+				for (int32 i = 0; i < Values.Num(); ++i)
+				{
+					InnerStrProp->SetPropertyValue(Helper.GetRawPtr(i), Values[i]);
+				}
+			}
+			else
+			{
+				// todo not a string; should we convert to string here?
+			}
+		}
+		else
+		{
+			// todo: log target property has unsupported element type
+		}
+	}
+	else
+	{
+		// todo: log unsupported property type
+		return;
+	}
+
+	// todo: log unsupported type mismatch
+}

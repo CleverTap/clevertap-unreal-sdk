@@ -50,7 +50,7 @@ struct CLEVERTAP_API FCleverTapDate
  * Variant type for allowed property value types.
  */
 USTRUCT(BlueprintType)
-struct FCleverTapPropertyValue
+struct CLEVERTAP_API FCleverTapPropertyValue
 {
 	GENERATED_BODY()
 
@@ -121,13 +121,59 @@ private:
 	VariantType Value;
 };
 
+/**
+ * A generic map of property keys & values.
+ *
+ * todo documentation needed here
+ */
 USTRUCT(BlueprintType)
-struct FCleverTapProperties
+struct CLEVERTAP_API FCleverTapProperties
 {
 	GENERATED_BODY()
 
+	/** Map of keys to values. Safe to access directly from C++ */
 	UPROPERTY()
 	TMap<FString, FCleverTapPropertyValue> Map;
+
+	/** Create a properties map populated with the properties from a UObject */
+	static FCleverTapProperties MakeFromObject(const UObject* Source);
+
+	/** Create a properties map populated with the properties from UStruct-type T */
+	template <typename T>
+	static FCleverTapProperties MakeFromStruct(const T& Source);
+
+	/** Load all properties from a UObject (overwriting existing values) */
+	void LoadFromObject(const UObject* Source);
+
+	/** Load all properties from a UStruct (overwriting existing values) */
+	template <typename T>
+	void LoadFromStruct(const T& Source);
+
+	/** Apply all matching properties to a UObject */
+	void ApplyToObject(UObject* Target) const;
+
+	/** Apply all matching properties to a UStruct-based type T */
+	template <typename T>
+	void ApplyToStruct(T* Source) const;
+
+	/** Merge in values from another properties object (overwriting existing values) */
+	void MergeFrom(const FCleverTapProperties& Other);
+
+private:
+	/** Returns true if this property should be skipped when loading/applying
+	 *
+	  (because it's marked Transent, Deprecated, DisableEditOnInstance or EditorOnly etc)
+	 */
+	static bool ShouldSkipProperty(const FProperty* Property);
+
+	/** Load all properties from a generic UStruct (overwrites existing values) */
+	void LoadFromStruct(const UStruct* StructDef, const void* SourceStructInstance);
+
+	/** Apply properties to a generic UStruct */
+	void ApplyToStruct(const UStruct* StructDef, void* TargetStructInstance) const;
+
+	/** Set the given Property on TargetStructInstance if this map has a value for that key. */
+	void ApplyPropertyToStruct(const UStruct* StructDef, FProperty* Prop, void* TargetStructInstance) const;
 };
 
 /** Returns a debug string describing the property's value and type. */
@@ -141,3 +187,25 @@ CLEVERTAP_API FString ToDebugString(const FCleverTapProperties& Properties);
 
 /** Returns a debug string listing all properties with their keys, types, and values. */
 CLEVERTAP_API FString ToDebugString(const TArray<FCleverTapProperties>& PropertiesArray);
+
+// ================= inlines =================
+
+template <typename T>
+inline FCleverTapProperties FCleverTapProperties::MakeFromStruct(const T& Source)
+{
+	FCleverTapProperties Out;
+	Out.LoadFromStruct(TBaseStructure<T>::Get(), &Source);
+	return Out;
+}
+
+template <typename T>
+inline void FCleverTapProperties::LoadFromStruct(const T& Source)
+{
+	LoadFromStruct(TBaseStructure<T>::Get(), &Source);
+}
+
+template <typename T>
+inline void FCleverTapProperties::ApplyToStruct(T* Target) const
+{
+	ApplyToStruct(TBaseStructure<T>::Get(), Target);
+}
