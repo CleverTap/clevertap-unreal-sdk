@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root xmlns:android="http://schemas.android.com/apk/res/android">
 	<init>
+		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="" />
+		<setBoolIsEqual result="UsePublishedCleverTapSDK" arg1="$S(AndroidLocalCleverTapSdkAarPath)" arg2="" />
+		<setBoolNot result="UseLocalCleverTapSDK" source="$B(UsePublishedCleverTapSDK)" />
+
 		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
 		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default="" />
 		<setStringFromProperty result="CTProjectToken" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectToken" default="" />
@@ -320,11 +324,71 @@
 	</buildscriptGradleAdditions>
 
 	<buildGradleAdditions>
+		<if condition="UsePublishedCleverTapSDK">
+			<true>
+				<!-- The default version of clevertap-android-sdk to use is specified here. -->
+				<insert>
+					dependencies { implementation "com.clevertap.android:clevertap-android-sdk:7.3.1" }
+				</insert>
+				<!-- Check the latest sdk version at
+					 https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
+				-->
+			</true>
+			<false>
+				<!-- use the local clevertap-android-sdk aar  -->
+				<log text="CleverTap: Using local clevertap-android-sdk.aar from AndroidLocalCleverTapSdkAarPath=$S(AndroidLocalCleverTapSdkAarPath)" />
+				<insertValue value="dependencies { implementation files('$S(AbsPluginDir)/../../../../$S(AndroidLocalCleverTapSdkAarPath)') }" />
+				<insertNewline />
+				<!-- extra dependencies to support the local clevertap-android-sdk aar  -->
+				<insert>
+					dependencies {
+					implementation 'androidx.work:work-runtime:2.7.1'
+
+					implementation("com.google.android.gms:play-services-location:21.3.0") // Needed for geofence
+					implementation("androidx.work:work-runtime:2.9.1") // Needed for geofence
+					implementation("androidx.concurrent:concurrent-futures:1.2.0") // Needed for geofence
+
+					implementation("com.google.firebase:firebase-messaging:24.0.0") //Needed for FCM
+					// implementation("com.google.android.gms:play-services-ads:23.6.0") //Needed to use Google Ad Ids
+
+					//ExoPlayer Libraries for Audio/Video InApp Notifications
+					//implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+					//implementation("com.google.android.exoplayer:exoplayer-hls:2.19.1")
+					//implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+
+					// Media3 Libraries for Audio/Video InApp Notifications
+					//implementation("androidx.media3:media3-exoplayer:1.4.0")
+					//implementation("androidx.media3:media3-exoplayer-hls:1.4.0")
+					//implementation("androidx.media3:media3-ui:1.4.0")
+
+					//implementation("com.github.bumptech.glide:glide:4.12.0")
+
+					//Mandatory if you are using Notification Inbox
+					implementation("com.google.android.material:material:1.12.0")
+					implementation("androidx.fragment:fragment:1.5.4")
+					implementation("androidx.appcompat:appcompat:1.7.0")
+					implementation("androidx.recyclerview:recyclerview:1.3.2")
+					implementation("androidx.viewpager:viewpager:1.0.0")
+
+					implementation("com.android.installreferrer:installreferrer:2.2")
+					// Mandatory for v3.6.4 and above
+
+					implementation("androidx.multidex:multidex:2.0.1")
+
+					// Import the BoM for the Firebase platform
+					implementation platform("com.google.firebase:firebase-bom:33.2.0")
+
+					// Declare the dependency for the Analytics library
+					// When using the BoM, you don't specify versions in Firebase library dependencies
+					// implementation("com.google.firebase:firebase-crashlytics")
+					// implementation("com.google.firebase:firebase-analytics")
+					}
+				</insert>
+			</false>
+		</if>
+
 		<insert>
 			dependencies {
-			// checkout the latest sdk version at
-			// https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
-			implementation "com.clevertap.android:clevertap-android-sdk:7.3.1"
 			implementation "com.clevertap.android:push-templates:1.4.0"
 			implementation "androidx.core:core:1.13.0"
 			implementation 'com.android.installreferrer:installreferrer:2.2'
