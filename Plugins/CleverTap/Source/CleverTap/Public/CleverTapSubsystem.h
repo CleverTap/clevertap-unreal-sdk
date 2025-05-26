@@ -16,7 +16,7 @@ class UCleverTapConfig;
  *  made. If any of the UCleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
  *  need to be called.
  */
-UCLASS(BlueprintType, ClassGroup = CleverTap)
+UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap Subsystem"))
 class CLEVERTAP_API UCleverTapSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
