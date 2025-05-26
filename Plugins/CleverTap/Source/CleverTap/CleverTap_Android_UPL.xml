@@ -3,7 +3,6 @@
 	<init>
 		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="" />
 		<setBoolIsEqual result="UsePublishedCleverTapSDK" arg1="$S(AndroidLocalCleverTapSdkAarPath)" arg2="" />
-		<setBoolNot result="UseLocalCleverTapSDK" source="$B(UsePublishedCleverTapSDK)" />
 
 		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
 		<setStringFromProperty result="CTProjectId" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="ProjectId" default="" />
@@ -552,5 +551,49 @@
 			com.clevertap.android.unreal.UECleverTapBridge.onNewIntent(newIntent);
 		</insert>
 	</gameActivityOnNewIntentAdditions>
+
+	<!-- Proguard / R8 Configuration -->
+	<proguardAdditions>
+		<insert>
+			# For CleverTap Unreal Plugin
+			-keep class com.clevertap.android.sdk.CleverTapAPI{*;}
+			-keep class com.clevertap.android.sdk.CleverTapAPI$LogLevel{*;}
+			-keep class com.clevertap.android.sdk.CleverTapInstanceConfig{*;}
+			-keep class com.clevertap.android.sdk.cryption.EncryptionLevel{*;}
+			-keep class com.clevertap.android.sdk.inapp.CTInAppNotification{*;}
+			-keep class com.clevertap.android.unreal.UECleverTapBridge{*;}
+			-keep class com.clevertap.android.unreal.UECleverTapListener{*;}
+
+			-keep interface com.clevertap.android.sdk.InAppNotificationButtonListener{*;}
+			-keep interface com.clevertap.android.sdk.InAppNotificationListener{*;}
+			-keep interface com.clevertap.android.sdk.pushnotification.CTPushNotificationListener{*;}
+			-keep interface com.clevertap.android.sdk.PushPermissionResponseListener{*;}
+		</insert>
+
+		<if condition="UsePublishedCleverTapSDK">
+			<false>
+				<insert>
+					# For CleverTap SDK
+					-keep class com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider{*;}
+					-keep class com.google.firebase.messaging.FirebaseMessagingService{*;}
+					-keep class com.clevertap.android.sdk.pushnotification.CTNotificationIntentService{*;}
+					-keep class com.google.android.exoplayer2.ExoPlayer{*;}
+					-keep class com.google.android.exoplayer2.source.hls.HlsMediaSource{*;}
+					-keep class com.google.android.exoplayer2.ui.StyledPlayerView{*;}
+					-keep class androidx.media3.exoplayer.ExoPlayer{*;}
+					-keep class androidx.media3.exoplayer.hls.HlsMediaSource{*;}
+					-keep class androidx.media3.ui.PlayerView{*;}
+					-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient{*;}
+					-keep class com.google.android.gms.common.GooglePlayServicesUtil{*;}
+					-keep class com.google.android.play.core.review.ReviewManagerFactory{*;}
+					-keepnames class * implements android.os.Parcelable {
+					public static final ** CREATOR;
+					}
+					-dontwarn com.clevertap.android.sdk.**
+					-keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
+				</insert>
+			</false>
+		</if>
+	</proguardAdditions>
 
 </root>
