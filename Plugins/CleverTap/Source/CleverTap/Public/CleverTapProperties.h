@@ -160,9 +160,10 @@ struct CLEVERTAP_API FCleverTapProperties
 	void MergeFrom(const FCleverTapProperties& Other);
 
 private:
-	/** Returns true if this property should be skipped when loading/applying
+	/** Returns true if this property should be skipped when applying or loading values.
 	 *
-	  (because it's marked Transent, Deprecated, DisableEditOnInstance or EditorOnly etc)
+	 *  Skips properties that are:
+	 *  - Transient, Deprecated, EditorOnly, or DisableEditOnInstance
 	 */
 	static bool ShouldSkipProperty(const FProperty* Property);
 

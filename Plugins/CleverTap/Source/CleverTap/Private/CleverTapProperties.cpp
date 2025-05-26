@@ -1,6 +1,8 @@
 // Copyright CleverTap All Rights Reserved.
 #include "CleverTapProperties.h"
 
+#include "CleverTapLog.h"
+
 namespace {
 
 template <typename T>
@@ -201,7 +203,12 @@ FString ToDebugString(const TArray<FCleverTapProperties>& PropertiesArray)
 
 FCleverTapProperties FCleverTapProperties::MakeFromObject(const UObject* Source)
 {
-	check(Source);
+	if (IsValid(Source) == false)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("FCleverTapProperties::MakeFromObject: Invalid Source UObject instance!"));
+		return {};
+	}
+
 	FCleverTapProperties Out;
 	Out.LoadFromStruct(Source->GetClass(), Source);
 	return Out;
@@ -209,13 +216,23 @@ FCleverTapProperties FCleverTapProperties::MakeFromObject(const UObject* Source)
 
 void FCleverTapProperties::LoadFromObject(const UObject* Source)
 {
-	check(Source);
+	if (IsValid(Source) == false)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("FCleverTapProperties::LoadFromObject: Invalid Source UObject instance!"));
+		return;
+	}
+
 	LoadFromStruct(Source->GetClass(), Source);
 }
 
 void FCleverTapProperties::ApplyToObject(UObject* Target) const
 {
-	check(Target);
+	if (IsValid(Target) == false)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("FCleverTapProperties::ApplyToObject: Invalid Target UObject instance!"));
+		return;
+	}
+
 	ApplyToStruct(Target->GetClass(), Target);
 }
 
@@ -227,8 +244,9 @@ void FCleverTapProperties::MergeFrom(const FCleverTapProperties& Other)
 	}
 }
 
-bool FCleverTapProperties::ShouldSkipProperty(const FProperty* Property) 
+bool FCleverTapProperties::ShouldSkipProperty(const FProperty* Property)
 {
+	check(Property);
 	constexpr EPropertyFlags SkipFlags = CPF_Transient | CPF_Deprecated | CPF_DisableEditOnInstance | CPF_EditorOnly;
 	return Property->HasAnyPropertyFlags(SkipFlags);
 }
@@ -245,7 +263,7 @@ void FCleverTapProperties::LoadFromStruct(const UStruct* StructDef, const void* 
 			continue;
 		}
 
-		const FString& Name = Property->GetName();
+		const FString Name = Property->GetName();
 		const void* ValuePtr = Property->ContainerPtrToValuePtr<void>(SourceStructInstance);
 
 		if (auto* BoolProp = CastField<FBoolProperty>(Property))
