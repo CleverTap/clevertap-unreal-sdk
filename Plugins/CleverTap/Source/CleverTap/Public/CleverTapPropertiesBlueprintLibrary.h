@@ -107,7 +107,8 @@ class UCleverTapPropertiesBlueprintLibrary : public UBlueprintFunctionLibrary
 
 	/** Stores the given Value under the specified Key as a Date property. */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
-	static void SetDateProperty(UPARAM(ref) FCleverTapProperties& Properties, const FString& Key, const FCleverTapDate &Value);
+	static void SetDateProperty(
+		UPARAM(ref) FCleverTapProperties& Properties, const FString& Key, const FCleverTapDate& Value);
 
 	/** Stores the given Value under the specified Key as a Float property. */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
