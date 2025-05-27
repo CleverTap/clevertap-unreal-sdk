@@ -82,7 +82,7 @@ public:
 	 * Gets the CleverTap Id associated with this instance.
 	 * The CleverTap Id is a unique identifier assigned to the user profile.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "CleverTap")
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
 	virtual FString GetCleverTapId() PURE_VIRTUAL(UCleverTapInstance::GetCleverTapId, return TEXT(""););
 
 	/**
