@@ -299,6 +299,60 @@ CleverTap.OnPushNotificationClicked.AddLambda([](const FCleverTapProperties& Not
 CleverTap.EnableOnPushNotificationClicked();
 ```
 
+## In-App Notifications
+In-app notifications are initially suspended. When your callbacks are set up then call
+`ICleverTapInstance::ResumeInAppNotifications()` to begin receiving in-app notifications.
+
+The payload parameters for all in-app notifications callbacks have their nested objects flattened as dot separated keys
+in the property map so that the object `{"a": { "b": 3.14 }}` would have a single entry of
+`Payload[FString{TEXT("a.b")}] == FCleverTapPropertyValue{ 3.14 }`. 
+
+### Callbacks
+#### OnInAppNotificationShown
+When an in-app notification is displayed this callback will be invoked with and the notification payload is passed as a
+parameter.
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.OnInAppNotificationShown.AddLambda([](const FCleverTapProperties& Payload)
+    {
+		UE_LOG(LogTemp, Log, TEXT("An in-app notification was shown: %s"), *ToDebugString(Payload));
+    });
+```
+
+#### OnInAppNotificationButtonClicked
+When the user clicks on an in-app notification button this callback will be invoked with the key/value pairs associated
+with that button.
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.OnInAppNotificationButtonClicked.AddLambda([](const FCleverTapProperties& Payload)
+    {
+		UE_LOG(LogTemp, Log, TEXT("An in-app notification button clicked: %s"), *ToDebugString(Payload));
+    });
+```
+
+
+#### OnInAppNotificationDismissed
+When an in-app notification is dismissed by the user this callback will be invoked with the notification payload and any
+extra key/value pairs specified for the in-app notification in the CleverTap dashboard.
+```c++
+CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+CleverTap.OnInAppNotificationDismissed.AddLambda([](const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras)
+    {
+		UE_LOG(LogTemp, Log, TEXT("An in-app notification was dismissed. Extras: %s, ActionExtras: %s"),
+            *ToDebugString(Extras), *ToDebugString(ActionExtras));
+    });
+```
+
+### Suspend, Resume, and Discard In-App Notifications
+In-app notifications initially start suspended. If you like to discard any notifications that were queued while they
+were suspended then you can invoke `ICleverTapInstance::DiscardInAppNotifications()` to do so. Notifications can be
+resumed by calling `ICleverTapInstance::ResumeInAppNotifications()`. Any queued notification that happened while
+suspended, and which has not been explicitly discarded, will be presented to the user. If you would like to suspend
+notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
+
 ## User Profiles
 ### On User Login
 The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the
