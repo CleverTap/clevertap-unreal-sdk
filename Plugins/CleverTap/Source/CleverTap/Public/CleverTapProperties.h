@@ -1,50 +1,11 @@
 // Copyright CleverTap All Rights Reserved.
 #pragma once
 
+#include "CleverTapDate.h"
+
 #include "CoreMinimal.h"
 #include "Misc/TVariant.h"
 #include "CleverTapProperties.generated.h"
-
-/**
- * Represents a date for CleverTap profile properties.
- */
-USTRUCT(BlueprintType)
-struct CLEVERTAP_API FCleverTapDate
-{
-	GENERATED_BODY()
-
-	/**
-	 * Numeric year, such as 2025
-	 */
-	UPROPERTY()
-	int32 Year;
-
-	/**
-	 * Numeric month between the values of [1, 12]
-	 */
-	UPROPERTY()
-	int32 Month;
-
-	/**
-	 * Numeric day for a given month
-	 */
-	UPROPERTY()
-	int32 Day;
-
-	FCleverTapDate() : Year(0), Month(0), Day(0) {}
-	FCleverTapDate(int32 InYear, int32 InMonth, int32 InDay) : Year(InYear), Month(InMonth), Day(InDay) {}
-	FCleverTapDate(const FCleverTapDate& Other) = default;
-
-	/**
-	 * Construct from the date part of an Unreal FDateTime struct. The time part is ignored.
-	 */
-	FCleverTapDate(const FDateTime& DateTime)
-		: Year(DateTime.GetYear()), Month(DateTime.GetMonth()), Day(DateTime.GetDay())
-	{
-	}
-
-	FString ToString() const { return FString::Printf(TEXT("%04d-%02d-%02d"), Year, Month, Day); }
-};
 
 /**
  * Variant type for allowed property value types.
@@ -149,17 +110,16 @@ struct CLEVERTAP_API FCleverTapProperties
 	template <typename T>
 	void LoadFromStruct(const T& Source);
 
-	/** Apply all matching properties to a UObject */
+	/** Copy all matching properties to a UObject */
 	void ApplyToObject(UObject* Target) const;
 
-	/** Apply all matching properties to a UStruct-based type T */
+	/** Copy all matching properties to a UStruct-based type T */
 	template <typename T>
-	void ApplyToStruct(T* Source) const;
+	void ApplyToStruct(T* Target) const;
 
 	/** Merge in values from another properties object (overwriting existing values) */
 	void MergeFrom(const FCleverTapProperties& Other);
 
-private:
 	/** Returns true if this property should be skipped when applying or loading values.
 	 *
 	 *  Skips properties that are:
@@ -167,6 +127,7 @@ private:
 	 */
 	static bool ShouldSkipProperty(const FProperty* Property);
 
+private:
 	/** Load all properties from a generic UStruct (overwrites existing values) */
 	void LoadFromStruct(const UStruct* StructDef, const void* SourceStructInstance);
 
@@ -176,6 +137,10 @@ private:
 	/** Set the given Property on TargetStructInstance if this map has a value for that key. */
 	void ApplyPropertyToStruct(const UStruct* StructDef, FProperty* Prop, void* TargetStructInstance) const;
 };
+
+/** Sets the given Value into the Property on TargetStructInstance described by StructDef */
+void ApplyCleverTapPropertyValueToStruct(
+	const FCleverTapPropertyValue& Value, const UStruct* StructDef, FProperty* Property, void* TargetStructInstance);
 
 /** Returns a debug string describing the property's value and type. */
 CLEVERTAP_API FString ToDebugString(const FCleverTapPropertyValue& Value);

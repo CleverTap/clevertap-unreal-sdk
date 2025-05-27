@@ -141,6 +141,105 @@ public:
 	virtual TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key)
 		PURE_VIRTUAL(UCleverTapInstance::PushProfile, return {};);
 
+	/** Returns the value of a property formatted as a String, or DefaultValue if the property does not exist. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FString GetPropertyAsString(const FString& Key, const FString& DefaultValue);
+
+	/** Returns the value of a Boolean property, or DefaultValue if the property is missing or not a Boolean. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool GetBoolProperty(const FString& Key, bool DefaultValue);
+
+	/** Returns the value of a Date property, or DefaultValue if the property is missing or not a Date.
+	 *
+	 *  TODO: perhaps support getting int properties as dates, doing the unix conversion, to hide that the backend is
+	 *        storing dates as ints, forggeting the type?
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FCleverTapDate GetDateProperty(const FString& Key, const FCleverTapDate& DefaultValue);
+
+	/** Returns the value of a Double property, or DefaultValue if the property is missing or not a Double.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit doubles, but Blueprint only supports 32-bit floats.
+	 *        64-bit values must be accessed from C++.
+	 */
+	double GetDoubleProperty(const FString& Key, double DefaultValue);
+
+	/** Returns the value of a Float property, or DefaultValue if the property is missing or not a Float.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit doubles, but Blueprint only supports 32-bit floats.
+	 *        64-bit values must be accessed from C++.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	float GetFloatProperty(const FString& Key, float DefaultValue);
+
+	/** Returns the value of a 32-bit Integer property, or DefaultValue if the property is missing or not a 32-bit
+	 *  Integer.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit integers, but Blueprint does not.
+	 *        64-bit values must be accessed from C++.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	int32 GetIntProperty(const FString& Key, int32 DefaultValue);
+
+	/** Returns the value of a 32-bit Integer property, or DefaultValue if the property is missing or not a 64-bit
+	 *  Integer.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit integers, but Blueprint does not.
+	 *        64-bit values must be accessed from C++.
+	 */
+	int64 GetInt64Property(const FString& Key, int64 DefaultValue);
+
+	/** Returns the value of a String property, or DefaultValue if the property is missing or not a String. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FString GetStringProperty(const FString& Key, const FString& DefaultValue);
+
+	/** Returns the value of a String array property, or DefaultValue if the property is missing or not an array of
+	 *  Strings. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	TArray<FString> GetStringArrayProperty(const FString& Key, const TArray<FString>& DefaultValue);
+
+	/** Returns true if the user profile contains a property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Boolean property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasBoolProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Date property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDateProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 64-bit Double property with the given Key.
+	 *
+	 *  Note: Double values cannot be accessed from Blueprint — C++ only.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDoubleProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Float property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasFloatProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 32-bit Integer property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasIntProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 64-bit Integer property with the given Key.
+	 *
+	 *  Note: 64-bit Integer values cannot be accessed from Blueprint — C++ only.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasInt64Property(const FString& Key);
+
+	/** Returns true if the user profile contains a String property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasStringProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a String Array property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasStringArrayProperty(const FString& Key);
+
 	/**
 	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
@@ -267,6 +366,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
 	virtual void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values)
 		PURE_VIRTUAL(UCleverTapInstance::SetMultiValuesForKey, ;);
+
+	/** Copy all matching profile properties to a UObject */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	void ApplyProfileToObject(UObject* Target);
+
+	/** Copy all matching profile properties to a UStruct-based type T */
+	template <typename T>
+	void ApplyProfileToStruct(T* Target);
 
 	/**
 	 * Record a user event on the user's profile with the specified event name.
@@ -541,4 +648,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetNetworkInformationRecording(bool bEnableCollection)
 		PURE_VIRTUAL(UCleverTapInstance::SetNetworkInformationRecording, ;);
+
+private:
+	/** Copy all matching profile properties to a UStruct-based type T */
+	void ApplyProfileToStruct(const UStruct* StructDef, void* TargetStructInstance);
 };
+
+template <typename T>
+inline void UCleverTapInstance::ApplyProfileToStruct(T* Target)
+{
+	ApplyProfileToStruct(TBaseStructure<T>::Get(), Target);
+}

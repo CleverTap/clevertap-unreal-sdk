@@ -360,55 +360,71 @@ void FCleverTapProperties::ApplyPropertyToStruct(
 		return;
 	}
 
+	ApplyCleverTapPropertyValueToStruct(*SourceValue, StructDef, Property, TargetStructInstance);
+}
+
+void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceValue, const UStruct* StructDef,
+	FProperty* Property, void* TargetStructInstance)
+{
+	check(StructDef);
+	check(Property);
+	check(TargetStructInstance);
+
+	if (FCleverTapProperties::ShouldSkipProperty(Property))
+	{
+		// this property has been excluded from load/apply
+		return;
+	}
+
 	// The target Value
 	void* TargetValuePtr = Property->ContainerPtrToValuePtr<void>(TargetStructInstance);
 
 	// Each FProperty type needs custom handling
 	if (auto* BoolProp = CastField<FBoolProperty>(Property))
 	{
-		if (SourceValue->IsType<bool>())
+		if (SourceValue.IsType<bool>())
 		{
-			BoolProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<bool>());
+			BoolProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<bool>());
 			return;
 		}
 	}
 	else if (auto* StringProp = CastField<FStrProperty>(Property))
 	{
-		if (SourceValue->IsType<FString>())
+		if (SourceValue.IsType<FString>())
 		{
-			StringProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<FString>());
+			StringProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<FString>());
 			return;
 		}
 	}
 	else if (auto* IntProp = CastField<FIntProperty>(Property))
 	{
-		if (SourceValue->IsType<int32>())
+		if (SourceValue.IsType<int32>())
 		{
-			IntProp->SetPropertyValue(TargetValuePtr, SourceValue->Get<int32>());
+			IntProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<int32>());
 			return;
 		}
 	}
 	else if (auto* Int64Prop = CastField<FInt64Property>(Property))
 	{
-		if (SourceValue->IsType<int64>())
+		if (SourceValue.IsType<int64>())
 		{
-			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<int64>());
+			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue.Get<int64>());
 			return;
 		}
 	}
 	else if (auto* FloatProp = CastField<FFloatProperty>(Property))
 	{
-		if (SourceValue->IsType<float>())
+		if (SourceValue.IsType<float>())
 		{
-			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<float>());
+			FloatProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<float>());
 			return;
 		}
 	}
 	else if (auto* DoubleProp = CastField<FFloatProperty>(Property))
 	{
-		if (SourceValue->IsType<double>())
+		if (SourceValue.IsType<double>())
 		{
-			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue->Get<double>());
+			DoubleProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<double>());
 			return;
 		}
 	}
@@ -417,9 +433,9 @@ void FCleverTapProperties::ApplyPropertyToStruct(
 		if (StructProp->Struct == FCleverTapDate::StaticStruct())
 		{
 			FCleverTapDate* TargetDatePtr = static_cast<FCleverTapDate*>(TargetValuePtr);
-			if (SourceValue->IsType<FCleverTapDate>())
+			if (SourceValue.IsType<FCleverTapDate>())
 			{
-				*TargetDatePtr = SourceValue->Get<FCleverTapDate>();
+				*TargetDatePtr = SourceValue.Get<FCleverTapDate>();
 				return;
 			}
 			else
@@ -436,9 +452,9 @@ void FCleverTapProperties::ApplyPropertyToStruct(
 	{
 		if (FStrProperty* InnerStrProp = CastField<FStrProperty>(ArrayProp->Inner))
 		{
-			if (SourceValue->IsType<TArray<FString>>())
+			if (SourceValue.IsType<TArray<FString>>())
 			{
-				const TArray<FString>& Values = SourceValue->Get<TArray<FString>>();
+				const TArray<FString>& Values = SourceValue.Get<TArray<FString>>();
 				FScriptArrayHelper Helper(ArrayProp, TargetValuePtr);
 				Helper.Resize(Values.Num());
 				for (int32 i = 0; i < Values.Num(); ++i)
