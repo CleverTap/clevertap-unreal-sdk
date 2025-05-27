@@ -3,6 +3,7 @@
 
 #include "CleverTapInstance.h"
 #include "CleverTapLogLevel.h"
+
 #include "CoreMinimal.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "CleverTapSubsystem.generated.h"
@@ -91,7 +92,7 @@ private:
 	 * Get the shared CleverTap API instance. If the instance has not been initialized then
 	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared CleverTap Instance"), Category = "CleverTap|Instance")
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared Instance"), Category = "CleverTap|Instance")
 	UCleverTapInstance* BlueprintSharedInstance();
 
 	void AddRemoteNotificationTokenListener();
@@ -106,4 +107,18 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<uint8> SavedRemoteNotificationToken;
+};
+
+UCLASS()
+class CLEVERTAP_API UCleverTapSubsystemBlueprintLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	 * Get the shared CleverTap API instance. If the instance has not been initialized then
+	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
+	 */
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared CleverTap Instance"), Category = "CleverTap|Instance")
+	static UCleverTapInstance* SharedCleverTapInstance();
 };

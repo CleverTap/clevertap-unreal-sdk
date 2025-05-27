@@ -226,3 +226,10 @@ void UCleverTapSubsystem::OnRegisteredForRemoteNotifications(TArray<uint8> Token
 		FCleverTapPlatformSDK::SetRemoteNotificationToken(*SharedInstanceImpl, SavedRemoteNotificationToken);
 	}
 }
+
+UCleverTapInstance* UCleverTapSubsystemBlueprintLibrary::SharedCleverTapInstance()
+{
+	UCleverTapSubsystem* CleverTapSubsystem = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+	check(CleverTapSubsystem);
+	return &CleverTapSubsystem->SharedInstance();
+}
