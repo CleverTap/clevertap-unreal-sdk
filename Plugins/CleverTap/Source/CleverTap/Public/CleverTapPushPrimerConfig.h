@@ -102,3 +102,25 @@ struct FCleverTapPushPrimerHalfInterstitialConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bFallbackToSettings = false;
 };
+
+/** Asset container for FCleverTapPushPrimerAlertConfig  */
+UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap PushPrimerAlertConfig Asset"))
+class UCleverTapPushPrimerAlertConfigAsset : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FCleverTapPushPrimerAlertConfig Config;
+};
+
+/** Asset container for FCleverTapPushPrimerHalfInterstitialConfig  */
+UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap PushPrimerHalfInterstitialConfig Asset"))
+class UCleverTapPushPrimerHalfInterstitialConfigAsset : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FCleverTapPushPrimerHalfInterstitialConfig Config;
+};
