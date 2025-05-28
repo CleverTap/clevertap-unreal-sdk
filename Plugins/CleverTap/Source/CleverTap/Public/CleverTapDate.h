@@ -15,19 +15,19 @@ struct CLEVERTAP_API FCleverTapDate
 	/**
 	 * Numeric year, such as 2025
 	 */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Year;
 
 	/**
 	 * Numeric month between the values of [1, 12]
 	 */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Month;
 
 	/**
 	 * Numeric day for a given month
 	 */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Day;
 
 	/** Default constructor. */
@@ -52,10 +52,10 @@ struct CLEVERTAP_API FCleverTapDate
 	}
 
 	/** Returns the current date in UTC. */
-	static FCleverTapDate UtcNow() { return FCleverTapDate(FDateTime::UtcNow()); }
+	static FCleverTapDate UtcToday() { return FCleverTapDate(FDateTime::UtcNow()); }
 
 	/** Returns the current date in local time. */
-	static FCleverTapDate Now() { return FCleverTapDate(FDateTime::Now()); }
+	static FCleverTapDate Today() { return FCleverTapDate(FDateTime::Now()); }
 
 	/** Returns an FDateTime set to Midnight on this date. */
 	FDateTime ToDateTime() const { return FDateTime(Year, Month, Day); }
