@@ -96,6 +96,13 @@ public:
 	ECleverTapLogLevel ShippingLogLevel = ECleverTapLogLevel::Off;
 
 	/**
+	 * Android only: Project-relative path to a local copy of clevertap-android-sdk.aar.
+	 * If set, this will override the default published SDK version used by the plugin.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString AndroidLocalCleverTapSdkAarPath;
+
+	/**
 	 * Android Only: When true, automatically integrate Google Firebase Messaging.
 	 * Requires a valid AndroidGoogleServicesJsonPath.
 	 *
