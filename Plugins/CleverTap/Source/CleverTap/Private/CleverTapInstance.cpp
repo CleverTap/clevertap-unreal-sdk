@@ -9,7 +9,7 @@ FString UCleverTapInstance::GetPropertyAsString(const FString& Key, const FStrin
 	auto MaybeValue = GetProperty(Key);
 	if (MaybeValue.IsSet())
 	{
-		return MaybeValue.GetValue().GetDebugString(); // TODO fix this
+		return MaybeValue.GetValue().ToString();
 	}
 	else
 	{

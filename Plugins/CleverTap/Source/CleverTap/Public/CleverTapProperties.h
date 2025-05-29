@@ -75,8 +75,14 @@ struct CLEVERTAP_API FCleverTapPropertyValue
 	/** Returns the Index of the currently loaded type; as per IndexOfType<T>() */
 	SIZE_T GetIndex() const { return Value.GetIndex(); }
 
+	/** Returns the Name of the currently loaded type as a string (intended for logging). */
+	FString GetTypeName() const;
+
+	/** Returns the value converted to a string. */
+	FString ToString() const;
+
 	/** Returns a debug string describing the property's value and type. */
-	FString GetDebugString() const;
+	FString ToDebugString() const;
 
 private:
 	VariantType Value;

@@ -22,7 +22,7 @@ FString UCleverTapPropertiesBlueprintLibrary::GetPropertyAsString(
 	}
 	else
 	{
-		return Value->GetDebugString(); // todo real ToString() cleanup support
+		return Value->ToString();
 	}
 }
 
