@@ -188,7 +188,7 @@ UCleverTapInstance* UCleverTapSubsystem::BlueprintSharedInstance()
 {
 	if (IsSharedInstanceInitialized() == false)
 	{
-		InitializeSharedInstance();
+		return &InitializeSharedInstance();
 	}
 	return SharedInstanceImpl;
 }
