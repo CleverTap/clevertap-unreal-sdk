@@ -33,9 +33,22 @@ bool UCleverTapInstance::GetBoolProperty(const FString& Key, bool DefaultValue)
 FCleverTapDate UCleverTapInstance::GetDateProperty(const FString& Key, const FCleverTapDate& DefaultValue)
 {
 	auto MaybeValue = GetProperty(Key);
-	if (MaybeValue.IsSet() && MaybeValue.GetValue().IsType<FCleverTapDate>())
+	if (MaybeValue.IsSet() == false)
+	{
+		return DefaultValue;
+	}
+
+	if (MaybeValue.GetValue().IsType<FCleverTapDate>())
 	{
 		return MaybeValue.GetValue().Get<FCleverTapDate>();
+	}
+	else if (MaybeValue.GetValue().IsType<int64>())
+	{
+		return FCleverTapDate::MakeFromUnixTimestamp(MaybeValue.GetValue().Get<int64>());
+	}
+	else if (MaybeValue.GetValue().IsType<int32>())
+	{
+		return FCleverTapDate::MakeFromUnixTimestamp(int64(MaybeValue.GetValue().Get<int32>()));
 	}
 	else
 	{
@@ -136,6 +149,17 @@ bool UCleverTapInstance::HasDateProperty(const FString& Key)
 {
 	auto MaybeValue = GetProperty(Key);
 	return MaybeValue.IsSet() && MaybeValue.GetValue().IsType<FCleverTapDate>();
+}
+
+bool UCleverTapInstance::HasDateCompatibleProperty(const FString& Key)
+{
+	auto MaybeValue = GetProperty(Key);
+	if (MaybeValue.IsSet() == false)
+	{
+		return false;
+	}
+	const auto& Value = MaybeValue.GetValue();
+	return Value.IsType<FCleverTapDate>() || Value.IsType<int64>() || Value.IsType<int32>();
 }
 
 bool UCleverTapInstance::HasDoubleProperty(const FString& Key)

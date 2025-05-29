@@ -44,13 +44,25 @@ FCleverTapDate UCleverTapPropertiesBlueprintLibrary::GetDateProperty(
 	const FCleverTapProperties& Properties, const FString& Key, const FCleverTapDate& DefaultValue)
 {
 	auto* Value = Properties.Map.Find(Key);
-	if (Value == nullptr || Value->IsType<FCleverTapDate>() == false)
+	if (Value == nullptr)
 	{
 		return DefaultValue;
 	}
-	else
+	if (Value->IsType<FCleverTapDate>())
 	{
 		return Value->Get<FCleverTapDate>();
+	}
+	else if (Value->IsType<int64>())
+	{
+		return FCleverTapDate::MakeFromUnixTimestamp(Value->Get<int64>());
+	}
+	else if (Value->IsType<int32>())
+	{
+		return FCleverTapDate::MakeFromUnixTimestamp(int64(Value->Get<int32>()));
+	}
+	else
+	{
+		return DefaultValue;
 	}
 }
 
@@ -125,6 +137,13 @@ bool UCleverTapPropertiesBlueprintLibrary::HasDateProperty(const FCleverTapPrope
 {
 	auto* Value = Properties.Map.Find(Key);
 	return Value && Value->IsType<FCleverTapDate>();
+}
+
+bool UCleverTapPropertiesBlueprintLibrary::HasDateCompatibleProperty(
+	const FCleverTapProperties& Properties, const FString& Key)
+{
+	auto* Value = Properties.Map.Find(Key);
+	return Value && (Value->IsType<FCleverTapDate>() || Value->IsType<int64>() || Value->IsType<int32>());
 }
 
 bool UCleverTapPropertiesBlueprintLibrary::HasDoubleProperty(const FCleverTapProperties& Properties, const FString& Key)

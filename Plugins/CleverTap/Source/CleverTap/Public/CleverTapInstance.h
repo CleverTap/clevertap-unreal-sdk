@@ -149,10 +149,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	bool GetBoolProperty(const FString& Key, bool DefaultValue);
 
-	/** Returns the value of a Date property, or DefaultValue if the property is missing or not a Date.
+	/** Returns the value of a Date property, or DefaultValue if the property is missing, not a Date, or not convertible
+	 *  to a date.
 	 *
-	 *  TODO: perhaps support getting int properties as dates, doing the unix conversion, to hide that the backend is
-	 *        storing dates as ints, forggeting the type?
+	 * Note: If the property holds an int32 or an int64 it will be treated as a unix timestamp and converted to
+	 *       an FCleverTapDate. See HasDateCompatibleProperty().
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	FCleverTapDate GetDateProperty(const FString& Key, const FCleverTapDate& DefaultValue);
@@ -209,6 +210,13 @@ public:
 	/** Returns true if the user profile contains a Date property with the given Key. */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	bool HasDateProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a date or a value that can be converted to a date with the given Key.
+	 *
+	 *  int32 and int64 values are treated as Unix timestamps & considered date compatible.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDateCompatibleProperty(const FString& Key);
 
 	/** Returns true if the user profile contains a 64-bit Double property with the given Key.
 	 *

@@ -26,7 +26,11 @@ class UCleverTapPropertiesBlueprintLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	static bool GetBoolProperty(const FCleverTapProperties& Properties, const FString& Key, bool DefaultValue);
 
-	/** Returns the value of a Date property, or DefaultValue if the property is missing or not a Date. */
+	/** Returns the value of a Date property, or DefaultValue if the property is missing or not convertible to a Date.
+	 *
+	 * Note: If the property holds an int32 or an int64 it will be treated as a unix timestamp and converted to
+	 *       an FCleverTapDate. See HasDateCompatibleProperty().
+	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	static FCleverTapDate GetDateProperty(
 		const FCleverTapProperties& Properties, const FString& Key, const FCleverTapDate& DefaultValue);
@@ -70,6 +74,13 @@ class UCleverTapPropertiesBlueprintLibrary : public UBlueprintFunctionLibrary
 	/** Returns true if Properties contains a Date property with the given Key. */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
 	static bool HasDateProperty(const FCleverTapProperties& Properties, const FString& Key);
+
+	/** Returns true if Properties contains this key with a date or a value that can be converted to a date.
+	 *
+	 *  int32 and int64 values are treated as Unix timestamps & considered date compatible.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	static bool HasDateCompatibleProperty(const FCleverTapProperties& Properties, const FString& Key);
 
 	/** Returns true if Properties contains a 64-bit Double property with the given Key.
 	 *
