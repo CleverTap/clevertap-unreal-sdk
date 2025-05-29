@@ -123,7 +123,6 @@ jclass LoadClass(JNIEnv* Env, const char* ClassPath)
 		return nullptr;
 	}
 
-	// todo there has to be a simpler way to do this!
 	jobject Activity = FAndroidApplication::GetGameActivityThis();
 	jclass ActivityClass = Env->GetObjectClass(Activity);
 	if (HandleExceptionOrError(Env, !ActivityClass, TEXT("GetGameActivityThis() failed")))
