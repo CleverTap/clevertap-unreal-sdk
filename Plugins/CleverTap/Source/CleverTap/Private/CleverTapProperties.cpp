@@ -489,6 +489,7 @@ void FCleverTapProperties::LoadFromStruct(const UStruct* StructDef, const void* 
 			}
 			else
 			{
+				// unsupported source StructProperty struct type
 				UE_LOG(LogCleverTap, Warning,
 					TEXT(
 						"FCleverTapProperties::LoadFromStruct: Source StructProperty \"%s\" has unsupported struct type %s"),
@@ -512,6 +513,7 @@ void FCleverTapProperties::LoadFromStruct(const UStruct* StructDef, const void* 
 			}
 			else
 			{
+				// unsupported source property array element type
 				UE_LOG(LogCleverTap, Warning,
 					TEXT(
 						"FCleverTapProperties::LoadFromStruct: Source ArrayProperty \"%s\" has unsupported element type %s"),
@@ -520,6 +522,7 @@ void FCleverTapProperties::LoadFromStruct(const UStruct* StructDef, const void* 
 		}
 		else
 		{
+			// unsupported source property type
 			UE_LOG(LogCleverTap, Warning,
 				TEXT("FCleverTapProperties::LoadFromStruct: Source Property \"%s\" has unsupported type %s"), *Name,
 				*internal::GetPropertyTypeName(Property));
@@ -538,7 +541,7 @@ void FCleverTapProperties::ApplyToStruct(const UStruct* StructDef, void* TargetS
 	}
 }
 
-void FCleverTapProperties::ApplyPropertyToStruct(
+bool FCleverTapProperties::ApplyPropertyToStruct(
 	const UStruct* StructDef, FProperty* Property, void* TargetStructInstance) const
 {
 	check(StructDef);
@@ -548,20 +551,20 @@ void FCleverTapProperties::ApplyPropertyToStruct(
 	if (ShouldSkipProperty(Property))
 	{
 		// this property has been excluded from load/apply
-		return;
+		return false;
 	}
 
 	const FCleverTapPropertyValue* SourceValue = Map.Find(Property->GetName());
 	if (!SourceValue)
 	{
 		// we dont have an entry in the map for this property
-		return;
+		return false;
 	}
 
-	ApplyCleverTapPropertyValueToStruct(*SourceValue, StructDef, Property, TargetStructInstance);
+	return ApplyCleverTapPropertyValueToStruct(*SourceValue, StructDef, Property, TargetStructInstance);
 }
 
-void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceValue, const UStruct* StructDef,
+bool ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceValue, const UStruct* StructDef,
 	FProperty* Property, void* TargetStructInstance)
 {
 	check(StructDef);
@@ -571,7 +574,7 @@ void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceVa
 	if (FCleverTapProperties::ShouldSkipProperty(Property))
 	{
 		// this property has been excluded from load/apply
-		return;
+		return false;
 	}
 
 	// The target Value
@@ -583,48 +586,51 @@ void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceVa
 		if (SourceValue.IsType<bool>())
 		{
 			BoolProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<bool>());
-			return;
+			return true;
 		}
+		// fall through to type-mistmatch warning at bottom
 	}
 	else if (auto* StringProp = CastField<FStrProperty>(Property))
 	{
-		if (SourceValue.IsType<FString>())
-		{
-			StringProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<FString>());
-			return;
-		}
+		// always convert all value types to string when required
+		StringProp->SetPropertyValue(TargetValuePtr, SourceValue.ToString());
+		return true;
 	}
 	else if (auto* IntProp = CastField<FIntProperty>(Property))
 	{
 		if (SourceValue.IsType<int32>())
 		{
 			IntProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<int32>());
-			return;
+			return true;
 		}
+		// fall through to type-mistmatch warning at bottom
 	}
 	else if (auto* Int64Prop = CastField<FInt64Property>(Property))
 	{
 		if (SourceValue.IsType<int64>())
 		{
 			Int64Prop->SetPropertyValue(TargetValuePtr, SourceValue.Get<int64>());
-			return;
+			return true;
 		}
+		// fall through to type-mistmatch warning at bottom
 	}
 	else if (auto* FloatProp = CastField<FFloatProperty>(Property))
 	{
 		if (SourceValue.IsType<float>())
 		{
 			FloatProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<float>());
-			return;
+			return true;
 		}
+		// fall through to type-mistmatch warning at bottom
 	}
-	else if (auto* DoubleProp = CastField<FFloatProperty>(Property))
+	else if (auto* DoubleProp = CastField<FDoubleProperty>(Property))
 	{
 		if (SourceValue.IsType<double>())
 		{
 			DoubleProp->SetPropertyValue(TargetValuePtr, SourceValue.Get<double>());
-			return;
+			return true;
 		}
+		// fall through to type-mistmatch warning at bottom
 	}
 	else if (FStructProperty* StructProp = CastField<FStructProperty>(Property))
 	{
@@ -634,16 +640,28 @@ void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceVa
 			if (SourceValue.IsType<FCleverTapDate>())
 			{
 				*TargetDatePtr = SourceValue.Get<FCleverTapDate>();
-				return;
+				return true;
 			}
-			else
+			else if (SourceValue.IsType<int64>())
 			{
-				// todo support setting a date from an int here
+				*TargetDatePtr = FCleverTapDate::MakeFromUnixTimestamp(SourceValue.Get<int64>());
+				return true;
 			}
+			else if (SourceValue.IsType<int32>())
+			{
+				*TargetDatePtr = FCleverTapDate::MakeFromUnixTimestamp(int64(SourceValue.Get<int32>()));
+				return true;
+			}
+			// fall through to type-mistmatch warning at bottom
 		}
 		else
 		{
-			// todo: log unsupported struct property type
+			// unsupported struct property type
+			UE_LOG(LogCleverTap, Warning,
+				TEXT(
+					"ApplyCleverTapPropertyValueToStruct: Target Struct Property \"%s\" has unsupported value type %s."),
+				*Property->GetName(), *internal::GetPropertyTypeName(StructProp));
+			return false;
 		}
 	}
 	else if (FArrayProperty* ArrayProp = CastField<FArrayProperty>(Property))
@@ -659,22 +677,36 @@ void ApplyCleverTapPropertyValueToStruct(const FCleverTapPropertyValue& SourceVa
 				{
 					InnerStrProp->SetPropertyValue(Helper.GetRawPtr(i), Values[i]);
 				}
+				return true;
 			}
 			else
 			{
-				// todo not a string; should we convert to string here?
+				// source is not a string array; fall through to the unsupported type mistmatch
+				// (we could potentially convert all array elements to strings but its probably not that useful)
 			}
 		}
 		else
 		{
-			// todo: log target property has unsupported element type
+			// unsupported array element type in target array property
+			UE_LOG(LogCleverTap, Warning,
+				TEXT(
+					"ApplyCleverTapPropertyValueToStruct: Target Array Property \"%s\" has unsupported element type %s."),
+				*Property->GetName(), *internal::GetPropertyTypeName(ArrayProp->Inner));
+			return false;
 		}
 	}
 	else
 	{
-		// todo: log unsupported property type
-		return;
+		// unsupported property type
+		UE_LOG(LogCleverTap, Warning,
+			TEXT("ApplyCleverTapPropertyValueToStruct: Target property \"%s\" has unsupported type %s."),
+			*Property->GetName(), *internal::GetPropertyTypeName(Property));
+		return false;
 	}
 
-	// todo: log unsupported type mismatch
+	// unsupported type mismatch
+	UE_LOG(LogCleverTap, Warning,
+		TEXT("ApplyCleverTapPropertyValueToStruct: Setting type %s on target %s property \"%s\" is not supported."),
+		*SourceValue.GetTypeName(), *internal::GetPropertyTypeName(Property), *Property->GetName());
+	return false;
 }

@@ -140,12 +140,16 @@ private:
 	/** Apply properties to a generic UStruct */
 	void ApplyToStruct(const UStruct* StructDef, void* TargetStructInstance) const;
 
-	/** Set the given Property on TargetStructInstance if this map has a value for that key. */
-	void ApplyPropertyToStruct(const UStruct* StructDef, FProperty* Prop, void* TargetStructInstance) const;
+	/** Set the given Property on TargetStructInstance if this map has a compatible value for that key.
+	 *  Returns true if a value was applied.
+	 */
+	bool ApplyPropertyToStruct(const UStruct* StructDef, FProperty* Prop, void* TargetStructInstance) const;
 };
 
-/** Sets the given Value into the Property on TargetStructInstance described by StructDef */
-void ApplyCleverTapPropertyValueToStruct(
+/** Sets the given Value into the Property on TargetStructInstance described by StructDef.
+ *  Returns true if a value was applied.
+ */
+bool ApplyCleverTapPropertyValueToStruct(
 	const FCleverTapPropertyValue& Value, const UStruct* StructDef, FProperty* Property, void* TargetStructInstance);
 
 /** Returns a debug string describing the property's value and type. */
