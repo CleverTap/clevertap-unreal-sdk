@@ -6,8 +6,10 @@
 #include "CleverTapLog.h"
 #include "CleverTapPlatformSDK.h"
 #include "CleverTapUtilities.h"
-#include "Misc/CoreDelegates.h"
 #include "NullCleverTapInstance.h"
+
+#include "Misc/CoreDelegates.h"
+#include "UnrealEngine.h"
 #include "UObject/UObjectBase.h"
 
 //==================================================================================================

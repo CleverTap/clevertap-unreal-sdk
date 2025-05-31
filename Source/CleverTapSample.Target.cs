@@ -8,10 +8,16 @@ public class CleverTapSampleTarget : TargetRules
 	public CleverTapSampleTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.AddRange( new string[] { "CleverTapSample" } );
 
-		BuildEnvironment = TargetBuildEnvironment.Unique;
 		bUseLoggingInShipping = true;
+
+#if UE_5_0_OR_LATER
+		DefaultBuildSettings = BuildSettingsVersion.V5;
+		CppStandard = CppStandardVersion.Cpp20;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+#else	
+		DefaultBuildSettings = BuildSettingsVersion.V2;
+#endif
 	}
 }

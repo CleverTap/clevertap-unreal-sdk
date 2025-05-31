@@ -5,6 +5,9 @@
 #include "CleverTapSubsystem.h"
 #include "CleverTapUtilities.h"
 
+#include "UnrealEngine.h"
+
+
 UNullCleverTapInstance* UNullCleverTapInstance::Create()
 {
 	UNullCleverTapInstance* Instance =

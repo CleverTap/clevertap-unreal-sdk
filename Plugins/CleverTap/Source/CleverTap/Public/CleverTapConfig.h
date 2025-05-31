@@ -257,7 +257,21 @@ public:
 	 * See https://developer.clevertap.com/docs/android-in-app-notifications#exclude-in-app-from-android-activity
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
-	FString AndroidSuspendInAppForActivities = TEXT("com.epicgames.ue4.SplashActivity");
+	FString AndroidSuspendInAppForActivities = DefaultAndroidUnrealSplashActivity();
+
+	/** Android Only: Returns the engine-version-specific java class Unreal uses for its Splash activity
+	 */
+	static FString DefaultAndroidUnrealSplashActivity();
+
+	/** Android Only: The SplashTheme name. Defaults to the engine-version-specific standard.
+	 *                 Used for the OpenUrlActivity.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "Android")
+	FString AndroidSplashTheme = DefaultAndroidUnrealSplashTheme();
+
+	/** Android Only: Returns the engine-version specific resource name of the splash theme.
+	 */
+	static FString DefaultAndroidUnrealSplashTheme();
 
 	/**
 	 * iOS Only: If true then show push notifications as a badge and in the notification center while the app is in the
