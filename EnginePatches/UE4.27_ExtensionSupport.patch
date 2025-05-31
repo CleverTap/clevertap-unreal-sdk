@@ -1,0 +1,852 @@
+diff -ur a/Engine/Source/Programs/AutomationTool/IOS/IOSPlatform.Automation.cs b/Engine/Source/Programs/AutomationTool/IOS/IOSPlatform.Automation.cs
+--- a/Engine/Source/Programs/AutomationTool/IOS/IOSPlatform.Automation.cs	2025-05-29 13:48:44
++++ b/Engine/Source/Programs/AutomationTool/IOS/IOSPlatform.Automation.cs	2025-05-29 13:48:53
+@@ -706,26 +706,28 @@
+ 			{
+ 				Arguments += " CODE_SIGN_IDENTITY=" + (Distribution ? "\"iPhone Distribution\"" : "\"iPhone Developer\"");
+ 			}
+-			if (!string.IsNullOrEmpty(Provision))
+-			{
+-				// read the provision to get the UUID
+-				if (File.Exists(Environment.GetEnvironmentVariable("HOME") + "/Library/MobileDevice/Provisioning Profiles/" + Provision))
+-				{
+-					string UUID = "";
+-					string AllText = File.ReadAllText(Environment.GetEnvironmentVariable("HOME") + "/Library/MobileDevice/Provisioning Profiles/" + Provision);
+-					int idx = AllText.IndexOf("<key>UUID</key>");
+-					if (idx > 0)
+-					{
+-						idx = AllText.IndexOf("<string>", idx);
+-						if (idx > 0)
+-						{
+-							idx += "<string>".Length;
+-							UUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
+-							Arguments += " PROVISIONING_PROFILE_SPECIFIER=" + UUID;
+-						}
+-					}
+-				}
+-			}
++			// [CleverTap] Begin
++			// if (!string.IsNullOrEmpty(Provision))
++			// {
++			// 	// read the provision to get the UUID
++			// 	if (File.Exists(Environment.GetEnvironmentVariable("HOME") + "/Library/MobileDevice/Provisioning Profiles/" + Provision))
++			// 	{
++			// 		string UUID = "";
++			// 		string AllText = File.ReadAllText(Environment.GetEnvironmentVariable("HOME") + "/Library/MobileDevice/Provisioning Profiles/" + Provision);
++			// 		int idx = AllText.IndexOf("<key>UUID</key>");
++			// 		if (idx > 0)
++			// 		{
++			// 			idx = AllText.IndexOf("<string>", idx);
++			// 			if (idx > 0)
++			// 			{
++			// 				idx += "<string>".Length;
++			// 				UUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
++			// 				Arguments += " PROVISIONING_PROFILE_SPECIFIER=" + UUID;
++			// 			}
++			// 		}
++			// 	}
++			// }
++			// [CleverTap] End
+ 		}
+ 		IProcessResult Result = Run("/usr/bin/env", Arguments, null, ERunOptions.Default);
+ 		if (bWasGenerated)
+diff -ur a/Engine/Source/Programs/UnrealBuildTool/Platform/IOS/UEBuildIOS.cs b/Engine/Source/Programs/UnrealBuildTool/Platform/IOS/UEBuildIOS.cs
+--- a/Engine/Source/Programs/UnrealBuildTool/Platform/IOS/UEBuildIOS.cs	2025-05-29 13:47:36
++++ b/Engine/Source/Programs/UnrealBuildTool/Platform/IOS/UEBuildIOS.cs	2025-05-29 13:47:49
+@@ -431,6 +431,138 @@
+ 		{
+ 		}
+ 
++		// [CleverTap] Begin
++		public static bool GetProvisioningInfoFromFile(FileReference ProvisionFile, out string ProvisionUUID, out string TeamUUID, out string BundleIdentifier, out string ProvisionName)
++		{
++			ProvisionUUID = null;
++			TeamUUID = null;
++			BundleIdentifier = null;
++			ProvisionName = null;
++
++			if(ProvisionFile == null)
++			{
++				return false;
++			}
++
++			if(!FileReference.Exists(ProvisionFile))
++			{
++				Log.TraceLog("Selected mobile provision {1} was not found. Please ensure you have a compatible provision installed.", ProvisionFile);
++				return false;
++			}
++
++			byte[] AllBytes = FileReference.ReadAllBytes(ProvisionFile);
++
++			uint StartIndex = (uint)AllBytes.Length;
++			uint EndIndex = (uint)AllBytes.Length;
++
++			for (uint i = 0; i + 4 < AllBytes.Length; i++)
++			{
++				if (AllBytes[i] == '<' && AllBytes[i+1] == '?' && AllBytes[i+ 2] == 'x' && AllBytes[i+ 3] == 'm' && AllBytes[i+ 4] == 'l')
++				{
++					StartIndex = i;
++					break;
++				}
++			}
++
++			if (StartIndex < AllBytes.Length)
++			{
++				for (uint i = StartIndex; i + 7 < AllBytes.Length; i++)
++				{
++					if(AllBytes[i] == '<' && AllBytes[i + 1] == '/' && AllBytes[i + 2] == 'p' && AllBytes[i + 3] == 'l' && AllBytes[i + 4] == 'i' && AllBytes[i + 5] == 's' && AllBytes[i + 6] == 't' && AllBytes[i + 7] == '>')
++					{
++						EndIndex = i+7;
++						break;
++					}
++				}
++			}
++
++			if (StartIndex < AllBytes.Length && EndIndex < AllBytes.Length)
++			{
++				byte[] TextBytes = new byte[EndIndex - StartIndex];
++				Buffer.BlockCopy(AllBytes, (int)StartIndex, TextBytes, 0, (int)(EndIndex - StartIndex));
++
++				string AllText = Encoding.UTF8.GetString(TextBytes);
++				int idx = AllText.IndexOf("<key>UUID</key>");
++				if (idx > 0)
++				{
++					idx = AllText.IndexOf("<string>", idx);
++					if (idx > 0)
++					{
++						idx += "<string>".Length;
++						ProvisionUUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
++					}
++				}
++				idx = AllText.IndexOf("<key>com.apple.developer.team-identifier</key>");
++				if (idx > 0)
++				{
++					idx = AllText.IndexOf("<string>", idx);
++					if (idx > 0)
++					{
++						idx += "<string>".Length;
++						TeamUUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
++					}
++				}
++				idx = AllText.IndexOf("<key>application-identifier</key>");
++				if (idx > 0)
++				{
++					idx = AllText.IndexOf("<string>", idx);
++					if (idx > 0)
++					{
++						idx += "<string>".Length;
++						String FullID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
++						BundleIdentifier = FullID.Substring(FullID.IndexOf('.') + 1);
++					}
++				}
++				idx = AllText.IndexOf("<key>Name</key>");
++				if (idx > 0)
++				{
++					idx = AllText.IndexOf("<string>", idx);
++					if (idx > 0)
++					{
++						idx += "<string>".Length;
++						ProvisionName = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
++					}
++				}
++			}
++
++			return true;
++		}
++
++		public static bool GetProvisioningInfo(string ProvisionProfile, out string ProvisionUUID, out string TeamUUID, out string BundleIdentifier, out string ProvisionName)
++		{
++			if(string.IsNullOrEmpty(ProvisionProfile))
++			{
++				ProvisionUUID = null;
++				TeamUUID = null;
++				BundleIdentifier = null;
++				ProvisionName = null;
++				return false;
++			}
++
++			DirectoryReference MobileProvisionDir;
++			if(BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Mac)
++			{
++				MobileProvisionDir = DirectoryReference.Combine(new DirectoryReference(Environment.GetEnvironmentVariable("HOME")), "Library", "MobileDevice", "Provisioning Profiles");
++			}
++			else
++			{
++				MobileProvisionDir = DirectoryReference.Combine(DirectoryReference.GetSpecialFolder(Environment.SpecialFolder.LocalApplicationData), "Apple Computer", "MobileDevice", "Provisioning Profiles");
++			}
++
++			FileReference PossibleMobileProvisionFile = FileReference.Combine(MobileProvisionDir, ProvisionProfile);
++			if(!FileReference.Exists(PossibleMobileProvisionFile))
++			{
++				ProvisionUUID = null;
++				TeamUUID = null;
++				BundleIdentifier = null;
++				ProvisionName = null;
++				return false;
++			}
++
++			return GetProvisioningInfoFromFile(PossibleMobileProvisionFile, out ProvisionUUID, out TeamUUID, out BundleIdentifier, out ProvisionName);
++		}
++		// [CleverTap] End
++
+ 		protected IOSProvisioningData(IOSProjectSettings ProjectSettings, bool bIsTVOS, bool bForDistribtion)
+ 		{
+             SigningCertificate = ProjectSettings.SigningCertificate;
+@@ -528,98 +660,15 @@
+             SigningCertificate = SigningCertificate.Replace("\"", "");
+ 
+             // read the provision to get the UUID
+-			if(MobileProvisionFile == null)
++			// [CleverTap] Begin
++			GetProvisioningInfoFromFile(MobileProvisionFile, out MobileProvisionUUID, out TeamUUID, out BundleIdentifier, out MobileProvisionName);
++			if (string.IsNullOrEmpty(MobileProvisionUUID) || string.IsNullOrEmpty(TeamUUID))
+ 			{
+-				Log.TraceLog("No matching provision file was discovered for {0}. Please ensure you have a compatible provision installed.", ProjectFile);
++				MobileProvision = null;
++				SigningCertificate = null;
++				Log.TraceLog("Failed to parse the mobile provisioning profile.");
+ 			}
+-			else if(!FileReference.Exists(MobileProvisionFile))
+-			{
+-				Log.TraceLog("Selected mobile provision for {0} ({1}) was not found. Please ensure you have a compatible provision installed.", ProjectFile, MobileProvisionFile);
+-			}
+-			else
+-            {
+-				byte[] AllBytes = FileReference.ReadAllBytes(MobileProvisionFile);
+-
+-				uint StartIndex = (uint)AllBytes.Length;
+-				uint EndIndex = (uint)AllBytes.Length;
+-
+-				for (uint i = 0; i + 4 < AllBytes.Length; i++)
+-				{
+-					if (AllBytes[i] == '<' && AllBytes[i+1] == '?' && AllBytes[i+ 2] == 'x' && AllBytes[i+ 3] == 'm' && AllBytes[i+ 4] == 'l')
+-					{
+-						StartIndex = i;
+-						break;
+-					}
+-				}
+-
+-				if (StartIndex < AllBytes.Length)
+-				{
+-					for (uint i = StartIndex; i + 7 < AllBytes.Length; i++)
+-					{
+-						if(AllBytes[i] == '<' && AllBytes[i + 1] == '/' && AllBytes[i + 2] == 'p' && AllBytes[i + 3] == 'l' && AllBytes[i + 4] == 'i' && AllBytes[i + 5] == 's' && AllBytes[i + 6] == 't' && AllBytes[i + 7] == '>')
+-						{
+-							EndIndex = i+7;
+-							break;
+-						}
+-					}
+-				}
+-
+-				if (StartIndex < AllBytes.Length && EndIndex < AllBytes.Length)
+-				{
+-					byte[] TextBytes = new byte[EndIndex - StartIndex];
+-					Buffer.BlockCopy(AllBytes, (int)StartIndex, TextBytes, 0, (int)(EndIndex - StartIndex));
+-
+-					string AllText = Encoding.UTF8.GetString(TextBytes);
+-					int idx = AllText.IndexOf("<key>UUID</key>");
+-					if (idx > 0)
+-					{
+-						idx = AllText.IndexOf("<string>", idx);
+-						if (idx > 0)
+-						{
+-							idx += "<string>".Length;
+-							MobileProvisionUUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
+-						}
+-					}
+-					idx = AllText.IndexOf("<key>com.apple.developer.team-identifier</key>");
+-					if (idx > 0)
+-					{
+-						idx = AllText.IndexOf("<string>", idx);
+-						if (idx > 0)
+-						{
+-							idx += "<string>".Length;
+-							TeamUUID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
+-						}
+-					}
+-					idx = AllText.IndexOf("<key>application-identifier</key>");
+-					if (idx > 0)
+-					{
+-						idx = AllText.IndexOf("<string>", idx);
+-						if (idx > 0)
+-						{
+-							idx += "<string>".Length;
+-							String FullID = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
+-							BundleIdentifier = FullID.Substring(FullID.IndexOf('.') + 1);
+-						}
+-					}
+-					idx = AllText.IndexOf("<key>Name</key>");
+-                    if (idx > 0)
+-                    {
+-                        idx = AllText.IndexOf("<string>", idx);
+-                        if (idx > 0)
+-                        {
+-                            idx += "<string>".Length;
+-                            MobileProvisionName = AllText.Substring(idx, AllText.IndexOf("</string>", idx) - idx);
+-                        }
+-                    }
+-				}
+-
+-				if (string.IsNullOrEmpty(MobileProvisionUUID) || string.IsNullOrEmpty(TeamUUID))
+-				{
+-					MobileProvision = null;
+-					SigningCertificate = null;
+-					Log.TraceLog("Failed to parse the mobile provisioning profile.");
+-				}
+-            }
++			// [CleverTap] End
+ 		}
+ 
+         void IPPDataReceivedHandler(Object Sender, DataReceivedEventArgs Line)
+diff -ur a/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProject.cs b/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProject.cs
+--- a/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProject.cs	2025-05-29 13:46:06
++++ b/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProject.cs	2025-05-29 13:46:23
+@@ -107,6 +107,10 @@
+ 			ProductGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
+ 			ResourceBuildPhaseGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
+ 			ConfigListGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++			// [CleverTap] Begin
++			FileSyncRootGroupGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++			SourcesBuildPhaseGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++			// [CleverTap] End
+ 			AllConfigs = new Dictionary<string, XcodeBuildConfig>();
+ 		}
+ 
+@@ -117,6 +121,10 @@
+ 		public string ProductGuid;
+ 		public string ResourceBuildPhaseGuid;
+ 		public string ConfigListGuid;
++		// [CleverTap] Begin
++		public string FileSyncRootGroupGuid;
++		public string SourcesBuildPhaseGuid;
++		// [CleverTap] End
+ 		public Dictionary<string, XcodeBuildConfig> AllConfigs;
+ 
+ 		public string ConfigurationContents;
+@@ -361,124 +369,251 @@
+ 			PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; explicitFileType = {2}; path = {1}; sourceTree = BUILT_PRODUCTS_DIR; }};" + ProjectFileGenerator.NewLine, TargetAppGuid, TargetName, bIsAppBundle ? "wrapper.application" : "\"compiled.mach-o.executable\""));
+ 		}
+ 
+-		private void GenerateSectionsWithExtensions(StringBuilder PBXBuildFileSection, StringBuilder PBXFileReferenceSection, StringBuilder PBXCopyFilesBuildPhaseSection, StringBuilder PBXResourcesBuildPhaseSection,
+-													List<XcodeExtensionInfo> AllExtensions, FileReference UProjectPath, List<XcodeBuildConfig> BuildConfigs)
++		// [CleverTap] Begin
++		private void GenerateSectionsWithExtension(StringBuilder PBXBuildFileSection, StringBuilder PBXFileReferenceSection, StringBuilder PBXFileSystemSynchronizedBuildFileExceptionSetSection, StringBuilder PBXFileSystemSynchronizedRootGroupSection, StringBuilder PBXCopyFilesBuildPhaseSection, StringBuilder PBXResourcesBuildPhaseSection,
++													List<XcodeExtensionInfo> AllExtensions, FileReference UProjectPath, List<XcodeBuildConfig> BuildConfigs, string ExtensionName, string ExtensionPath)
+ 		{
+-			if (UProjectPath != null)
++			Console.WriteLine("  Project {0} has Extension {1}!", UProjectPath, ExtensionPath);
++
++			// assume each Extension in here will create a resulting Extension.appex
++			string Extension = ExtensionName + ".appex";
++
++			string ExtensionGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++			string FileSyncExceptionGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++
++			// make an extension info object
++			XcodeExtensionInfo ExtensionInfo = new XcodeExtensionInfo(ExtensionName);
++			AllExtensions.Add(ExtensionInfo);
++
++			PBXBuildFileSection.Append(string.Format("\t\t{0} /* {1} in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {2} /* {1} */; settings = {{ATTRIBUTES = (RemoveHeadersOnCopy, ); }}; }};" + ProjectFileGenerator.NewLine,
++				ExtensionGuid,
++				Extension,
++				ExtensionInfo.ProductGuid));
++
++			PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; explicitFileType = \"wrapper.app-extension\"; includeInIndex = 0; path = \"{1}\"; sourceTree = BUILT_PRODUCTS_DIR; }};" + ProjectFileGenerator.NewLine,
++				ExtensionInfo.ProductGuid,
++				Extension));
++
+ 			{
+-				string ProjectExtensionsDir = Path.Combine(Path.GetDirectoryName(UProjectPath.FullName), "Build/IOS/Extensions");
+-				//string ProjectIntermediateDir = Path.Combine(Path.GetDirectoryName(UProjectPath.FullName), "Intermediate/IOS/Extensions");
++				StringBuilder TargetContent = PBXFileSystemSynchronizedBuildFileExceptionSetSection;
++				TargetContent.Append(string.Format("\t\t{0} /* Exceptions for \"{1}\" folder in \"{2}\" target */ = {{" + ProjectFileGenerator.NewLine,
++					FileSyncExceptionGuid,
++					ExtensionPath,
++					ExtensionName));
++				TargetContent.Append("\t\t\tisa = PBXFileSystemSynchronizedBuildFileExceptionSet;" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\tmembershipExceptions = (" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\t\tInfo.plist," + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++				TargetContent.Append(string.Format("\t\t\ttarget = {0} /* {1} */;" + ProjectFileGenerator.NewLine,
++					ExtensionInfo.TargetGuid,
++					ExtensionName));
++				TargetContent.Append("\t\t};" + ProjectFileGenerator.NewLine);
++			}
+ 
+-				if (Directory.Exists(ProjectExtensionsDir))
++			{
++				StringBuilder TargetContent = PBXFileSystemSynchronizedRootGroupSection;
++				TargetContent.Append(string.Format("\t\t{0} /* {1} */ = {{" + ProjectFileGenerator.NewLine,
++					ExtensionInfo.FileSyncRootGroupGuid,
++					ExtensionName));
++				TargetContent.Append("\t\t\tisa = PBXFileSystemSynchronizedRootGroup;" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\texceptions = (" + ProjectFileGenerator.NewLine);
++				TargetContent.Append(string.Format("\t\t\t\t{0} /* Exceptions for \"{1}\" folder in \"{2}\" target */," + ProjectFileGenerator.NewLine,
++					FileSyncExceptionGuid,
++					ExtensionPath,
++					ExtensionName));
++				TargetContent.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\tpath = " + ExtensionPath + ";" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t\tsourceTree = \"<group>\";" + ProjectFileGenerator.NewLine);
++				TargetContent.Append("\t\t};" + ProjectFileGenerator.NewLine);
++			}
++
++			PBXCopyFilesBuildPhaseSection.Append(string.Format("\t\t\t\t{0} /* {1} in Embed App Extensions */," + ProjectFileGenerator.NewLine,
++				ExtensionGuid,
++				Extension));
++
++			PBXResourcesBuildPhaseSection.Append("/* Begin PBXResourcesBuildPhase section */" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t" + ExtensionInfo.ResourceBuildPhaseGuid + " /* Resources */ = {" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t\tisa = PBXResourcesBuildPhase;" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t\tbuildActionMask = 2147483647;" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t\tfiles = (" + ProjectFileGenerator.NewLine);
++			if (Directory.Exists(Path.Combine(ExtensionPath, "Resources")))
++			{
++				DirectoryInfo ResourceDir = new System.IO.DirectoryInfo(Path.Combine(ExtensionPath, "Resources"));
++				foreach (FileSystemInfo FSI in ResourceDir.EnumerateFileSystemInfos())
+ 				{
+-					foreach (DirectoryInfo DI in new System.IO.DirectoryInfo(ProjectExtensionsDir).EnumerateDirectories())
++					if (FSI.Name.StartsWith("."))
+ 					{
+-						Console.WriteLine("  Project {0} has Extension {1}!", UProjectPath, DI);
++						continue;
++					}
++					// for each resource, put it into the File/FileRef section, and into the CopyResuorceBuildPhase
++					string ResourceGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++					string ResourceRefGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++					PBXBuildFileSection.Append(string.Format("\t\t{0} /* {1} in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {2} /* {1} */; }};" + ProjectFileGenerator.NewLine,
++						ResourceGuid,
++						FSI.Name,
++						ResourceRefGuid));
+ 
+-						// assume each Extension in here will create a resulting Extension.appex
+-						string Extension = DI.Name + ".appex";
++					// lastKnownFileType = wrapper.app-extension; 
++					PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = \"{2}\"; sourceTree = \"<absolute>\"; }};" + ProjectFileGenerator.NewLine,
++						ResourceRefGuid,
++						FSI.Name,
++						// @todo: make this relative path!! 
++						FSI.FullName));
+ 
+-						string ExtensionGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++					PBXResourcesBuildPhaseSection.Append("\t\t\t\t" + ResourceGuid + " /* " + FSI.Name + " in " + ResourceDir.Name + " */," + ProjectFileGenerator.NewLine);
++				}
++			}
++			PBXResourcesBuildPhaseSection.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t\trunOnlyForDeploymentPostprocessing = 0;" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("\t\t};" + ProjectFileGenerator.NewLine);
++			PBXResourcesBuildPhaseSection.Append("/* End PBXResourcesBuildPhase section */" + ProjectFileGenerator.NewLine + ProjectFileGenerator.NewLine);
+ 
+-						// make an extension info object
+-						XcodeExtensionInfo ExtensionInfo = new XcodeExtensionInfo(DI.Name);
+-						AllExtensions.Add(ExtensionInfo);
++			StringBuilder ConfigSection = new StringBuilder();
++			// copy over the configs from the general project to the extension
++			foreach (XcodeBuildConfig Configuration in BuildConfigs)
++			{
++				string ConfigGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
++				string ConfigName = Configuration.DisplayName;
+ 
+-						PBXBuildFileSection.Append(string.Format("\t\t{0} /* {1} in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {2} /* {1} */; settings = {{ATTRIBUTES = (RemoveHeadersOnCopy, ); }}; }};" + ProjectFileGenerator.NewLine,
+-							ExtensionGuid,
+-							Extension,
+-							ExtensionInfo.ProductGuid));
++				ConfigSection.Append("\t\t" + ConfigGuid + " /* " + ConfigName + " */ = {" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\tisa = XCBuildConfiguration;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\tbuildSettings = {" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = \"iMessage App Icon\";" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tINFOPLIST_FILE = \"" + Path.Combine(ExtensionPath, "Info.plist") + "\";" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tCLANG_ENABLE_MODULES = YES;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tSKIP_INSTALL = YES;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";" + ProjectFileGenerator.NewLine);
+ 
+-						PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; explicitFileType = wrapper.app-extension; path = \"{1}\"; sourceTree = BUILT_PRODUCTS_DIR; }};" + ProjectFileGenerator.NewLine,
+-							ExtensionInfo.ProductGuid,
+-							Extension));
++				bool bSupportIOS = true;
++				bool bSupportTVOS = true;
++				if (bSupportIOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.IOS, EProjectType.Code))
++				{
++					IOSPlatform IOSPlatform = ((IOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.IOS));
++					IOSProjectSettings ProjectSettings = IOSPlatform.ReadProjectSettings(UProjectPath);
++					ConfigSection.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]\" = " + ProjectSettings.BundleIdentifier + "." + ExtensionInfo.Name + ";" + ProjectFileGenerator.NewLine);
++				}
+ 
+-						PBXCopyFilesBuildPhaseSection.Append(string.Format("\t\t\t\t{0} /* {1} in Embed App Extensions */," + ProjectFileGenerator.NewLine,
+-							ExtensionGuid,
+-							Extension));
++				if (bSupportTVOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.TVOS, EProjectType.Code))
++				{
++					TVOSPlatform TVOSPlatform = ((TVOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.TVOS));
++					TVOSProjectSettings ProjectSettings = TVOSPlatform.ReadProjectSettings(UProjectPath);
++					ConfigSection.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvos*]\" = " + ProjectSettings.BundleIdentifier + "." + ExtensionInfo.Name + ";" + ProjectFileGenerator.NewLine);
++				}
+ 
+-						PBXResourcesBuildPhaseSection.Append("/* Begin PBXResourcesBuildPhase section */" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t" + ExtensionInfo.ResourceBuildPhaseGuid + " /* Resources */ = {" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t\tisa = PBXResourcesBuildPhase;" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t\tbuildActionMask = 2147483647;" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t\tfiles = (" + ProjectFileGenerator.NewLine);
+-						if (Directory.Exists(Path.Combine(DI.FullName, "Resources")))
++				string IOSRuntimeVersion, TVOSRuntimeVersion;
++				AppendPlatformConfiguration(ConfigSection, Configuration, ExtensionInfo.Name, UProjectPath, false, bSupportIOS, bSupportTVOS, out IOSRuntimeVersion, out TVOSRuntimeVersion, bEmitProvisioning: false);
++
++				if (bSupportIOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.IOS, EProjectType.Code))
++				{
++					IOSPlatform IOSPlatform = ((IOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.IOS));
++					IOSProjectSettings ProjectSettings = IOSPlatform.ReadProjectSettings(UProjectPath);
++					if (!ProjectSettings.bAutomaticSigning)
++					{
++						string ProvisioningUUID = string.Empty;
++
++						string ProvisioningProfile;
++						ConfigHierarchy IOSIni = ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, UProjectPath.Directory, UnrealTargetPlatform.IOS);
++						if (IOSIni.GetString("/Script/IOSRuntimeSettings.IOSRuntimeSettings", "MobileProvision_" + ExtensionName, out ProvisioningProfile))
+ 						{
+-							DirectoryInfo ResourceDir = new System.IO.DirectoryInfo(Path.Combine(DI.FullName, "Resources"));
+-							foreach (FileSystemInfo FSI in ResourceDir.EnumerateFileSystemInfos())
+-							{
+-								if (FSI.Name.StartsWith("."))
+-								{
+-									continue;
+-								}
+-								// for each resource, put it into the File/FileRef section, and into the CopyResuorceBuildPhase
+-								string ResourceGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
+-								string ResourceRefGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
+-								PBXBuildFileSection.Append(string.Format("\t\t{0} /* {1} in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {2} /* {1} */; }};" + ProjectFileGenerator.NewLine,
+-									ResourceGuid,
+-									FSI.Name,
+-									ResourceRefGuid));
++							string IgnoredTeamUUID;
++							string IgnoredBundleIdentifier;
++							string IgnoredName;
++							IOSProvisioningData.GetProvisioningInfo(ProvisioningProfile, out ProvisioningUUID, out IgnoredTeamUUID, out IgnoredBundleIdentifier, out IgnoredName);
++						}
+ 
+-								// lastKnownFileType = wrapper.app-extension; 
+-								PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = \"{2}\"; sourceTree = \"<absolute>\"; }};" + ProjectFileGenerator.NewLine,
+-									ResourceRefGuid,
+-									FSI.Name,
+-									// @todo: make this relative path!! 
+-									FSI.FullName));
++						if (string.IsNullOrEmpty(ProvisioningUUID))
++						{
++							IOSProvisioningData ProvisioningData = IOSPlatform.ReadProvisioningData(ProjectSettings, bForDistribution);
++							ProvisioningUUID = ProvisioningData.MobileProvisionUUID;
++						}
+ 
+-								PBXResourcesBuildPhaseSection.Append("\t\t\t\t" + ResourceGuid + " /* " + FSI.Name + " in " + ResourceDir.Name + " */," + ProjectFileGenerator.NewLine);
+-							}
++						ConfigSection.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]\" = \"" + ProvisioningUUID + "\";" + ProjectFileGenerator.NewLine);
++					}
++				}
++				
++				if (bSupportTVOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.TVOS, EProjectType.Code))
++				{
++					TVOSPlatform TVOSPlatform = ((TVOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.TVOS));
++					TVOSProjectSettings ProjectSettings = TVOSPlatform.ReadProjectSettings(UProjectPath);
++					if (!ProjectSettings.bAutomaticSigning)
++					{
++						string ProvisioningUUID = string.Empty;
++
++						string ProvisioningProfile;
++						ConfigHierarchy TVOSIni = ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, UProjectPath.Directory, UnrealTargetPlatform.TVOS);
++						if (TVOSIni.GetString("/Script/IOSRuntimeSettings.IOSRuntimeSettings", "MobileProvision_" + ExtensionName, out ProvisioningProfile))
++						{
++							string IgnoredTeamUUID;
++							string IgnoredBundleIdentifier;
++							string IgnoredName;
++							TVOSProvisioningData.GetProvisioningInfo(ProvisioningProfile, out ProvisioningUUID, out IgnoredTeamUUID, out IgnoredBundleIdentifier, out IgnoredName);
+ 						}
+-						PBXResourcesBuildPhaseSection.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t\trunOnlyForDeploymentPostprocessing = 0;" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("\t\t};" + ProjectFileGenerator.NewLine);
+-						PBXResourcesBuildPhaseSection.Append("/* End PBXResourcesBuildPhase section */" + ProjectFileGenerator.NewLine + ProjectFileGenerator.NewLine);
+ 
+-						StringBuilder ConfigSection = new StringBuilder();
+-						// copy over the configs from the general project to the extension
+-						foreach (XcodeBuildConfig Configuration in BuildConfigs)
++						if (string.IsNullOrEmpty(ProvisioningUUID))
+ 						{
+-							string ConfigGuid = XcodeProjectFileGenerator.MakeXcodeGuid();
+-							string ConfigName = Configuration.DisplayName;
++							TVOSProvisioningData ProvisioningData = TVOSPlatform.ReadProvisioningData(ProjectSettings, bForDistribution);
++							ProvisioningUUID = ProvisioningData.MobileProvisionUUID;
++						}
+ 
+-							ConfigSection.Append("\t\t" + ConfigGuid + " /* " + ConfigName + " */ = {" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\tisa = XCBuildConfiguration;" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\tbuildSettings = {" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = \"iMessage App Icon\";" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\t\tINFOPLIST_FILE = \"" + Path.Combine(DI.FullName, "Info.plist") + "\";" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\t\tSKIP_INSTALL = YES;" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";" + ProjectFileGenerator.NewLine);
++						ConfigSection.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=appletvos*]\" = \"" + ProvisioningUUID + "\";" + ProjectFileGenerator.NewLine);
++					}
++				}
+ 
+-							bool bSupportIOS = true;
+-							bool bSupportTVOS = true;
+-							if (bSupportIOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.IOS, EProjectType.Code))
+-							{
+-								IOSPlatform IOSPlatform = ((IOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.IOS));
+-								IOSProjectSettings ProjectSettings = IOSPlatform.ReadProjectSettings(UProjectPath);
+-								ConfigSection.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]\" = " + ProjectSettings.BundleIdentifier + "." + ExtensionInfo.Name + ";" + ProjectFileGenerator.NewLine);
+-							}
++				ConfigSection.Append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"\";" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t};" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\tname = \"" + ConfigName + "\";" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t};" + ProjectFileGenerator.NewLine);
+ 
+-							if (bSupportTVOS && InstalledPlatformInfo.IsValidPlatform(UnrealTargetPlatform.TVOS, EProjectType.Code))
+-							{
+-								TVOSPlatform TVOSPlatform = ((TVOSPlatform)UEBuildPlatform.GetBuildPlatform(UnrealTargetPlatform.TVOS));
+-								TVOSProjectSettings ProjectSettings = TVOSPlatform.ReadProjectSettings(UProjectPath);
+-								ConfigSection.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvos*]\" = " + ProjectSettings.BundleIdentifier + "." + ExtensionInfo.Name + ";" + ProjectFileGenerator.NewLine);
+-							}
++				XcodeBuildConfig Config = new XcodeBuildConfig(ConfigName, ExtensionInfo.Name, null, null, null, null, Configuration.BuildConfig);
++				ExtensionInfo.AllConfigs.Add(ConfigGuid, Config);
++			}
+ 
+-							string IOSRuntimeVersion, TVOSRuntimeVersion;
+-							AppendPlatformConfiguration(ConfigSection, Configuration, ExtensionInfo.Name, UProjectPath, false, bSupportIOS, bSupportTVOS, out IOSRuntimeVersion, out TVOSRuntimeVersion);
++			ExtensionInfo.ConfigurationContents = ConfigSection.ToString();
++		}
++		// [CleverTap] End
+ 
+-							ConfigSection.Append("\t\t\t};" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t\tname = \"" + ConfigName + "\";" + ProjectFileGenerator.NewLine);
+-							ConfigSection.Append("\t\t};" + ProjectFileGenerator.NewLine);
++		// [CleverTap] Begin
++		private void GenerateSectionsWithExtensions(StringBuilder PBXBuildFileSection, StringBuilder PBXFileReferenceSection, StringBuilder PBXFileSystemSynchronizedBuildFileExceptionSetSection, StringBuilder PBXFileSystemSynchronizedRootGroupSection, StringBuilder PBXCopyFilesBuildPhaseSection, StringBuilder PBXResourcesBuildPhaseSection,
++													List<XcodeExtensionInfo> AllExtensions, FileReference UProjectPath, List<XcodeBuildConfig> BuildConfigs)
++		// [CleverTap] End
++		{
++			if (UProjectPath != null)
++			{
++				string ProjectExtensionsDir = Path.Combine(Path.GetDirectoryName(UProjectPath.FullName), "Build/IOS/Extensions");
++				//string ProjectIntermediateDir = Path.Combine(Path.GetDirectoryName(UProjectPath.FullName), "Intermediate/IOS/Extensions");
+ 
+-							XcodeBuildConfig Config = new XcodeBuildConfig(ConfigName, ExtensionInfo.Name, null, null, null, null, Configuration.BuildConfig);
+-							ExtensionInfo.AllConfigs.Add(ConfigGuid, Config);
++				if (Directory.Exists(ProjectExtensionsDir))
++				{
++					foreach (DirectoryInfo DI in new System.IO.DirectoryInfo(ProjectExtensionsDir).EnumerateDirectories())
++					{
++						// [CleverTap] Begin
++						GenerateSectionsWithExtension(PBXBuildFileSection, PBXFileReferenceSection, PBXFileSystemSynchronizedBuildFileExceptionSetSection, PBXFileSystemSynchronizedRootGroupSection, PBXCopyFilesBuildPhaseSection, PBXResourcesBuildPhaseSection, AllExtensions, UProjectPath, BuildConfigs, DI.Name, DI.FullName);
++						// [CleverTap] End
++					}
++				}
++
++				// [CleverTap] Begin
++				string ProjectPluginDir = Path.Combine(Path.GetDirectoryName(UProjectPath.FullName), "Plugins");
++				if (Directory.Exists(ProjectPluginDir))
++				{
++					foreach (DirectoryInfo PluginDI in new System.IO.DirectoryInfo(ProjectPluginDir).EnumerateDirectories())
++					{
++						string PluginExtensionDir = Path.Combine(PluginDI.FullName, "Source/ThirdParty/IOS/Extensions");
++						if (!Directory.Exists(PluginExtensionDir))
++						{
++							continue;
+ 						}
+ 
+-						ExtensionInfo.ConfigurationContents = ConfigSection.ToString();
++
++						foreach (DirectoryInfo DI in new System.IO.DirectoryInfo(PluginExtensionDir).EnumerateDirectories())
++						{
++							GenerateSectionsWithExtension(PBXBuildFileSection, PBXFileReferenceSection, PBXFileSystemSynchronizedBuildFileExceptionSetSection, PBXFileSystemSynchronizedRootGroupSection, PBXCopyFilesBuildPhaseSection, PBXResourcesBuildPhaseSection, AllExtensions, UProjectPath, BuildConfigs, DI.Name, DI.FullName);
++						}
+ 					}
+ 				}
++				// [CleverTap] End
+ 			}
+ 		}
+ 
+@@ -527,8 +662,22 @@
+ 			Content.Append("/* End PBXFileReference section */" + ProjectFileGenerator.NewLine + ProjectFileGenerator.NewLine);
+ 		}
+ 
+-		private void AppendSourcesBuildPhaseSection(StringBuilder Content, StringBuilder SectionContent, string SourcesBuildPhaseGuid)
++		// [CleverTap] Begin
++		private void AppendFileSystemSynchronizedSections(StringBuilder Content, StringBuilder ExceptionSectionContent, StringBuilder RootSectionContent)
+ 		{
++			Content.Append("/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */" + ProjectFileGenerator.NewLine);
++			Content.Append(ExceptionSectionContent);
++			Content.Append("/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */" + ProjectFileGenerator.NewLine);
++
++			Content.Append("/* Begin PBXFileSystemSynchronizedRootGroup section */" + ProjectFileGenerator.NewLine);
++			Content.Append(RootSectionContent);
++			Content.Append("/* End PBXFileSystemSynchronizedRootGroup section */" + ProjectFileGenerator.NewLine);
++		}
++
++		// [CleverTap] End
++
++		private void AppendSourcesBuildPhaseSection(StringBuilder Content, StringBuilder SectionContent, string SourcesBuildPhaseGuid, List<XcodeExtensionInfo> AllExtensions)
++		{
+ 			Content.Append("/* Begin PBXSourcesBuildPhase section */" + ProjectFileGenerator.NewLine);
+ 			Content.Append(string.Format("\t\t{0} = {{{1}", SourcesBuildPhaseGuid, ProjectFileGenerator.NewLine));
+ 			Content.Append("\t\t\tisa = PBXSourcesBuildPhase;" + ProjectFileGenerator.NewLine);
+@@ -538,6 +687,20 @@
+ 			Content.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
+ 			Content.Append("\t\t\trunOnlyForDeploymentPostprocessing = 0;" + ProjectFileGenerator.NewLine);
+ 			Content.Append("\t\t};" + ProjectFileGenerator.NewLine);
++
++			// [CleverTap] Begin
++			foreach (XcodeExtensionInfo EI in AllExtensions)
++			{
++				Content.Append(string.Format("\t\t{0} = {{{1}", EI.SourcesBuildPhaseGuid, ProjectFileGenerator.NewLine));
++				Content.Append("\t\t\tisa = PBXSourcesBuildPhase;" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\tbuildActionMask = 2147483647;" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\tfiles = (" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\trunOnlyForDeploymentPostprocessing = 0;" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t};" + ProjectFileGenerator.NewLine);
++			}
++			// [CleverTap] End
++
+ 			Content.Append("/* End PBXSourcesBuildPhase section */" + ProjectFileGenerator.NewLine + ProjectFileGenerator.NewLine);
+ 		}
+ 
+@@ -685,10 +848,14 @@
+ 			}
+ 
+ 			// use generica target section function for an application type
+-			AppendGenericTargetSection(Content, TargetName, TargetGuid, bIsAppBundle ? "com.apple.product-type.application" : "com.apple.product-type.tool", TargetBuildConfigGuid, TargetAppGuid, DependencyGuids, BuildPhases);
++			// [CleverTap] Begin
++			AppendGenericTargetSection(Content, TargetName, TargetGuid, bIsAppBundle ? "com.apple.product-type.application" : "com.apple.product-type.tool", TargetBuildConfigGuid, TargetAppGuid, /*FileSyncRootGroupGuid:*/null, DependencyGuids, BuildPhases);
++			// [CleverTap] End
+ 		}
+ 
+-		private void AppendGenericTargetSection(StringBuilder Content, string TargetName, string TargetGuid, string TargetType, string TargetBuildConfigGuid, string TargetAppGuid, IEnumerable<string> TargetDependencyGuids, Dictionary<string, string> BuildPhases)
++		// [CleverTap] Begin
++		private void AppendGenericTargetSection(StringBuilder Content, string TargetName, string TargetGuid, string TargetType, string TargetBuildConfigGuid, string TargetAppGuid, string FileSyncRootGroupGuid, IEnumerable<string> TargetDependencyGuids, Dictionary<string, string> BuildPhases)
++		// [CleverTap] End
+ 		{
+ 			Content.Append("/* Begin PBXNativeTarget section */" + ProjectFileGenerator.NewLine);
+ 
+@@ -713,6 +880,14 @@
+ 				}
+ 			}
+ 			Content.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++			// [CleverTap] Begin
++			if (!string.IsNullOrEmpty(FileSyncRootGroupGuid))
++			{
++				Content.Append("\t\t\tfileSystemSynchronizedGroups = (" + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\t\t" + FileSyncRootGroupGuid + " /* " + TargetName + " */," + ProjectFileGenerator.NewLine);
++				Content.Append("\t\t\t);" + ProjectFileGenerator.NewLine);
++			}
++			// [CleverTap] End
+ 			Content.Append("\t\t\tname = \"" + TargetName + "\";" + ProjectFileGenerator.NewLine);
+ 			Content.Append("\t\t\tpassBuildSettingsInEnvironment = 1;" + ProjectFileGenerator.NewLine);
+ 			Content.Append("\t\t\tproductName = \"" + TargetName + "\";" + ProjectFileGenerator.NewLine);
+@@ -827,8 +1002,11 @@
+ 			{
+ 				Dictionary<string, string> BuildPhases = new Dictionary<string, string>();
+ 				BuildPhases.Add(EI.ResourceBuildPhaseGuid, "Resources");
++				// [CleverTap] Begin
++				BuildPhases.Add(EI.SourcesBuildPhaseGuid, "Sources");
+ 
+-				AppendGenericTargetSection(ProjectFileContent, EI.Name, EI.TargetGuid, "com.apple.product-type.app-extension.messages-sticker-pack", EI.ConfigListGuid, EI.ProductGuid, null, BuildPhases);
++				AppendGenericTargetSection(ProjectFileContent, EI.Name, EI.TargetGuid, "com.apple.product-type.app-extension", EI.ConfigListGuid, EI.ProductGuid, EI.FileSyncRootGroupGuid, null, BuildPhases);
++				// [CleverTap] End
+ 			}
+ 		}
+ 
+@@ -1072,7 +1250,9 @@
+ 			return CachedMacProjectArcitectures[TargetName];
+ 		}
+ 
+-		private void AppendPlatformConfiguration(StringBuilder Content, XcodeBuildConfig Config, string TargetName, FileReference ProjectFile, bool bSupportMac, bool bSupportIOS, bool bSupportTVOS, out string IOSRunTimeVersion, out string TVOSRunTimeVersion, string BinariesSubDir = "/Payload")
++		// [CleverTap] Begin
++		private void AppendPlatformConfiguration(StringBuilder Content, XcodeBuildConfig Config, string TargetName, FileReference ProjectFile, bool bSupportMac, bool bSupportIOS, bool bSupportTVOS, out string IOSRunTimeVersion, out string TVOSRunTimeVersion, string BinariesSubDir = "/Payload", bool bEmitProvisioning = true)
++		// [CleverTap] End
+ 		{
+ 			FileReference MacExecutablePath = Config.MacExecutablePath;
+ 
+@@ -1156,14 +1336,19 @@
+ 					Content.Append("\t\t\t\t\"DEVELOPMENT_TEAM[sdk=iphoneos*]\" = " + TEAM_IOS + ";" + ProjectFileGenerator.NewLine);
+ 				}
+ 				Content.Append("\t\t\t\t\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"" + IOS_CERT + "\";" + ProjectFileGenerator.NewLine);
+-				if (!bAutomaticSigning && !string.IsNullOrEmpty(UUID_IOS))
++				// [CleverTap] Begin
++				if (bEmitProvisioning)
+ 				{
+-					Content.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]\" = \"" + UUID_IOS + "\";" + ProjectFileGenerator.NewLine);
++					if (!bAutomaticSigning && !string.IsNullOrEmpty(UUID_IOS))
++					{
++						Content.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]\" = \"" + UUID_IOS + "\";" + ProjectFileGenerator.NewLine);
++					}
++					if (ProjectFile != null)
++					{
++						Content.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]\" = " + IOS_BUNDLE + ";" + ProjectFileGenerator.NewLine);
++					}
+ 				}
+-				if (ProjectFile != null)
+-				{
+-					Content.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]\" = " + IOS_BUNDLE + ";" + ProjectFileGenerator.NewLine);
+-				}
++				// [CleverTap] End
+ 			}
+ 			if (TVOSRunTimeVersion != null)
+ 			{
+@@ -1177,14 +1362,19 @@
+ 					Content.Append("\t\t\t\t\"DEVELOPMENT_TEAM[sdk=appletvos*]\" = " + TEAM_TVOS + ";" + ProjectFileGenerator.NewLine);
+ 				}
+ 				Content.Append("\t\t\t\t\"CODE_SIGN_IDENTITY[sdk=appletvos*]\" = \"" + TVOS_CERT + "\";" + ProjectFileGenerator.NewLine);
+-				if (!bAutomaticSigning && !string.IsNullOrEmpty(UUID_TVOS))
++				// [CleverTap] Begin
++				if (bEmitProvisioning)
+ 				{
+-					Content.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=appletvos*]\" = \"" + UUID_TVOS + "\";" + ProjectFileGenerator.NewLine);
++					if (!bAutomaticSigning && !string.IsNullOrEmpty(UUID_TVOS))
++					{
++						Content.Append("\t\t\t\t\"PROVISIONING_PROFILE_SPECIFIER[sdk=appletvos*]\" = \"" + UUID_TVOS + "\";" + ProjectFileGenerator.NewLine);
++					}
++					if (ProjectFile != null)
++					{
++						Content.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvos*]\" = " + TVOS_BUNDLE + ";" + ProjectFileGenerator.NewLine);
++					}
+ 				}
+-				if (ProjectFile != null)
+-				{
+-					Content.Append("\t\t\t\t\"PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvos*]\" = " + TVOS_BUNDLE + ";" + ProjectFileGenerator.NewLine);
+-				}
++				// [CleverTap] End
+ 			}
+ 			if (bSupportMac)
+ 			{
+@@ -1987,12 +2177,18 @@
+ 
+ 			StringBuilder PBXBuildFileSection = new StringBuilder();
+ 			StringBuilder PBXFileReferenceSection = new StringBuilder();
++			// [CleverTap] Begin
++			StringBuilder PBXFileSystemSynchronizedBuildFileExceptionSetSection = new StringBuilder();
++			StringBuilder PBXFileSystemSynchronizedRootGroupSection = new StringBuilder();
++			// [CleverTap] End
+ 			StringBuilder PBXSourcesBuildPhaseSection = new StringBuilder();
+ 			StringBuilder PBXCopyExtensionsBuildPhaseSection = new StringBuilder();
+ 			StringBuilder PBXResourcesBuildPhaseSection = new StringBuilder();
+ 			List<XcodeExtensionInfo> AllExtensions = new List<XcodeExtensionInfo>();
+ 			GenerateSectionsWithSourceFiles(PBXBuildFileSection, PBXFileReferenceSection, PBXSourcesBuildPhaseSection, TargetAppGuid, TargetName, bIsAppBundle);
+-			GenerateSectionsWithExtensions(PBXBuildFileSection, PBXFileReferenceSection, PBXCopyExtensionsBuildPhaseSection, PBXResourcesBuildPhaseSection, AllExtensions, GameProjectPath, BuildConfigs);
++			// [CleverTap] Begin
++			GenerateSectionsWithExtensions(PBXBuildFileSection, PBXFileReferenceSection, PBXFileSystemSynchronizedBuildFileExceptionSetSection, PBXFileSystemSynchronizedRootGroupSection, PBXCopyExtensionsBuildPhaseSection, PBXResourcesBuildPhaseSection, AllExtensions, GameProjectPath, BuildConfigs);
++			// [CleverTap] End
+ 
+ 			StringBuilder ProjectFileContent = new StringBuilder();
+ 
+@@ -2006,7 +2202,10 @@
+ 
+ 			AppendBuildFileSection(ProjectFileContent, PBXBuildFileSection);
+ 			AppendFileReferenceSection(ProjectFileContent, PBXFileReferenceSection);
+-			AppendSourcesBuildPhaseSection(ProjectFileContent, PBXSourcesBuildPhaseSection, SourcesBuildPhaseGuid);
++			// [CleverTap] Begin
++			AppendFileSystemSynchronizedSections(ProjectFileContent, PBXFileSystemSynchronizedBuildFileExceptionSetSection, PBXFileSystemSynchronizedRootGroupSection);
++			AppendSourcesBuildPhaseSection(ProjectFileContent, PBXSourcesBuildPhaseSection, SourcesBuildPhaseGuid, AllExtensions);
++			// [CleverTap] End
+ 			AppendCopyExtensionsBuildPhaseSection(ProjectFileContent, PBXCopyExtensionsBuildPhaseSection, CopyExtensionsBuildPhaseGuid);
+ 			ProjectFileContent.Append(PBXResourcesBuildPhaseSection);
+ 			AppendContainerItemProxySection(ProjectFileContent, BuildTargetName, BuildTargetGuid, TargetProxyGuid, ProjectGuid);
