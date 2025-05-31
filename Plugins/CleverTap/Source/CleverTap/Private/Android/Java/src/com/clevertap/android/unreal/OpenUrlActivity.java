@@ -27,6 +27,7 @@ public class OpenUrlActivity extends Activity {
         finish();
     }
 
+    @SuppressWarnings("unchecked")
     private static Class<? extends Activity> findGameActivityClass() {
         // UE5 first
         try {
