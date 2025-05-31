@@ -277,15 +277,39 @@ URL handling.
 > The CleverTap Unreal plugin currently does not support [Push Impressions](https://developer.clevertap.com/docs/push-notifications-ios#push-impressions), [Push Primers](https://developer.clevertap.com/docs/push-notifications-ios#ios-push-primer), or [Rich Push Notifications](https://developer.clevertap.com/docs/rich-push-notifications).
 
 #### iOS - Optional Engine changes for Push Notifications that launch the App
+On Windows, a patch program equivalent can be installed using winget.
+```powershell
+winget install GnuWin32.Patch
+```
+
+##### iOS Engine Patch - Push Notification Callback Invocation When App is Closed
 If you're App isn't in the foreground or background then Unreal will not forward the push notification to CleverTap unless you make engine changes to `Engine/Source/Runtime/ApplicationCore/Private/IOS/IOSAppDelegate.cpp`.  An example of such changes can be found in the `EnginePatches/iOSSavedRemoteNotifications.patch` patch file. This can be applied in the Unreal root directory using the linux patch command.
 ```bash
 UnrealEngine % patch -p1 -u -i /path/to/CleverTapSample/EnginePatches/iOSSavedRemoteNotifications.patch
 ```
 
-On Windows, a patch program equivalent can be installed using winget.
-```powershell
-winget install GnuWin32.Patch
+##### iOS Engine Patch - Rich Push Notification Support
+[Rich Push Notifications](https://developer.clevertap.com/docs/rich-push-notifications) require a [Notification Service
+Extension](https://developer.apple.com/reference/usernotifications/unnotificationserviceextension). Unfortunately
+Unreal Engine doesn't support app extensions without modification to its build process. An example patch that adds
+support for app extensions can be found in the
+[EnginePatches/UE4.27_ExtensionSupport.patch](EnginePatches/UE4.27_ExtensionSupport.patch) patch file. This can
+be applied in the Unreal root directory using the linux patch command.
+```bash
+UnrealEngine % patch -p1 -u -i /path/to/CleverTapSample/EnginePatches/UE4.27_ExtensionSupport.patch
 ```
+
+Once patched, the extension located at [Plugins/CleverTap/Source/ThirdParty/IOS/Extensions/CTNotificationService](Plugins/CleverTap/Source/ThirdParty/IOS/Extensions/CTNotificationService) will be included in the build. A custom signing provision can be specified for the extension via changes to the `Config/DefaultEngine.ini` file.
+```ini
+[/Script/IOSRuntimeSettings.IOSRuntimeSettings]
+MobileProvision_CTNotificationService=YourProvisioning.mobileprovision
+```
+Please make sure the specified .mobileprovision file is installed before building.
+
+> [!NOTE]
+> This engine patch adds support for arbitrary app extensions located in `{ProjectFolder}/Build/IOS/Extensions` or any
+> `{ProjectFolder}/Plugins/{PluginNameHere}/Source/ThirdParty/IOS/Extensions` folders. It only supports UE4.27 and has
+> only been tested against the CTNotificationService extension provided here.
 
 ### Enabling OnPushNotificationClicked
 After setting up your shared CleverTap instance the `OnPushNotificationClicked` delegate can be enabled by calling `EnableOnPushNotificationClicked()`. On iOS, if the engine patch has been applied for push notifications that launch the app then this can trigger attempting to broadcast the push notification that launched the app. Therefore a delegate listener should be added before calling `EnableOnPushNotificationClicked()`.
