@@ -7,7 +7,6 @@
 
 #include "UnrealEngine.h"
 
-
 UNullCleverTapInstance* UNullCleverTapInstance::Create()
 {
 	UNullCleverTapInstance* Instance =
