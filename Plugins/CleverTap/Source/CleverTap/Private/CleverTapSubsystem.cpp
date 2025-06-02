@@ -15,12 +15,6 @@
 
 namespace {
 
-FNullCleverTapInstance& CommonNullInstance()
-{
-	static FNullCleverTapInstance Singleton;
-	return Singleton;
-}
-
 const UCleverTapConfig* TryResolveCleverTapConfig(const UCleverTapConfig* MaybeExplicitConfig = nullptr)
 {
 	if (MaybeExplicitConfig)
@@ -49,7 +43,7 @@ const UCleverTapConfig* TryResolveCleverTapConfig(const UCleverTapConfig* MaybeE
 
 void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	CleverTapSDK::Ignore(Collection);
+	Super::Initialize(Collection);
 
 	const UCleverTapConfig* const Config = UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
 	if (!ensure(IsValid(Config)))
@@ -66,9 +60,9 @@ void UCleverTapSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	AddRemoteNotificationTokenListener();
 }
 
-ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverTapConfig* Config)
+UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverTapConfig* Config)
 {
-	if (SharedInstanceImpl != nullptr)
+	if (IsValid(SharedInstanceImpl))
 	{
 		return *SharedInstanceImpl; // Already initialized
 	}
@@ -77,15 +71,15 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const UCleverT
 	if (!IsValid(Config))
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
-		return CommonNullInstance();
+		return NullInstance();
 	}
 
 	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(Config));
 }
 
-ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
+UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverTapInstanceConfig& Config)
 {
-	if (SharedInstanceImpl != nullptr)
+	if (IsValid(SharedInstanceImpl))
 	{
 		return *SharedInstanceImpl; // Already initialized
 	}
@@ -94,7 +88,7 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverT
 
 	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config);
 	UE_CLOG(
-		SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+		!IsValid(SharedInstanceImpl), LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
 
 	if (SavedRemoteNotificationToken.Num() > 0)
 	{
@@ -104,9 +98,9 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FCleverT
 	return *SharedInstanceImpl;
 }
 
-ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString& CleverTapId)
+UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString& CleverTapId)
 {
-	if (SharedInstanceImpl != nullptr)
+	if (IsValid(SharedInstanceImpl))
 	{
 		return *SharedInstanceImpl; // Already initialized
 	}
@@ -115,16 +109,16 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(const FString&
 	if (!IsValid(Config))
 	{
 		UE_LOG(LogCleverTap, Error, TEXT("UCleverTapConfig was invalid. Initialization will not occur."));
-		return CommonNullInstance();
+		return NullInstance();
 	}
 
 	return InitializeSharedInstance(*Config, CleverTapId);
 }
 
-ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
+UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	const UCleverTapConfig& Config, const FString& CleverTapId)
 {
-	if (SharedInstanceImpl != nullptr)
+	if (IsValid(SharedInstanceImpl))
 	{
 		return *SharedInstanceImpl; // Already initialized
 	}
@@ -132,10 +126,10 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	return InitializeSharedInstance(FCleverTapInstanceConfig::FromCleverTapConfig(&Config), CleverTapId);
 }
 
-ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
+UCleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	const FCleverTapInstanceConfig& Config, const FString& CleverTapId)
 {
-	if (SharedInstanceImpl != nullptr)
+	if (IsValid(SharedInstanceImpl))
 	{
 		return *SharedInstanceImpl; // Already initialized
 	}
@@ -152,7 +146,7 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 
 	SharedInstanceImpl = FCleverTapPlatformSDK::InitializeSharedInstance(Config, CleverTapId);
 	UE_CLOG(
-		SharedInstanceImpl == nullptr, LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
+		!IsValid(SharedInstanceImpl), LogCleverTap, Fatal, TEXT("Failed to initialize the CleverTap shared instance"));
 
 	if (SavedRemoteNotificationToken.Num() > 0)
 	{
@@ -162,9 +156,18 @@ ICleverTapInstance& UCleverTapSubsystem::InitializeSharedInstance(
 	return *SharedInstanceImpl;
 }
 
+UCleverTapInstance& UCleverTapSubsystem::NullInstance()
+{
+	if (!IsValid(NullInstanceImpl))
+	{
+		NullInstanceImpl = UNullCleverTapInstance::Create();
+	}
+	return *NullInstanceImpl;
+}
+
 bool UCleverTapSubsystem::IsSharedInstanceInitialized() const
 {
-	return SharedInstanceImpl.IsValid();
+	return IsValid(SharedInstanceImpl);
 }
 
 void UCleverTapSubsystem::SetLogLevel(ECleverTapLogLevel Level)
@@ -172,13 +175,22 @@ void UCleverTapSubsystem::SetLogLevel(ECleverTapLogLevel Level)
 	FCleverTapPlatformSDK::SetLogLevel(Level);
 }
 
-ICleverTapInstance& UCleverTapSubsystem::SharedInstance()
+UCleverTapInstance& UCleverTapSubsystem::SharedInstance()
 {
-	if (SharedInstanceImpl == nullptr)
+	if (IsSharedInstanceInitialized() == false)
 	{
 		return InitializeSharedInstance();
 	}
 	return *SharedInstanceImpl;
+}
+
+UCleverTapInstance* UCleverTapSubsystem::BlueprintSharedInstance()
+{
+	if (IsSharedInstanceInitialized() == false)
+	{
+		return &InitializeSharedInstance();
+	}
+	return SharedInstanceImpl;
 }
 
 void UCleverTapSubsystem::BlueprintInitializeSharedInstance(const UCleverTapConfig* Config)
@@ -213,4 +225,11 @@ void UCleverTapSubsystem::OnRegisteredForRemoteNotifications(TArray<uint8> Token
 	{
 		FCleverTapPlatformSDK::SetRemoteNotificationToken(*SharedInstanceImpl, SavedRemoteNotificationToken);
 	}
+}
+
+UCleverTapInstance* UCleverTapSubsystemBlueprintLibrary::SharedCleverTapInstance()
+{
+	UCleverTapSubsystem* CleverTapSubsystem = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+	check(CleverTapSubsystem);
+	return &CleverTapSubsystem->SharedInstance();
 }

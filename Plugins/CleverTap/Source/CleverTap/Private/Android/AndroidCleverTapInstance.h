@@ -2,19 +2,64 @@
 #pragma once
 
 #include "CleverTapInstance.h"
-#include "NullCleverTapInstance.generated.h"
+
+#include "Android/AndroidApplication.h"
+#include "AndroidCleverTapInstance.generated.h"
 
 /**
- * A CleverTap instance implementation that does nothing and returns default values.
+ * The Android implementation of UCleverTapInstance
  */
 UCLASS(NotBlueprintable)
-class CLEVERTAP_API UNullCleverTapInstance : public UCleverTapInstance
+class CLEVERTAP_API UAndroidCleverTapInstance : public UCleverTapInstance
 {
 	GENERATED_BODY()
 
-public:
-	static UNullCleverTapInstance* Create();
+	// Most execution happens on the main game thread, but JNI callbacks can come from arbitrary threads.
+	// This critical section is used to co-ordinate access to the set of instances and their InAppNotificationFilters.
+	static FCriticalSection CriticalSection;
+	static TSet<UAndroidCleverTapInstance*> Instances;
 
+	// per-instance data
+	jobject JavaCleverTapInstance;
+	bool bEnableOnPushNotificationClicked = false;
+	TOptional<FCleverTapProperties> BufferedPushNotificationPayload;
+	TUniqueFunction<bool(const FCleverTapProperties&)> InAppNotificationFilter = [](const FCleverTapProperties&) {
+		return true;
+	};
+
+	void Initialize(JNIEnv* Env, jobject JavaCleverTapInstanceIn);
+	~UAndroidCleverTapInstance();
+
+public:
+	/* Creates a new UAndroidCleverTapInstance to wrap the provided Java CleverTapSDK instance
+	 */
+	static UAndroidCleverTapInstance* Create(JNIEnv* Env, jobject JavaCleverTapInstanceIn);
+
+	/** Converts a raw NativeInstancePtr to either a valid FAndroidCleverTapInstance* or a nullptr.
+	 */
+	static UAndroidCleverTapInstance* CheckedInstancePtr(jlong NativeInstancePtr);
+
+	/** Returns true if the given Instance currently exists. */
+	static bool IsValid(const UAndroidCleverTapInstance* Instance) { return Instances.Contains(Instance); }
+
+	// Notification Handlers
+	// =====================================
+	static void BroadcastOnPushPermissionResponse(jlong NativeInstancePtr, bool bGranted);
+	static void BroadcastOnPushNotificationClicked(
+		jlong NativeInstancePtr, const FCleverTapProperties& NotificationProperties);
+	void BroadcastOnPushNotificationClicked(const FCleverTapProperties& NotificationProperties);
+
+	static bool BeforeShowInAppNotification(jlong NativeInstancePtr, const FCleverTapProperties& Extras);
+	static void BroadcastOnInAppNotificationShown(jlong NativeInstancePtr, const FCleverTapProperties& Payload);
+	static void BroadcastOnInAppNotificationDismissed(
+		jlong NativeInstancePtr, const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+	static void BroadcastOnInAppNotificationButtonClicked(
+		jlong NativeInstancePtr, const FCleverTapProperties& ButtonProperties);
+
+	static void BroadcastOnOpenUrl(const FString& Url);
+
+	// UCleverTapInstance Methods
+	// =====================================
 	FString GetCleverTapId() override;
 
 	void OnUserLogin(const FCleverTapProperties& Profile) override;

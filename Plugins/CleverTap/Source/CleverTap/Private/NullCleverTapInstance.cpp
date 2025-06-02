@@ -1,163 +1,173 @@
 // Copyright CleverTap All Rights Reserved.
 #include "NullCleverTapInstance.h"
 
+#include "CleverTapLog.h"
+#include "CleverTapSubsystem.h"
 #include "CleverTapUtilities.h"
 
-FString FNullCleverTapInstance::GetCleverTapId()
+UNullCleverTapInstance* UNullCleverTapInstance::Create()
+{
+	UNullCleverTapInstance* Instance =
+		NewObject<UNullCleverTapInstance>(GEngine->GetEngineSubsystem<UCleverTapSubsystem>());
+	return Instance;
+}
+
+FString UNullCleverTapInstance::GetCleverTapId()
 {
 	return FString{};
 }
 
-void FNullCleverTapInstance::OnUserLogin(const FCleverTapProperties& Profile)
+void UNullCleverTapInstance::OnUserLogin(const FCleverTapProperties& Profile)
 {
 	CleverTapSDK::Ignore(Profile);
 }
 
-void FNullCleverTapInstance::OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId)
+void UNullCleverTapInstance::OnUserLoginWithCleverTapId(const FCleverTapProperties& Profile, const FString& CleverTapId)
 {
 	CleverTapSDK::Ignore(Profile, CleverTapId);
 }
 
-void FNullCleverTapInstance::PushProfile(const FCleverTapProperties& Profile)
+void UNullCleverTapInstance::PushProfile(const FCleverTapProperties& Profile)
 {
 	CleverTapSDK::Ignore(Profile);
 }
 
-void FNullCleverTapInstance::PushEvent(const FString& EventName)
+void UNullCleverTapInstance::PushEvent(const FString& EventName)
 {
 	CleverTapSDK::Ignore(EventName);
 }
 
-void FNullCleverTapInstance::PushEvent(const FString& EventName, const FCleverTapProperties& Actions)
+void UNullCleverTapInstance::PushEventWithProperties(const FString& EventName, const FCleverTapProperties& Actions)
 {
 	CleverTapSDK::Ignore(EventName, Actions);
 }
 
-void FNullCleverTapInstance::PushChargedEvent(
+void UNullCleverTapInstance::PushChargedEvent(
 	const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items)
 {
 	CleverTapSDK::Ignore(ChargeDetails, Items);
 }
 
-TOptional<FCleverTapPropertyValue> FNullCleverTapInstance::GetProperty(const FString& Key)
+TOptional<FCleverTapPropertyValue> UNullCleverTapInstance::GetProperty(const FString& Key)
 {
 	CleverTapSDK::Ignore(Key);
 	return {};
 }
 
-void FNullCleverTapInstance::DecrementValue(const FString& Key, int Amount)
+void UNullCleverTapInstance::DecrementIntValue(const FString& Key, int Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
 }
 
-void FNullCleverTapInstance::DecrementValue(const FString& Key, double Amount)
+void UNullCleverTapInstance::DecrementFloatValue(const FString& Key, float Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
 }
 
-void FNullCleverTapInstance::IncrementValue(const FString& Key, int Amount)
+void UNullCleverTapInstance::IncrementIntValue(const FString& Key, int Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
 }
 
-void FNullCleverTapInstance::IncrementValue(const FString& Key, double Amount)
+void UNullCleverTapInstance::IncrementFloatValue(const FString& Key, float Amount)
 {
 	CleverTapSDK::Ignore(Key, Amount);
 }
 
-void FNullCleverTapInstance::AddMultiValueForKey(const FString& Key, const FString& Value)
+void UNullCleverTapInstance::AddMultiValueForKey(const FString& Key, const FString& Value)
 {
 	CleverTapSDK::Ignore(Key, Value);
 }
 
-void FNullCleverTapInstance::AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
+void UNullCleverTapInstance::AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
 {
 	CleverTapSDK::Ignore(Key, Values);
 }
 
-void FNullCleverTapInstance::RemoveMultiValueForKey(const FString& Key, const FString& Value)
+void UNullCleverTapInstance::RemoveMultiValueForKey(const FString& Key, const FString& Value)
 {
 	CleverTapSDK::Ignore(Key, Value);
 }
 
-void FNullCleverTapInstance::RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
+void UNullCleverTapInstance::RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
 {
 	CleverTapSDK::Ignore(Key, Values);
 }
 
-void FNullCleverTapInstance::RemoveValueForKey(const FString& Key)
+void UNullCleverTapInstance::RemoveValueForKey(const FString& Key)
 {
 	CleverTapSDK::Ignore(Key);
 }
 
-void FNullCleverTapInstance::SetMultiValuesForKey(const FString& Key, const TArray<FString> Values)
+void UNullCleverTapInstance::SetMultiValuesForKey(const FString& Key, const TArray<FString> Values)
 {
 	CleverTapSDK::Ignore(Key, Values);
 }
 
-ECleverTapPushPermissionStatus FNullCleverTapInstance::GetPushPermissionStatus()
+ECleverTapPushPermissionStatus UNullCleverTapInstance::GetPushPermissionStatus()
 {
 	return ECleverTapPushPermissionStatus::NotGranted;
 }
 
-void FNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings)
+void UNullCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings)
 {
 	CleverTapSDK::Ignore(bFallbackToSettings);
 }
 
-void FNullCleverTapInstance::PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig)
+void UNullCleverTapInstance::PromptForPushPermissionWithAlertPrimer(
+	const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig)
 {
 	CleverTapSDK::Ignore(PushPrimerAlertConfig);
 }
 
-void FNullCleverTapInstance::PromptForPushPermission(
+void UNullCleverTapInstance::PromptForPushPermissionWithHalfInterstitialPrimer(
 	const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
 {
 	CleverTapSDK::Ignore(PushPrimerHalfInterstitialConfig);
 }
 
-void FNullCleverTapInstance::EnableOnPushNotificationClicked() {}
+void UNullCleverTapInstance::EnableOnPushNotificationClicked() {}
 
-void FNullCleverTapInstance::EnableOnOpenUrl() {}
+void UNullCleverTapInstance::EnableOnOpenUrl() {}
 
-bool FNullCleverTapInstance::LocalizeAndroidNotificationChannel(
+bool UNullCleverTapInstance::LocalizeAndroidNotificationChannel(
 	const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
 {
 	CleverTapSDK::Ignore(ChannelID, ChannelName, ChannelDescription);
 	return false;
 }
 
-bool FNullCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName)
+bool UNullCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName)
 {
 	CleverTapSDK::Ignore(GroupID, GroupName);
 	return false;
 }
 
-void FNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)
+void UNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)
 {
 	CleverTapSDK::Ignore(UrlHandler);
 }
 
-void FNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter)
+void UNullCleverTapInstance::RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter)
 {
 	CleverTapSDK::Ignore(Filter);
 }
 
-void FNullCleverTapInstance::DiscardInAppNotifications() {}
-void FNullCleverTapInstance::ResumeInAppNotifications() {}
-void FNullCleverTapInstance::SuspendInAppNotifications() {}
+void UNullCleverTapInstance::DiscardInAppNotifications() {}
+void UNullCleverTapInstance::ResumeInAppNotifications() {}
+void UNullCleverTapInstance::SuspendInAppNotifications() {}
 
-void FNullCleverTapInstance::SetOffline(bool bIsOffline)
+void UNullCleverTapInstance::SetOffline(bool bIsOffline)
 {
 	CleverTapSDK::Ignore(bIsOffline);
 }
 
-void FNullCleverTapInstance::SetOptOut(bool bIsOptingOut)
+void UNullCleverTapInstance::SetOptOut(bool bIsOptingOut)
 {
 	CleverTapSDK::Ignore(bIsOptingOut);
 }
 
-void FNullCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollection)
+void UNullCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollection)
 {
 	CleverTapSDK::Ignore(bEnableCollection);
 }

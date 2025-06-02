@@ -3,6 +3,7 @@
 
 #include "CleverTapInstance.h"
 #include "CleverTapLogLevel.h"
+
 #include "CoreMinimal.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "CleverTapSubsystem.generated.h"
@@ -13,10 +14,10 @@ class UCleverTapConfig;
 /**
  * A UEngineSubsystem for interaction with the CleverTap SDK.
  *  Note: UCleverTapSubsystem must be initialized before a call to FPlatformMisc::RegisterForRemoteNotifications() is
- *  made. If any of the ICleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
+ *  made. If any of the UCleverTapInstance push primer methods are used then RegisterForRemoteNotifications() doesn't
  *  need to be called.
  */
-UCLASS(BlueprintType, ClassGroup = CleverTap)
+UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap Subsystem"))
 class CLEVERTAP_API UCleverTapSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
@@ -25,27 +26,27 @@ public:
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig* Config = nullptr);
+	UCleverTapInstance& InitializeSharedInstance(const UCleverTapConfig* Config = nullptr);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
+	UCleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const FString& CleverTapId);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const UCleverTapConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with a custom CleverTap Id.
 	 */
-	ICleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
+	UCleverTapInstance& InitializeSharedInstance(const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Returns true if the shared instance has been initialized.
@@ -63,30 +64,61 @@ public:
 	 * Get the shared CleverTap API instance. If the instance has not been initialized then
 	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
 	 */
-	ICleverTapInstance& SharedInstance();
+	UCleverTapInstance& SharedInstance();
 
 	// <UEngineSubsystem>
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	// </UEngineSubsystem>
 
 private:
+	/** Access to the fallback no-op instance. Will be created if needed. */
+	UCleverTapInstance& NullInstance();
+
 	/**
 	 * Explicitly initialize the shared CleverTap instance.
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstance"))
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Shared Instance"), Category = "CleverTap|Instance")
 	void BlueprintInitializeSharedInstance(const UCleverTapConfig* Config);
 
 	/**
 	 * Explicitly initialize the shared CleverTap instance with an optional custom CleverTap
 	 *  Id.
 	 */
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"))
+	UFUNCTION(
+		BlueprintCallable, meta = (DisplayName = "InitializeSharedInstanceWithId"), Category = "CleverTap|Instance")
 	void BlueprintInitializeSharedInstanceWithId(const UCleverTapConfig* Config, const FString& CleverTapId);
+
+	/**
+	 * Get the shared CleverTap API instance. If the instance has not been initialized then
+	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
+	 */
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared Instance"), Category = "CleverTap|Instance")
+	UCleverTapInstance* BlueprintSharedInstance();
 
 	void AddRemoteNotificationTokenListener();
 	void OnRegisteredForRemoteNotifications(TArray<uint8> Token);
 
 private:
-	TUniquePtr<ICleverTapInstance> SharedInstanceImpl;
+	UPROPERTY(Transient)
+	UCleverTapInstance* SharedInstanceImpl = nullptr;
+
+	UPROPERTY(Transient)
+	UCleverTapInstance* NullInstanceImpl = nullptr;
+
+	UPROPERTY(Transient)
 	TArray<uint8> SavedRemoteNotificationToken;
+};
+
+UCLASS()
+class CLEVERTAP_API UCleverTapSubsystemBlueprintLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	 * Get the shared CleverTap API instance. If the instance has not been initialized then
+	 *  an attempt to initialize it will be made as if calling InitializeSharedInstance().
+	 */
+	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Shared CleverTap Instance"), Category = "CleverTap|Instance")
+	static UCleverTapInstance* SharedCleverTapInstance();
 };

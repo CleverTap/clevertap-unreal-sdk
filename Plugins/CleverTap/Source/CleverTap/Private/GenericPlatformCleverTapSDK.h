@@ -17,24 +17,28 @@ struct FGenericPlatformSDK
 	static void SetLogLevel(ECleverTapLogLevel Level);
 
 	/**
-	 * Initialize the shared CleverTap instance. If successful this returns a non-null
-	 *  instance object. This instance object can be used to call other SDK methods. It should
-	 *  eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
+	 * Initializes the shared CleverTap instance with a custom CleverTap Id.
+	 * Returns a non-null instance object if successful.
+	 *
+	 * The returned object is owned by the CleverTapSubsystem and does not need to be manually destroyed.
+	 * You can safely store and use the pointer while the subsystem is active.
 	 */
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
+	static UCleverTapInstance* InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
 
 	/**
-	 * Initialize the shared CleverTap instance with a custom CleverTap Id. If successful this
-	 *  returns a non-null instance object. This instance object can be used to call other SDK methods.
-	 *  It should eventually be destroyed using the DestroyInstance(ICleverTapInstanceInterface&) method.
+	 * Initializes the shared CleverTap instance with a custom CleverTap Id.
+	 * Returns a non-null instance object if successful.
+	 *
+	 * The returned object is owned by the CleverTapSubsystem and does not need to be manually destroyed.
+	 * You can safely store and use the pointer while the subsystem is active.
 	 */
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+	static UCleverTapInstance* InitializeSharedInstance(
 		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
 
 	/**
 	 * Tell the specific CleverTap instance to register for remote notifications.
 	 */
-	static void SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token);
+	static void SetRemoteNotificationToken(UCleverTapInstance& Instance, const TArray<uint8>& Token);
 };
 
 }} // namespace CleverTapSDK::GenericPlatform

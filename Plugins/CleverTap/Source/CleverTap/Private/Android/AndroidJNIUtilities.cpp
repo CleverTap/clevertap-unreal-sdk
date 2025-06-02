@@ -123,7 +123,6 @@ jclass LoadClass(JNIEnv* Env, const char* ClassPath)
 		return nullptr;
 	}
 
-	// todo there has to be a simpler way to do this!
 	jobject Activity = FAndroidApplication::GetGameActivityThis();
 	jclass ActivityClass = Env->GetObjectClass(Activity);
 	if (HandleExceptionOrError(Env, !ActivityClass, TEXT("GetGameActivityThis() failed")))
@@ -320,51 +319,6 @@ FString JavaObjectToString(JNIEnv* Env, jobject JavaObject)
 	Env->DeleteLocalRef(JavaStr);
 	Env->DeleteLocalRef(ObjectClass);
 	return Result;
-}
-
-FString JavaStringArrayToString(JNIEnv* Env, jobjectArray Array)
-{
-	// todo make this handle arrays of anything, not just strings, rename to JavaArrayToString
-
-	if (!Env)
-	{
-		UE_LOG(LogCleverTap, Error, TEXT("JNIEnv is null!"));
-		return TEXT("<null env>");
-	}
-	jsize Length = Env->GetArrayLength(Array);
-	if (HandleException(Env, TEXT("GetArrayLength()")))
-	{
-		return TEXT("<error>");
-	}
-
-	FString Output = TEXT("[");
-
-	for (jsize i = 0; i < Length; ++i)
-	{
-		jstring JStr = (jstring)Env->GetObjectArrayElement(Array, i);
-		if (HandleException(Env, TEXT("GetObjectArrayElement()")))
-		{
-			return TEXT("<error>");
-		}
-
-		const char* UTF = Env->GetStringUTFChars(JStr, nullptr);
-		if (HandleException(Env, TEXT("GetStringUTFChars()")))
-		{
-			return TEXT("<error>");
-		}
-		FString Entry = UTF ? UTF8_TO_TCHAR(UTF) : TEXT("<null>");
-		Env->ReleaseStringUTFChars(JStr, UTF);
-		Env->DeleteLocalRef(JStr);
-
-		Output += Entry;
-		if (i < Length - 1)
-		{
-			Output += TEXT(", ");
-		}
-	}
-
-	Output += TEXT("]");
-	return Output;
 }
 
 jobject StringArrayToJavaArrayList(JNIEnv* Env, const TArray<FString>& StringArray)

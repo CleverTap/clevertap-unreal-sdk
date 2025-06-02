@@ -103,11 +103,23 @@ public:
 private:
 	void PopulateUI();
 	void ConfigureSharedInstance();
+
+	UFUNCTION()
 	void OnPushPermissionResponse(bool bGranted);
+
+	UFUNCTION()
 	void OnPushNotificationClicked(const FCleverTapProperties& NotificationPayload);
+
+	UFUNCTION()
 	void OnInAppNotificationShown(const FCleverTapProperties& NotificationPayload);
+
+	UFUNCTION()
 	void OnInAppNotificationDismissed(const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+
+	UFUNCTION()
 	void OnInAppNotificationButtonClicked(const FCleverTapProperties& NotificationPayload);
+
+	UFUNCTION()
 	void OnOpenUrl(const FString& Url);
 
 private:

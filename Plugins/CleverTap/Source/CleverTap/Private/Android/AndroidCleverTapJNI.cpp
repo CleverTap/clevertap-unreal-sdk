@@ -902,12 +902,12 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerAlertC
 	}
 
 	FCleverTapProperties ConfigProperties;
-	ConfigProperties.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
-	ConfigProperties.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
-	ConfigProperties.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
-	ConfigProperties.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
-	ConfigProperties.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
-	ConfigProperties.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
+	ConfigProperties.Map.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
+	ConfigProperties.Map.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
+	ConfigProperties.Map.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Map.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
+	ConfigProperties.Map.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
+	ConfigProperties.Map.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
 	jobject JavaMap = ConvertCleverTapPropertiesToJavaMap(Env, ConfigProperties);
 	if (!JavaMap)
 	{
@@ -935,23 +935,23 @@ jobject CreatePushPrimerConfigJSON(JNIEnv* Env, const FCleverTapPushPrimerHalfIn
 	}
 
 	FCleverTapProperties ConfigProperties;
-	ConfigProperties.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
-	ConfigProperties.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
-	ConfigProperties.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
-	ConfigProperties.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
-	ConfigProperties.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
-	ConfigProperties.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
+	ConfigProperties.Map.Add(TEXT("TitleText"), PrimerConfig.TitleText.ToString());
+	ConfigProperties.Map.Add(TEXT("MessageText"), PrimerConfig.MessageText.ToString());
+	ConfigProperties.Map.Add(TEXT("PositiveButtonText"), PrimerConfig.PositiveButtonText.ToString());
+	ConfigProperties.Map.Add(TEXT("NegativeButtonText"), PrimerConfig.NegativeButtonText.ToString());
+	ConfigProperties.Map.Add(TEXT("FollowDeviceOrientation"), PrimerConfig.bFollowDeviceOrientation);
+	ConfigProperties.Map.Add(TEXT("FallbackToSettings"), PrimerConfig.bFallbackToSettings);
 	if (PrimerConfig.ImageURL.IsEmpty() == false)
 	{
-		ConfigProperties.Add(TEXT("ImageURL"), PrimerConfig.ImageURL);
+		ConfigProperties.Map.Add(TEXT("ImageURL"), PrimerConfig.ImageURL);
 	}
-	ConfigProperties.Add(TEXT("BackgroundColor"), ColorToHexString(PrimerConfig.BackgroundColor));
-	ConfigProperties.Add(TEXT("ButtonBorderColor"), ColorToHexString(PrimerConfig.ButtonBorderColor));
-	ConfigProperties.Add(TEXT("TitleTextColor"), ColorToHexString(PrimerConfig.TitleTextColor));
-	ConfigProperties.Add(TEXT("MessageTextColor"), ColorToHexString(PrimerConfig.MessageTextColor));
-	ConfigProperties.Add(TEXT("ButtonTextColor"), ColorToHexString(PrimerConfig.ButtonTextColor));
-	ConfigProperties.Add(TEXT("ButtonBackgroundColor"), ColorToHexString(PrimerConfig.ButtonBackgroundColor));
-	ConfigProperties.Add(TEXT("ButtonBorderRadius"), PrimerConfig.ButtonBorderRadius);
+	ConfigProperties.Map.Add(TEXT("BackgroundColor"), ColorToHexString(PrimerConfig.BackgroundColor));
+	ConfigProperties.Map.Add(TEXT("ButtonBorderColor"), ColorToHexString(PrimerConfig.ButtonBorderColor));
+	ConfigProperties.Map.Add(TEXT("TitleTextColor"), ColorToHexString(PrimerConfig.TitleTextColor));
+	ConfigProperties.Map.Add(TEXT("MessageTextColor"), ColorToHexString(PrimerConfig.MessageTextColor));
+	ConfigProperties.Map.Add(TEXT("ButtonTextColor"), ColorToHexString(PrimerConfig.ButtonTextColor));
+	ConfigProperties.Map.Add(TEXT("ButtonBackgroundColor"), ColorToHexString(PrimerConfig.ButtonBackgroundColor));
+	ConfigProperties.Map.Add(TEXT("ButtonBorderRadius"), PrimerConfig.ButtonBorderRadius);
 
 	jobject JavaMap = ConvertCleverTapPropertiesToJavaMap(Env, ConfigProperties);
 	if (!JavaMap)

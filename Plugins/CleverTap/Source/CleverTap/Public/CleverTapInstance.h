@@ -5,41 +5,47 @@
 #include "CleverTapPushPrimerConfig.h"
 
 #include "CoreMinimal.h"
+#include "UObject/Object.h"
+#include "CleverTapInstance.generated.h"
 
 /**
  * Delegate type that broadcasts URLS the application should open.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnOpenUrl, const FString& Url);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOpenUrl, const FString&, Url);
 
 /**
  * Delegate type that broadcasts the eventual user response to PromptForPushPermission()
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool bGranted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPushPermissionResponse, bool, bGranted);
 
 /**
  * Delegate type used to broadcast notifications when the user taps on a Push Notification.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPushNotificationClicked, const FCleverTapProperties& NotificationPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnPushNotificationClicked, const FCleverTapProperties&, NotificationPayload);
 
 /**
  * Delegate type used to broadcast in-app notifications when they are shown to the user.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationShown, const FCleverTapProperties& NotificationPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnInAppNotificationShown, const FCleverTapProperties&, NotificationPayload);
 
 /**
  * Delegate type used to broadcast button presses on in-app notifications.
  */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnInAppNotificationButtonClicked, const FCleverTapProperties& ButtonPayload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnInAppNotificationButtonClicked, const FCleverTapProperties&, ButtonPayload);
 
 /**
  * Delegate type used to broadcast in-app notifications when the user dismissed them.
  */
-DECLARE_MULTICAST_DELEGATE_TwoParams(
-	FOnInAppNotificationDismissed, const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnInAppNotificationDismissed, const FCleverTapProperties&, Extras, const FCleverTapProperties&, ActionExtras);
 
 /**
  * Status of if the user has granted permission to send push notifications.
  */
+UENUM(BlueprintType)
 enum class ECleverTapPushPermissionStatus : uint8
 {
 	// The permission status is currently unknown
@@ -65,39 +71,64 @@ enum class ECleverTapChannel : uint8
 /**
  * A CleverTap API instance
  */
-class CLEVERTAP_API ICleverTapInstance
-{
-public:
-	virtual ~ICleverTapInstance() = default;
 
+UCLASS(Blueprintable, Abstract)
+class CLEVERTAP_API UCleverTapInstance : public UObject
+{
+	GENERATED_BODY()
+
+public:
 	/**
-	 * Gets the CleverTap Id associated with this instance. The CleverTap Id is a unique identifier
-	 *  assigned to the user profile.
+	 * Gets the CleverTap Id associated with this instance.
+	 * The CleverTap Id is a unique identifier assigned to the user profile.
 	 */
-	virtual FString GetCleverTapId() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual FString GetCleverTapId() PURE_VIRTUAL(UCleverTapInstance::GetCleverTapId, return TEXT(""););
 
 	/**
 	 * Called to enrich an anonymous user profile with identifying information about the user. CleverTap provides
 	 *  pre-defined profile properties such as name, phone, gender, age, and so on to represent well-known properties to
 	 *  associate with the profile. A list of all pre-defined property names is available in the online documentation.
-	 *  This overload of OnUserLogin() is only valid if bUseCustomCleverTapId == false in the configuration INI at build
-	 *  time.
+	 *
+	 * NOTE: This overload of OnUserLogin() is only valid if bUseCustomCleverTapId == false in the configuration INI at
+	 * build time.
 	 */
-	virtual void OnUserLogin(const FCleverTapProperties& Profile) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void OnUserLogin(const FCleverTapProperties& Profile) PURE_VIRTUAL(UCleverTapInstance::OnUserLogin, ;);
 
 	/**
 	 * Called to enrich an anonymous user profile with identifying information about the user and provide them a custom
 	 *  CleverTap identifier. CleverTap provides pre-defined profile properties such as name, phone, gender, age, and so
 	 *  on to represent well-known properties to associate with the profile. A list of all pre-defined property names is
-	 *  available in the online documentation. This overload of OnUserLogin() is only valid if
-	 *  bUseCustomCleverTapId == true in the configuration INI at build time.
+	 *  available in the online documentation.
+	 *
+	 * NOTE: This overload of OnUserLogin() is only valid if bUseCustomCleverTapId == true in the configuration INI at
+	 * build time.
 	 */
-	virtual void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void OnUserLoginWithCleverTapId(const FCleverTapProperties& Profile, const FString& CleverTapId)
+		PURE_VIRTUAL(UCleverTapInstance::OnUserLoginWithCleverTapId, ;);
+	;
+
+	/**
+	 * Called to enrich an anonymous user profile with identifying information about the user and provide them a custom
+	 *  CleverTap identifier. CleverTap provides pre-defined profile properties such as name, phone, gender, age, and so
+	 *  on to represent well-known properties to associate with the profile. A list of all pre-defined property names is
+	 *  available in the online documentation.
+	 *
+	 * NOTE: This overload of OnUserLogin() is only valid if bUseCustomCleverTapId == true in the configuration INI at
+	 * build time.
+	 */
+	void OnUserLogin(const FCleverTapProperties& Profile, const FString& CleverTapId)
+	{
+		OnUserLoginWithCleverTapId(Profile, CleverTapId);
+	};
 
 	/**
 	 * Update a user's profile with additional properties.
 	 */
-	virtual void PushProfile(const FCleverTapProperties& Profile) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void PushProfile(const FCleverTapProperties& Profile) PURE_VIRTUAL(UCleverTapInstance::PushProfile, ;);
 
 	/**
 	 * Returns the user profile property value for the given key, or an empty optional if not found.
@@ -107,31 +138,171 @@ public:
 	 * NOTE: Date related property values are returned as number of seconds since January 1, 1970, 00:00:00 GMT,
 	 *       not the FCleverTapDate type used to set them.
 	 */
-	virtual TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key) = 0;
+	virtual TOptional<FCleverTapPropertyValue> GetProperty(const FString& Key)
+		PURE_VIRTUAL(UCleverTapInstance::PushProfile, return {};);
+
+	/** Returns the value of a property formatted as a String, or DefaultValue if the property does not exist. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FString GetPropertyAsString(const FString& Key, const FString& DefaultValue);
+
+	/** Returns the value of a Boolean property, or DefaultValue if the property is missing or not a Boolean. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool GetBoolProperty(const FString& Key, bool DefaultValue);
+
+	/** Returns the value of a Date property, or DefaultValue if the property is missing, not a Date, or not convertible
+	 *  to a date.
+	 *
+	 * Note: If the property holds an int32 or an int64 it will be treated as a unix timestamp and converted to
+	 *       an FCleverTapDate. See HasDateCompatibleProperty().
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FCleverTapDate GetDateProperty(const FString& Key, const FCleverTapDate& DefaultValue);
+
+	/** Returns the value of a Double property, or DefaultValue if the property is missing or not a Double.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit doubles, but Blueprint only supports 32-bit floats.
+	 *        64-bit values must be accessed from C++.
+	 */
+	double GetDoubleProperty(const FString& Key, double DefaultValue);
+
+	/** Returns the value of a Float property, or DefaultValue if the property is missing or not a Float.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit doubles, but Blueprint only supports 32-bit floats.
+	 *        64-bit values must be accessed from C++.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	float GetFloatProperty(const FString& Key, float DefaultValue);
+
+	/** Returns the value of a 32-bit Integer property, or DefaultValue if the property is missing or not a 32-bit
+	 *  Integer.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit integers, but Blueprint does not.
+	 *        64-bit values must be accessed from C++.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	int32 GetIntProperty(const FString& Key, int32 DefaultValue);
+
+	/** Returns the value of a 32-bit Integer property, or DefaultValue if the property is missing or not a 64-bit
+	 *  Integer.
+	 *
+	 *  Note: FCleverTapPropertyValue supports 64-bit integers, but Blueprint does not.
+	 *        64-bit values must be accessed from C++.
+	 */
+	int64 GetInt64Property(const FString& Key, int64 DefaultValue);
+
+	/** Returns the value of a String property, or DefaultValue if the property is missing or not a String. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	FString GetStringProperty(const FString& Key, const FString& DefaultValue);
+
+	/** Returns the value of a String array property, or DefaultValue if the property is missing or not an array of
+	 *  Strings. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	TArray<FString> GetStringArrayProperty(const FString& Key, const TArray<FString>& DefaultValue);
+
+	/** Returns true if the user profile contains a property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Boolean property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasBoolProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Date property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDateProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a date or a value that can be converted to a date with the given Key.
+	 *
+	 *  int32 and int64 values are treated as Unix timestamps & considered date compatible.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDateCompatibleProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 64-bit Double property with the given Key.
+	 *
+	 *  Note: Double values cannot be accessed from Blueprint — C++ only.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasDoubleProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a Float property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasFloatProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 32-bit Integer property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasIntProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a 64-bit Integer property with the given Key.
+	 *
+	 *  Note: 64-bit Integer values cannot be accessed from Blueprint — C++ only.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasInt64Property(const FString& Key);
+
+	/** Returns true if the user profile contains a String property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasStringProperty(const FString& Key);
+
+	/** Returns true if the user profile contains a String Array property with the given Key. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	bool HasStringArrayProperty(const FString& Key);
 
 	/**
 	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
-	virtual void DecrementValue(const FString& Key, int Amount) = 0;
+	void DecrementValue(const FString& Key, int Amount) { DecrementIntValue(Key, Amount); }
 
 	/**
 	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
-	virtual void DecrementValue(const FString& Key, double Amount) = 0;
+	void DecrementValue(const FString& Key, float Amount) { DecrementFloatValue(Key, Amount); }
+
+	/**
+	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
+	 *  double. The Amount value should be zero or greater than zero.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void DecrementIntValue(const FString& Key, int Amount)
+		PURE_VIRTUAL(UCleverTapInstance::DecrementIntValue, ;);
+
+	/**
+	 * Decrement a user profile property by the specified amount. The property type must be an integer, float, or
+	 *  double. The Amount value should be zero or greater than zero.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void DecrementFloatValue(const FString& Key, float Amount)
+		PURE_VIRTUAL(UCleverTapInstance::DecrementFloatValue, ;);
 
 	/**
 	 * Increment a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
-	virtual void IncrementValue(const FString& Key, int Amount) = 0;
+	void IncrementValue(const FString& Key, int Amount) { IncrementIntValue(Key, Amount); }
 
 	/**
 	 * Increment a user profile property by the specified amount. The property type must be an integer, float, or
 	 *  double. The Amount value should be zero or greater than zero.
 	 */
-	virtual void IncrementValue(const FString& Key, double Amount) = 0;
+	void IncrementValue(const FString& Key, float Amount) { IncrementFloatValue(Key, Amount); }
+
+	/**
+	 * Increment a user profile property by the specified amount. The property type must be an integer, float, or
+	 *  double. The Amount value should be zero or greater than zero.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void IncrementIntValue(const FString& Key, int Amount)
+		PURE_VIRTUAL(UCleverTapInstance::IncrementIntValue, ;);
+
+	/**
+	 * Increment a user profile property by the specified amount. The property type must be an integer, float, or
+	 *  double. The Amount value should be zero or greater than zero.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void IncrementFloatValue(const FString& Key, float Amount)
+		PURE_VIRTUAL(UCleverTapInstance::IncrementFloatValue, ;);
 
 	/**
 	 * Add a unique value to a multi-value user profile property
@@ -143,7 +314,9 @@ public:
 	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
 	 * with the current value cast to a string and the new value(s) added
 	 */
-	virtual void AddMultiValueForKey(const FString& Key, const FString& Value) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void AddMultiValueForKey(const FString& Key, const FString& Value)
+		PURE_VIRTUAL(UCleverTapInstance::AddMultiValueForKey, ;);
 
 	/**
 	 * Add a collection of unique values to a multi-value user profile property
@@ -155,7 +328,9 @@ public:
 	 * If the key currently contains a scalar value, the key will be promoted to a multi-value property
 	 * with the current value cast to a string and the new value(s) added
 	 */
-	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void AddMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
+		PURE_VIRTUAL(UCleverTapInstance::AddMultiValuesForKey, ;);
 
 	/**
 	 * Remove a unique value from a multi-value user profile property.
@@ -164,7 +339,9 @@ public:
 	 * the key will be promoted to a multi-value property with the current value cast to a string.
 	 * If the multi-value property is empty after the remove operation, the key will be removed.
 	 */
-	virtual void RemoveMultiValueForKey(const FString& Key, const FString& Value) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void RemoveMultiValueForKey(const FString& Key, const FString& Value)
+		PURE_VIRTUAL(UCleverTapInstance::RemoveMultiValueForKey, ;);
 
 	/**
 	 * Remove a collection of unique values from a multi-value user profile property
@@ -174,14 +351,17 @@ public:
 	 *
 	 * If the multi-value property is empty after the remove operation, the key will be removed.
 	 */
-	virtual void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void RemoveMultiValuesForKey(const FString& Key, const TArray<FString>& Values)
+		PURE_VIRTUAL(UCleverTapInstance::RemoveMultiValuesForKey, ;);
 
 	/**
 	 * Remove the user profile property value specified by key from the user profile.
 	 *
 	 * This method can be used to remove PII data (for eg. Email,Name,Phone), locally from database and shared prefs.
 	 */
-	virtual void RemoveValueForKey(const FString& Key) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void RemoveValueForKey(const FString& Key) PURE_VIRTUAL(UCleverTapInstance::RemoveValueForKey, ;);
 
 	/**
 	 * Set a collection of unique values as a multi-value user profile property.
@@ -191,18 +371,42 @@ public:
 	 * Max 100 values, on reaching 100 cap, oldest value(s) will be removed.
 	 * Values must be Strings and are limited to 512 characters.
 	 */
-	virtual void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void SetMultiValuesForKey(const FString& Key, const TArray<FString> Values)
+		PURE_VIRTUAL(UCleverTapInstance::SetMultiValuesForKey, ;);
+
+	/** Copy all matching profile properties to a UObject */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Properties")
+	void ApplyProfileToObject(UObject* Target);
+
+	/** Copy all matching profile properties to a UStruct-based type T */
+	template <typename T>
+	void ApplyProfileToStruct(T* Target);
 
 	/**
 	 * Record a user event on the user's profile with the specified event name.
 	 */
-	virtual void PushEvent(const FString& EventName) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void PushEvent(const FString& EventName) PURE_VIRTUAL(UCleverTapInstance::PushEvent, ;);
 
 	/**
 	 * Record a user event on the user's profile with the specified event name and the associated key:value pair based
 	 *  event properties.
 	 */
-	virtual void PushEvent(const FString& EventName, const FCleverTapProperties& Actions) = 0;
+	void PushEvent(const FString& EventName, const FCleverTapProperties& EventProperties)
+	{
+		PushEventWithProperties(EventName, EventProperties);
+	}
+
+	/**
+	 * Record a user event on the user's profile with the specified event name and the associated key:value pair based
+	 *  event properties.
+	 *
+	 * Blueprint callable version of the PushEvent(String,FCleverTapProperties) overload.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void PushEventWithProperties(const FString& EventName, const FCleverTapProperties& EventProperties)
+		PURE_VIRTUAL(UCleverTapInstance::PushEventWithProperties, ;);
 
 	/**
 	 * Record a special user event to capture key details about transaction purchases. The charge details allows you to
@@ -210,32 +414,63 @@ public:
 	 *  information. The list of items allows you to record a list of items sold along with associated properties they
 	 *  may have such as size, color, category, etc.
 	 */
-	virtual void PushChargedEvent(
-		const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	virtual void PushChargedEvent(const FCleverTapProperties& ChargeDetails, const TArray<FCleverTapProperties>& Items)
+		PURE_VIRTUAL(UCleverTapInstance::PushChargedEvent, ;);
 
 	/**
 	 * Gets the push permission status. If this returns ECleverTapPushPermissionStatus::Unknown then it should be polled
 	 *  until the status has been determined.
 	 */
-	virtual ECleverTapPushPermissionStatus GetPushPermissionStatus() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual ECleverTapPushPermissionStatus GetPushPermissionStatus()
+		PURE_VIRTUAL(UCleverTapInstance::GetPushPermissionStatus, return ECleverTapPushPermissionStatus::Unknown;);
 
 	/**
-	 * Prompts the user to grant push permissions, if they've not already been granted or denied.
+	 * Prompts the user to grant push permissions, if they've not already been granted.
 	 *
 	 *\param bFallbackToSettings - when this is true and permissions were previously denied, then show an alert dialog
 	 *                             which routes to app's notification settings page.
 	 */
-	virtual void PromptForPushPermission(bool bFallbackToSettings) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual void PromptForPushPermission(bool bFallbackToSettings)
+		PURE_VIRTUAL(UCleverTapInstance::PromptForPushPermission, ;);
 
 	/**
-	 * Prompts the user to grant push permissions using a push primer alert, if they've not already been granted or
-	 * denied.
+	 * Prompts the user to grant push permissions using a push primer alert, if they've not already been granted.
 	 *
 	 * A Push Primer explains the need for push notifications to your users and helps to improve your engagement rates.
 	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
 	 * notification permission.
 	 */
-	virtual void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual void PromptForPushPermissionWithAlertPrimer(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig)
+		PURE_VIRTUAL(UCleverTapInstance::PromptForPushPermissionWithAlertPrimer, ;);
+
+	/**
+	 * Prompts the user to grant push permissions using a push primer alert, if they've not already been granted.
+	 *
+	 * A Push Primer explains the need for push notifications to your users and helps to improve your engagement rates.
+	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
+	 * notification permission.
+	 */
+	void PromptForPushPermission(const FCleverTapPushPrimerAlertConfig& PushPrimerAlertConfig)
+	{
+		PromptForPushPermissionWithAlertPrimer(PushPrimerAlertConfig);
+	}
+
+	/**
+	 * Prompts the user to grant push permissions using a push primer half-interstitial, if they've not already been
+	 * granted.
+	 *
+	 * A Push Primer explains the need for push notifications to your users and helps to improve your engagement rates.
+	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
+	 * notification permission.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual void PromptForPushPermissionWithHalfInterstitialPrimer(
+		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
+		PURE_VIRTUAL(UCleverTapInstance::PromptForPushPermissionWithHalfInterstitialPrimer, ;);
 
 	/**
 	 * Prompts the user to grant push permissions using a push primer half-interstitial, if they've not already been
@@ -245,8 +480,10 @@ public:
 	 * It is an InApp notification that provides the details of message types, your users can expect, before requesting
 	 * notification permission.
 	 */
-	virtual void PromptForPushPermission(
-		const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig) = 0;
+	void PromptForPushPermission(const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig)
+	{
+		PromptForPushPermissionWithHalfInterstitialPrimer(PushPrimerHalfInterstitialConfig);
+	}
 
 	/**
 	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()
@@ -268,7 +505,8 @@ public:
 	 * If the game was launched by clicking on a push notification, it will be delivered immediately after this
 	 * call. If multiple notifications are received before this call, only the most recent will be delivered.
 	 */
-	virtual void EnableOnPushNotificationClicked() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual void EnableOnPushNotificationClicked() PURE_VIRTUAL(UCleverTapInstance::EnableOnPushNotificationClicked, ;);
 
 	/**
 	 * Called when the application should open a URL (e.g. from clicking a deep link in a notification).
@@ -280,6 +518,7 @@ public:
 	 *          registered as intent filters on Android or in the plist for iOS.
 	 *          See `bIntegrateOpenUrl`
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|System")
 	FOnOpenUrl OnOpenUrl;
 
 	/**
@@ -289,7 +528,8 @@ public:
 	 * If the game was launched by clicking on a registerd URL scheme, OnOpenUrl will be delivered immediately after
 	 * this call. If multiple notifications are received before this call, only the most recent will be delivered.
 	 */
-	virtual void EnableOnOpenUrl() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void EnableOnOpenUrl() PURE_VIRTUAL(UCleverTapInstance::EnableOnOpenUrl, ;);
 
 	/**
 	 * Android Only: Updates the name and description of an existing Notification Channel with localized text.
@@ -303,8 +543,10 @@ public:
 	 *
 	 * Call this function during startup (and at locale change) to update the name and description strings.
 	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
 	virtual bool LocalizeAndroidNotificationChannel(
-		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) = 0;
+		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
+		PURE_VIRTUAL(UCleverTapInstance::LocalizeAndroidNotificationChannel, return false;);
 
 	/**
 	 * Android Only: Updates the name of an existing Notification Channel Group with localized text.
@@ -318,7 +560,9 @@ public:
 	 *
 	 * Call this function during startup (and at locale change) to update with the localized name.
 	 */
-	virtual bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName)
+		PURE_VIRTUAL(UCleverTapInstance::LocalizeAndroidNotificationChannel, return false;);
 
 	/**
 	 * iOS Only: Register a URL handler if you would like to implement custom handling for URLs in the case of in-app
@@ -328,7 +572,8 @@ public:
 	 *  if you would like CleverTap to open the URL supplied to it. There is no guarantee on the thread that the
 	 *  handler is called on.
 	 */
-	virtual void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) = 0;
+	virtual void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)
+		PURE_VIRTUAL(UCleverTapInstance::LocalizeAndroidNotificationChannel, ;);
 
 	/**
 	 * Called when an in-app notification is shown to the user.
@@ -336,6 +581,7 @@ public:
 	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
 	 * connected and your application is prepared to handle the notifications.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationShown OnInAppNotificationShown;
 
 	/**
@@ -344,11 +590,13 @@ public:
 	 * Note: InApp notifications are initially suspended; call ResumeInAppNotifications() when your delegates are
 	 * connected and your application is prepared to handle the notifications.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationDismissed OnInAppNotificationDismissed;
 
 	/**
 	 * Called when the user clicks on a Key/Value pair button in an in-app notification.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|InApp")
 	FOnInAppNotificationButtonClicked OnInAppNotificationButtonClicked;
 
 	/**
@@ -357,24 +605,29 @@ public:
 	 *  The filter should return true if the in-app notification should be shown and false when it should be
 	 *  surppressed. Note that there is no guarantee what thread the filter function is invoked on.
 	 */
-	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter) = 0;
+	virtual void RegisterInAppNotificationFilter(TUniqueFunction<bool(const FCleverTapProperties&)> Filter)
+		PURE_VIRTUAL(UCleverTapInstance::RegisterInAppNotificationFilter, ;);
 
 	/**
 	 * Disables the display of InApp notifications and discards any new incoming.
 	 *
 	 * The InApp Notifications will be displayed again only once ResumeInAppNotifications() is called.
 	 */
-	virtual void DiscardInAppNotifications() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
+	virtual void DiscardInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::DiscardInAppNotifications, ;);
+	;
 
 	/** Resumes displaying in-app notifications.
 	 *
 	 *  Any notifacations queued by SuspendInAppNotifications() will be instantly shown.
 	 */
-	virtual void ResumeInAppNotifications() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
+	virtual void ResumeInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::ResumeInAppNotifications, ;);
 
 	/** Suspends and saves in-app notifications until ResumeInAppNotifications() is called.
 	 */
-	virtual void SuspendInAppNotifications() = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
+	virtual void SuspendInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::SuspendInAppNotifications, ;);
 
 	/** Disables or enables sending events to the server.
 	 *
@@ -385,18 +638,32 @@ public:
 	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
 	 * the SDK instance will immediately attempt to send events that have been queued while offline.
 	 */
-	virtual void SetOffline(bool bIsOffline) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void SetOffline(bool bIsOffline) PURE_VIRTUAL(UCleverTapInstance::SetOffline, ;);
 
 	/**
 	 * Can be used to stop sending events to CleverTap for GDPR compliance. Calling this method with bIsOptingOut
 	 *  set to false will resume sending events to CleverTap. This value is not remembered across app sessions so
 	 *  it is best practice to call this method with the correct state as early as possible after initialization.
 	 */
-	virtual void SetOptOut(bool bIsOptingOut) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void SetOptOut(bool bIsOptingOut) PURE_VIRTUAL(UCleverTapInstance::SetOptOut, ;);
 
 	/**
 	 * CleverTap does not track network information by default for GDPR compliance. Enabling collection will
 	 *  collection personal information like Wifi, network information, and user IP.
 	 */
-	virtual void SetNetworkInformationRecording(bool bEnableCollection) = 0;
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void SetNetworkInformationRecording(bool bEnableCollection)
+		PURE_VIRTUAL(UCleverTapInstance::SetNetworkInformationRecording, ;);
+
+private:
+	/** Copy all matching profile properties to a UStruct-based type T */
+	void ApplyProfileToStruct(const UStruct* StructDef, void* TargetStructInstance);
 };
+
+template <typename T>
+inline void UCleverTapInstance::ApplyProfileToStruct(T* Target)
+{
+	ApplyProfileToStruct(TBaseStructure<T>::Get(), Target);
+}
