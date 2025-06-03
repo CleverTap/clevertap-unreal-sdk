@@ -8,10 +8,10 @@ namespace CleverTapSDK { namespace IOS {
 struct FPlatformSDK : GenericPlatform::FGenericPlatformSDK
 {
 	static void SetLogLevel(ECleverTapLogLevel Level);
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
-	static TUniquePtr<ICleverTapInstance> InitializeSharedInstance(
+	static UCleverTapInstance* InitializeSharedInstance(const FCleverTapInstanceConfig& Config);
+	static UCleverTapInstance* InitializeSharedInstance(
 		const FCleverTapInstanceConfig& Config, const FString& CleverTapId);
-	static void SetRemoteNotificationToken(ICleverTapInstance& Instance, const TArray<uint8>& Token);
+	static void SetRemoteNotificationToken(UCleverTapInstance& Instance, const TArray<uint8>& Token);
 };
 
 }} // namespace CleverTapSDK::IOS
