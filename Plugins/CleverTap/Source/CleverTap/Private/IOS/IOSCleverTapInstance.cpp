@@ -6,6 +6,7 @@
 #include "CleverTapSubsystem.h"
 #include "CleverTapUtilities.h"
 #include "IOS/IOSAppDelegate.h"
+#include "IOS/URLFilterList.h"
 #include "Misc/CoreDelegates.h"
 
 #import <CleverTapSDK/CleverTap.h>
@@ -500,6 +501,18 @@ void EnsurePushNotificationMonitoring()
 #endif
 }
 
+const CleverTapSDK::IOS::FURLFilterList& GetSharedURLFilterList()
+{
+	static CleverTapSDK::IOS::FURLFilterList FilterList = [] {
+		check(IsInGameThread());
+
+		const UCleverTapConfig* const Config = UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
+		check(Config != nullptr);
+		return CleverTapSDK::IOS::FURLFilterList{ *Config };
+	}();
+	return FilterList;
+}
+
 } // namespace
 
 @implementation CleverTapSDKListener
@@ -613,6 +626,11 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 	}
 
 	EnsurePushNotificationMonitoring();
+
+	// Construction of the shared filter list requires us to be on the GameThread,
+	//  but usage of it doesn't. We pre-construct it here so that it can be used to
+	//  filter URLs on all threads.
+	CleverTapSDK::Ignore = GetSharedURLFilterList();
 
 	return Instance;
 }
@@ -974,13 +992,20 @@ void UIOSCleverTapInstance::HandlePushNotificationTapped(const FCleverTapPropert
 
 bool UIOSCleverTapInstance::HandleUrl(FString Url, ECleverTapChannel Channel) const
 {
-	FScopeLock Lck{ &CriticalSection };
-
-	if (UrlHandler)
+	if (GetSharedURLFilterList().IsFilteredURL(Url))
 	{
-		return UrlHandler(MoveTemp(Url), Channel);
+		UE_LOG(LogCleverTap, Log, TEXT("URL %s was filtered by shared configuration deep link requirements"), *Url);
+		return false;
 	}
 
+	{
+		FScopeLock Lck{ &CriticalSection };
+
+		if (UrlHandler)
+		{
+			return UrlHandler(MoveTemp(Url), Channel);
+		}
+	}
 	return true;
 }
 
@@ -1016,6 +1041,12 @@ void UIOSCleverTapInstance::HandleOnOpenURL(UIApplication* App, NSURL* URL, NSSt
 {
 	CleverTapSDK::Ignore(App, Source, Annotation);
 
-	AsyncTask(
-		ENamedThreads::GameThread, [this, URLStr = FString{ URL.absoluteString }]() { OnOpenUrl.Broadcast(URLStr); });
+	FString URLStr{ URL.absoluteString };
+	if (GetSharedURLFilterList().IsFilteredURL(URLStr))
+	{
+		UE_LOG(LogCleverTap, Log, TEXT("URL %s was filtered by shared configuration deep link requirements"), *URLStr);
+		return;
+	}
+
+	AsyncTask(ENamedThreads::GameThread, [this, URLStr = MoveTemp(URLStr)] { OnOpenUrl.Broadcast(URLStr); });
 }

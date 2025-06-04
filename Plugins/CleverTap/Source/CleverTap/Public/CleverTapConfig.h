@@ -179,8 +179,8 @@ public:
 	 * Configure up to 4 slots in your .ini file. Only the cross platform Scheme field, as described above, is
 	 * required:
 	 *
-	 *	AndroidIntentFilterSlot1_Host=clevertap.com
-	 *	AndroidIntentFilterSlot1_PathPrefix=/unreal-sample
+	 *	DeepLinkHostFilterSlot1=clevertap.com
+	 *	DeepLinkPathPrefixFilterSlot1=/unreal-sample
 	 *	AndroidIntentFilterSlot1_AutoVerify=True
 	 *
 	 * Note: Http/Https schemes require digital verification via assetlinks.json hosted on the target domain.
@@ -217,6 +217,54 @@ public:
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
 	FString DeepLinkSchemeFilterSlot4;
 
+	/**
+	 * First allowed deep link host. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkHostFilterSlot1;
+
+	/**
+	 * Second allowed deep link host. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkHostFilterSlot2;
+
+	/**
+	 * Third allowed deep link host. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkHostFilterSlot3;
+
+	/**
+	 * Fourth allowed deep link host. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkHostFilterSlot4;
+
+	/**
+	 * First allowed deep link path prefix. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkPathPrefixFilterSlot1;
+
+	/**
+	 * Second allowed deep link path prefix. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkPathPrefixFilterSlot2;
+
+	/**
+	 * Third allowed deep link path prefix. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkPathPrefixFilterSlot3;
+
+	/**
+	 * Fourth allowed deep link path prefix. Make sure bIntegrateOpenUrl is set to true.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly)
+	FString DeepLinkPathPrefixFilterSlot4;
+
 	/** AndroidIntentFilterSlots
 	 *
 	 * Note: These settings are currently only used by Android_UPL and do not need to exist in this struct.
@@ -226,20 +274,12 @@ public:
 	 * should be added as real members of this struct:
 	 *
 
-		FString AndroidIntentFilterSlot1_Host;
-		FString AndroidIntentFilterSlot1_PathPrefix;
 		bool bAndroidIntentFilterSlot1_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot2_Host;
-		FString AndroidIntentFilterSlot2_PathPrefix;
 		bool bAndroidIntentFilterSlot2_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot3_Host;
-		FString AndroidIntentFilterSlot3_PathPrefix;
 		bool bAndroidIntentFilterSlot3_AutoVerify = true;
 
-		FString AndroidIntentFilterSlot4_Host;
-		FString AndroidIntentFilterSlot4_PathPrefix;
 		bool bAndroidIntentFilterSlot4_AutoVerify = true;
 	**/
 
