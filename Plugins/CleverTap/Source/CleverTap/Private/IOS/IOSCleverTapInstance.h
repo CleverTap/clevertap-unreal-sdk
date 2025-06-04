@@ -21,7 +21,8 @@ class CLEVERTAP_API UIOSCleverTapInstance : public UCleverTapInstance {
 public:
   GENERATED_BODY()
 
-  static UIOSCleverTapInstance* CreateFromNativeInstance(CleverTap *NativeInstance);
+  static UIOSCleverTapInstance *
+  CreateFromNativeInstance(CleverTap *NativeInstance);
 
   static void HandleWillPresentNotification(NSDictionary *UserInfo);
   static void HandleDidReceiveNotificationResponse(NSDictionary *UserInfo);
