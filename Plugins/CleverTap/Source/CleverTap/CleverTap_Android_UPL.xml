@@ -251,8 +251,8 @@
 		using up to 4 slots defined in DefaultEngine.ini.
 
 			DeepLinkSchemeFilterSlotN=string
-			AndroidIntentFilterSlotN_Host=string
-			AndroidIntentFilterSlotN_PathPrefix=string
+			DeepLinkHostFilterSlotN=string
+			DeepLinkPathPrefixFilterSlotN=string
 			AndroidIntentFilterSlotN_AutoVerify=bool
 
 		The <intent-filter> is required to launch the app in response to matching URLs.
@@ -286,7 +286,7 @@
 							<setElement result="FilterData_$I(index)" value="data" />
 							<addAttribute tag="$FilterData_$I(index)" name="android:scheme" value="$S(Slot_$I(index)_Scheme)" />
 
-							<setStringFromProperty result="Slot_$I(index)_Host" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_Host" default="" />
+							<setStringFromProperty result="Slot_$I(index)_Host" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="DeepLinkHostFilterSlot$I(index)" default="" />
 							<setBoolIsEqual result="Slot_$I(index)_Host_IsEmpty" arg1="$S(Slot_$I(index)_Host)" arg2="" />
 							<if condition="Slot_$I(index)_Host_IsEmpty">
 								<false>
@@ -294,7 +294,7 @@
 								</false>
 							</if>
 
-							<setStringFromProperty result="Slot_$I(index)_PathPrefix" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidIntentFilterSlot$I(index)_PathPrefix" default="" />
+							<setStringFromProperty result="Slot_$I(index)_PathPrefix" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="DeepLinkPathPrefixFilter$I(index)" default="" />
 							<setBoolIsEqual result="Slot_$I(index)_PathPrefix_IsEmpty" arg1="$S(Slot_$I(index)_PathPrefix)" arg2="" />
 							<if condition="Slot_$I(index)_Host_IsEmpty">
 								<false>
