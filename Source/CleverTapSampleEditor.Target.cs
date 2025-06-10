@@ -10,12 +10,16 @@ public class CleverTapSampleEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		ExtraModuleNames.AddRange( new string[] { "CleverTapSample" } );
 
-#if UE_5_0_OR_LATER
-		DefaultBuildSettings = BuildSettingsVersion.V5;
-		CppStandard = CppStandardVersion.Cpp20;
-		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-#else	
-		DefaultBuildSettings = BuildSettingsVersion.V2;
+#if UE_5_4_OR_LATER
+	    DefaultBuildSettings = BuildSettingsVersion.V5;
+#elif UE_5_3_OR_LATER 
+	    DefaultBuildSettings = BuildSettingsVersion.V4;
+#else
+    	DefaultBuildSettings = BuildSettingsVersion.V2;
 #endif
+
+#if UE_5_1_OR_LATER
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+#endif 
 	}
 }

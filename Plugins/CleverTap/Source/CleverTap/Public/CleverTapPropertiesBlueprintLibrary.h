@@ -2,6 +2,8 @@
 #pragma once
 
 #include "CleverTapProperties.h"
+
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "CleverTapPropertiesBlueprintLibrary.generated.h"
 
 UCLASS()

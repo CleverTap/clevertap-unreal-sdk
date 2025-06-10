@@ -5,6 +5,7 @@
 #include "CleverTapLogLevel.h"
 
 #include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "CleverTapSubsystem.generated.h"
 
