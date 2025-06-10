@@ -359,8 +359,8 @@ bool TryFlattenNSDictionary(NSString* KeyPrefix, NSDictionary* Dict, FCleverTapP
 		}
 		else
 		{
-			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary entry for key '%s.%s': %s"),
-				*FString{ NewPrefix }, *FString{ NSStringFromClass([Value class]) });
+			UE_LOG(LogCleverTap, Warning, TEXT("Unhandled NSDictionary entry for key '%s': %s"), *FString{ NewPrefix },
+				*FString{ NSStringFromClass([Value class]) });
 			bAllSuccessful = false;
 		}
 	}
