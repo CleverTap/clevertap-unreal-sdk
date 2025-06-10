@@ -54,7 +54,7 @@ public class UECleverTapBridge {
             boolean showBadge, String sound) {
 
         // default the name to the id if none provided
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.length() == 0) {
             name = channelId;
         }
 

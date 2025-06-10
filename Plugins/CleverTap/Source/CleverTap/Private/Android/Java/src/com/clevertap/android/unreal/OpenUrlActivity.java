@@ -17,7 +17,7 @@ public class OpenUrlActivity extends Activity {
 
         if (data != null) {
             // Forward the intent to GameActivity
-            Intent forward = new Intent(this, com.epicgames.ue4.GameActivity.class);
+            Intent forward = new Intent(this, findGameActivityClass());
             forward.setAction(Intent.ACTION_VIEW);
             forward.setData(data);
             forward.putExtras(sourceIntent);
@@ -26,4 +26,22 @@ public class OpenUrlActivity extends Activity {
 
         finish();
     }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Activity> findGameActivityClass() {
+        // UE5 first
+        try {
+            return (Class<? extends Activity>) Class.forName("com.epicgames.unreal.GameActivity");
+        } catch (ClassNotFoundException ignored) {
+        }
+
+        // UE4 fallback
+        try {
+            return (Class<? extends Activity>) Class.forName("com.epicgames.ue4.GameActivity");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(
+                    "Unable to locate Unreal GameActivity", e);
+        }
+    }
+
 }

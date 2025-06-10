@@ -45,8 +45,8 @@ FCleverTapProperties& PopulatePropertiesWith(
 		FCleverTapPropertyValue* const ExistingValue = Properties.Map.Find(Param.Key);
 		if (ExistingValue)
 		{
-			UE_LOG(
-				LogCleverTapSample, Warning, TEXT("Property parameter '%s' already exists. Value will be overwritten"));
+			UE_LOG(LogCleverTapSample, Warning,
+				TEXT("Property parameter '%s' already exists. Value will be overwritten"), *Param.Key);
 			ExistingValue->Emplace<FString>(Param.Value);
 		}
 		else
@@ -534,7 +534,7 @@ void USampleMainMenu::PushProfileDataTypeTest()
 	// Exercise GetProperty() on each type.
 	// As the above modifications happen asynchronously. GetProperty() will take awhile to be updated with the new
 	// profile values. The below will likely only show the correct output on the second call to this function.
-	for (const auto Pair : Profile.Map)
+	for (const auto& Pair : Profile.Map)
 	{
 		UE_LOG(LogCleverTapSample, Log, TEXT("%s=%s"), *Pair.Key, *ToDebugString(CleverTap.GetProperty(Pair.Key)));
 	}

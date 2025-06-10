@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root xmlns:android="http://schemas.android.com/apk/res/android">
 	<init>
+		<setBoolIsEqual result="IsUE4" arg1="$I(EngineMajorVersion)" arg2="4" />
+
 		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="" />
 		<setBoolIsEqual result="UsePublishedCleverTapSDK" arg1="$S(AndroidLocalCleverTapSdkAarPath)" arg2="" />
 
@@ -27,8 +29,22 @@
 
 		<setStringFromProperty result="CTSmallNotificationIconPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSmallNotificationIconPath" default="" />
 
-		<setStringFromProperty result="CTSuspendInAppForActivities" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSuspendInAppForActivities" default="com.epicgames.ue4.SplashActivity" />
+		<if condition="IsUE4">
+			<!-- Unfortunately UPL doesn't get to see default values for settings not explicitly in the ini files,
+			     so we need to duplicate defaults here for consistent behaviour				
+			-->
+			<true>
+				<setString result="DefaultSplashActivity" value="com.epicgames.ue4.SplashActivity" />
+				<setString result="DefaultSplashTheme" value="@style/UE4SplashTheme" />
+			</true>
+			<false>
+				<setString result="DefaultSplashActivity" value="com.epicgames.unreal.SplashActivity" />
+				<setString result="DefaultSplashTheme" value="@style/UnrealSplashTheme" />
+			</false>
+		</if>
 
+		<setStringFromProperty result="CTSuspendInAppForActivities" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSuspendInAppForActivities" default="$S(DefaultSplashActivity)" />
+		<setStringFromProperty result="SplashTheme" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidSplashTheme" default="$S(DefaultSplashTheme)" />
 
 		<setBoolIsEqual result="HaveNoSmallNotificationIcon" arg1="$S(CTSmallNotificationIconPath)" arg2="" />
 		<if condition="HaveNoSmallNotificationIcon">
@@ -58,7 +74,9 @@
 
 	<prebuildCopies>
 		<copyDir src="$S(PluginDir)/Private/Android/Java/src" dst="$S(BuildDir)/src/" />
+	</prebuildCopies>
 
+	<gradleCopies>
 		<if condition="CTIntegrateFirebase">
 			<true>
 				<log text="CleverTap: including google-services.json from ini setting: $S(CTAndroidGoogleServicesJsonPath)" />
@@ -69,7 +87,9 @@
 				<log text="CleverTap: NOT including google-services.json or integrating firebase" />
 			</false>
 		</if>
+	</gradleCopies>
 
+	<resourceCopies>
 		<if condition="HaveNoSmallNotificationIcon">
 			<false>
 				<copyFile src="$S(PluginDir)/../../../../$S(CTSmallNotificationIconPath)"
@@ -92,7 +112,7 @@
 					dst="$S(BuildDir)/res/raw/" />
 			</false>
 		</if>
-	</prebuildCopies>
+	</resourceCopies>
 
 	<androidManifestUpdates>
 		<if condition="CTAutoInit">
@@ -248,7 +268,7 @@
 				<addAttribute tag="$OpenUrlActivity" name="android:exported" value="true" />
 				<addAttribute tag="$OpenUrlActivity" name="android:launchMode" value="singleTop" />
 				<addAttribute tag="$OpenUrlActivity" name="android:noHistory" value="true" />
-				<addAttribute tag="$OpenUrlActivity" name="android:theme" value="@style/UE4SplashTheme" />
+				<addAttribute tag="$OpenUrlActivity" name="android:theme" value="$S(SplashTheme)" />
 
 				<setInt result="index" value="1" />
 				<setBool result="loopRun" value="true" />
