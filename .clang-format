@@ -45,6 +45,7 @@ IndentCaseLabels: true
 IndentPPDirectives: BeforeHash
 IndentWidth: 4
 NamespaceIndentation: None
+PackConstructorInitializers: Never
 PointerAlignment: Left
 SortIncludes: false
 SpaceBeforeCaseColon: false
