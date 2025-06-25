@@ -133,7 +133,7 @@ void ACppDemonstrationHUD::SyncSaveStateToViewModels(TScriptInterface<IViewModel
 	Save.Phone = Profile->GetPhone();
 
 	auto const Privacy = MainMenuVM->GetPrivacyTab();
-	Save.bIsOptOut = !Privacy->GetOptIn();
+	Save.bIsOptOut = Privacy->GetOptOut();
 	Save.bIsOffline = Privacy->GetOffline();
 	Save.bIsNotRecordingNetInfo = !Privacy->GetNetworkRecording();
 
@@ -262,19 +262,8 @@ void ACppDemonstrationHUD::BeginDisplay_MainMenu()
 			.SetEmail(Ctx, Save.Email)
 			.SetPhone(Ctx, Save.Phone);
 
-		if (!Save.Phone.IsEmpty())
-		{
-			TArray<FProfilePropertyViewModel> Properties;
-			FProfilePropertyViewModel& PhoneProperty = Properties.AddDefaulted_GetRef();
-			PhoneProperty.Key = TEXT("Phone");
-			PhoneProperty.ValueType = EProfilePropertyType::String;
-			PhoneProperty.ValueString = Save.Phone;
-
-			UserProfile->SetProfileProperties(Ctx, Properties);
-		}
-
 		VM.GetPrivacyTab()
-			->SetOptIn(Ctx, !Save.bIsOptOut)
+			->SetOptOut(Ctx, Save.bIsOptOut)
 			.SetOffline(Ctx, Save.bIsOffline)
 			.SetNetworkRecording(Ctx, !Save.bIsNotRecordingNetInfo);
 	});

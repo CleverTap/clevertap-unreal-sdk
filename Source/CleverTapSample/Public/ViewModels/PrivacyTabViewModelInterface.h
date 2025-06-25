@@ -23,10 +23,10 @@ class CLEVERTAPSAMPLE_API IPrivacyTabViewModelInterface
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
-	bool GetOptIn() const;
+	bool GetOptOut() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
-	void SetOptIn(bool bIsOptIn);
+	void SetOptOut(bool bIsOptOut);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
 	bool GetOffline() const;

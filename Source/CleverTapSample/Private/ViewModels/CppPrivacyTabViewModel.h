@@ -14,19 +14,19 @@ class UCppPrivacyTabViewModel : public UCppViewModelBase, public IPrivacyTabView
 	GENERATED_UCLASS_BODY()
 
 public:
-	bool GetOptIn() const;
+	bool GetOptOut() const;
 	bool GetOffline() const;
 	bool GetNetworkRecording() const;
 
 	void Edit(TFunctionRef<void(MutableContext&, UCppPrivacyTabViewModel&)> EditFn);
-	UCppPrivacyTabViewModel& SetOptIn(MutableContext&, bool Value);
+	UCppPrivacyTabViewModel& SetOptOut(MutableContext&, bool Value);
 	UCppPrivacyTabViewModel& SetOffline(MutableContext&, bool Value);
 	UCppPrivacyTabViewModel& SetNetworkRecording(MutableContext&, bool Value);
 
 private:
 	// <IPrivacyTabViewModelInterface>
-	bool GetOptIn_Implementation() const override;
-	void SetOptIn_Implementation(bool bInIsOptIn) override;
+	bool GetOptOut_Implementation() const override;
+	void SetOptOut_Implementation(bool bInIsOptOut) override;
 	bool GetOffline_Implementation() const override;
 	void SetOffline_Implementation(bool bInIsOffline) override;
 	bool GetNetworkRecording_Implementation() const override;
@@ -34,7 +34,7 @@ private:
 	// </IPrivacyTabViewModelInterface>
 
 private:
-	uint8 bIsOptIn : 1;
+	uint8 bIsOptOut : 1;
 	uint8 bIsOffline : 1;
 	uint8 bIsNetworkRecording : 1;
 };

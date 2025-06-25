@@ -8,14 +8,14 @@
 UCppPrivacyTabViewModel::UCppPrivacyTabViewModel(const FObjectInitializer& ObjectInitializer)
 	: Super{ ObjectInitializer }
 {
-	bIsOptIn = false;
+	bIsOptOut = false;
 	bIsOffline = false;
-	bIsNetworkRecording = false;
+	bIsNetworkRecording = true;
 }
 
-bool UCppPrivacyTabViewModel::GetOptIn() const
+bool UCppPrivacyTabViewModel::GetOptOut() const
 {
-	return bIsOptIn;
+	return bIsOptOut;
 }
 
 bool UCppPrivacyTabViewModel::GetOffline() const
@@ -33,9 +33,9 @@ void UCppPrivacyTabViewModel::Edit(TFunctionRef<void(MutableContext&, UCppPrivac
 	Super::Edit<UCppPrivacyTabViewModel>(EditFn);
 }
 
-UCppPrivacyTabViewModel& UCppPrivacyTabViewModel::SetOptIn(MutableContext&, bool Value)
+UCppPrivacyTabViewModel& UCppPrivacyTabViewModel::SetOptOut(MutableContext&, bool Value)
 {
-	bIsOptIn = Value;
+	bIsOptOut = Value;
 	return *this;
 }
 
@@ -51,17 +51,17 @@ UCppPrivacyTabViewModel& UCppPrivacyTabViewModel::SetNetworkRecording(MutableCon
 	return *this;
 }
 
-bool UCppPrivacyTabViewModel::GetOptIn_Implementation() const
+bool UCppPrivacyTabViewModel::GetOptOut_Implementation() const
 {
-	return bIsOptIn;
+	return bIsOptOut;
 }
 
-void UCppPrivacyTabViewModel::SetOptIn_Implementation(bool bInIsOptIn)
+void UCppPrivacyTabViewModel::SetOptOut_Implementation(bool bInIsOptOut)
 {
-	Edit([=](MutableContext&, UCppPrivacyTabViewModel& VM) { VM.bIsOptIn = bInIsOptIn; });
+	Edit([=](MutableContext&, UCppPrivacyTabViewModel& VM) { VM.bIsOptOut = bInIsOptOut; });
 
 	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
-	CleverTapInst.SetOptOut(!bInIsOptIn);
+	CleverTapInst.SetOptOut(bInIsOptOut);
 }
 
 bool UCppPrivacyTabViewModel::GetOffline_Implementation() const

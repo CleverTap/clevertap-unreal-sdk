@@ -488,6 +488,7 @@ public:
 	/**
 	 * Delegate that broadcasts the eventual user response to PromptForPushPermission()
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|Push")
 	FOnPushPermissionResponse OnPushPermissionResponse;
 
 	/**
@@ -496,6 +497,7 @@ public:
 	 * Initially paused; call EnableOnPushNotificationClicked() once event handlers are connected and game systems are
 	 * ready.
 	 */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|Push")
 	FOnPushNotificationClicked OnPushNotificationClicked;
 
 	/**
