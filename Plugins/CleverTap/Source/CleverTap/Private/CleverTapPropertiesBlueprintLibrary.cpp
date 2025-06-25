@@ -308,10 +308,10 @@ FCleverTapDate UCleverTapPropertiesBlueprintLibrary::Conv_StringToDate(const FSt
 
 	// Split on space
 	TArray<FString> Parts{};
-	InString.ParseIntoArray(Parts, TEXT(" "));
+	ReplacedString.ParseIntoArray(Parts, TEXT(" "));
 	if (Parts.Num() < 3)
 	{
-		UE_LOG(LogCleverTap, Warning, TEXT("Invalid date format: %s"), *InString);
+		UE_LOG(LogCleverTap, Warning, TEXT("Invalid date format: %s (%s) (%d)"), *InString);
 		return FCleverTapDate{};
 	}
 

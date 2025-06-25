@@ -1,5 +1,7 @@
 #include "WorldObject.h"
 
+#include "CoreGlobals.h"
+
 UWorld* UWorldObject::GetWorld() const
 {
 	if (HasAnyFlags(RF_ClassDefaultObject))
@@ -30,5 +32,10 @@ void UWorldObject::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	Initialize();
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		check(IsInGameThread());
+
+		Initialize();
+	}
 }
