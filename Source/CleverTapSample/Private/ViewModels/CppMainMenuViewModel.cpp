@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "ViewModels/CppMainMenuViewModel.h"
 
 #include "CppDemonstrationHUD.h"

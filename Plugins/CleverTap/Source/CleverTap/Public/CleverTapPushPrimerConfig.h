@@ -15,7 +15,7 @@
  *  See ICleverTapInstance::PromptForPushPermission()
  */
 USTRUCT(BlueprintType)
-struct FCleverTapPushPrimerAlertConfig
+struct CLEVERTAP_API FCleverTapPushPrimerAlertConfig
 {
 	GENERATED_BODY()
 
@@ -52,7 +52,7 @@ struct FCleverTapPushPrimerAlertConfig
  *  See ICleverTapInstance::PromptForPushPermission()
  */
 USTRUCT(BlueprintType)
-struct FCleverTapPushPrimerHalfInterstitialConfig
+struct CLEVERTAP_API FCleverTapPushPrimerHalfInterstitialConfig
 {
 	GENERATED_BODY()
 
@@ -105,7 +105,7 @@ struct FCleverTapPushPrimerHalfInterstitialConfig
 
 /** Asset container for FCleverTapPushPrimerAlertConfig  */
 UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap PushPrimerAlertConfig Asset"))
-class UCleverTapPushPrimerAlertConfigAsset : public UDataAsset
+class CLEVERTAP_API UCleverTapPushPrimerAlertConfigAsset : public UDataAsset
 {
 	GENERATED_BODY()
 
@@ -116,7 +116,7 @@ public:
 
 /** Asset container for FCleverTapPushPrimerHalfInterstitialConfig  */
 UCLASS(BlueprintType, ClassGroup = CleverTap, meta = (DisplayName = "CleverTap PushPrimerHalfInterstitialConfig Asset"))
-class UCleverTapPushPrimerHalfInterstitialConfigAsset : public UDataAsset
+class CLEVERTAP_API UCleverTapPushPrimerHalfInterstitialConfigAsset : public UDataAsset
 {
 	GENERATED_BODY()
 

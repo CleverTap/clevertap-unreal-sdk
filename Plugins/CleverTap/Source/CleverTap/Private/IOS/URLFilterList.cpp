@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "IOS/URLFilterList.h"
 
 #include "CleverTapConfig.h"

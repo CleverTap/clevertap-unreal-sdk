@@ -10,7 +10,7 @@ class UCleverTapConfig;
 /**
  * An explicit instance configuration used for deferred shared instance initialization or multi-instance support.
  */
-struct FCleverTapInstanceConfig
+struct CLEVERTAP_API FCleverTapInstanceConfig
 {
 	/**
 	 * The project ID taken from the CleverTap dashboard

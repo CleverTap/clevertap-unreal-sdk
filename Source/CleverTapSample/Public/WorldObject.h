@@ -5,7 +5,7 @@
 #include "WorldObject.generated.h"
 
 /**
- * Base class that allows for blueprint function calls, unlike UObject
+ * Base class that allows for blueprint function library calls, unlike UObject
  */
 UCLASS(Blueprintable)
 class CLEVERTAPSAMPLE_API UWorldObject : public UObject

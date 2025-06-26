@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "CppLoginPageViewModel.h"
 
 #include "CleverTapConfig.h"

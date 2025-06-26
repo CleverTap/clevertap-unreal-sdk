@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "IOSCleverTapInstance.h"
 
 #include "CleverTapConfig.h"

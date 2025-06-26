@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "CppUserProfileViewModel.h"
 
 #include "CleverTapInstance.h"

@@ -69,10 +69,11 @@ struct CLEVERTAP_API FCleverTapDate
 };
 
 UCLASS()
-class UCleverTapDateBlueprintLibrary : public UBlueprintFunctionLibrary
+class CLEVERTAP_API UCleverTapDateBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
+public:
 	/** Convert a CleverTapDate to an FDateTime. */
 	UFUNCTION(BlueprintPure, Category = "CleverTap|Date")
 	static FDateTime CleverTapDateToDateTime(const FCleverTapDate& CleverTapDate) { return CleverTapDate.ToDateTime(); }

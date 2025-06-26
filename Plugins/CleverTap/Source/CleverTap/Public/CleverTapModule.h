@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FCleverTapModule : public IModuleInterface
+class CLEVERTAP_API FCleverTapModule : public IModuleInterface
 {
 public:
 	// <IModuleInterface>

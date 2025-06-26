@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "WorldObject.h"
 
 #include "CoreGlobals.h"

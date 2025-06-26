@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "CppDemonstrationGameMode.h"
 
 #include "CppDemonstrationHUD.h"

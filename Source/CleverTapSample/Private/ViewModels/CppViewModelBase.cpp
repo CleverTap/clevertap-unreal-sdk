@@ -1,3 +1,4 @@
+// Copyright CleverTap All Rights Reserved.
 #include "ViewModels/CppViewModelBase.h"
 
 #include "UserWidgetView.h"
