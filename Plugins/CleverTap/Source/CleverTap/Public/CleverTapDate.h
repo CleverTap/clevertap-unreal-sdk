@@ -32,17 +32,29 @@ struct CLEVERTAP_API FCleverTapDate
 	int32 Day;
 
 	/** Default constructor. */
-	FCleverTapDate() : Year(0), Month(0), Day(0) {}
+	FCleverTapDate()
+		: Year(0)
+		, Month(0)
+		, Day(0)
+	{
+	}
 
 	/** Fully specified constructor. */
-	FCleverTapDate(int32 InYear, int32 InMonth, int32 InDay) : Year(InYear), Month(InMonth), Day(InDay) {}
+	FCleverTapDate(int32 InYear, int32 InMonth, int32 InDay)
+		: Year(InYear)
+		, Month(InMonth)
+		, Day(InDay)
+	{
+	}
 
 	/** Copy constructor. */
 	FCleverTapDate(const FCleverTapDate& Other) = default;
 
 	/** Construct from the date part of an Unreal FDateTime struct. The time part is ignored. */
 	FCleverTapDate(const FDateTime& DateTime)
-		: Year(DateTime.GetYear()), Month(DateTime.GetMonth()), Day(DateTime.GetDay())
+		: Year(DateTime.GetYear())
+		, Month(DateTime.GetMonth())
+		, Day(DateTime.GetDay())
 	{
 	}
 
@@ -68,6 +80,9 @@ struct CLEVERTAP_API FCleverTapDate
 	FString ToString() const { return FString::Printf(TEXT("%04d-%02d-%02d"), Year, Month, Day); }
 };
 
+/**
+ * Blueprint function library for FCleverTapDate utilities.
+ */
 UCLASS()
 class CLEVERTAP_API UCleverTapDateBlueprintLibrary : public UBlueprintFunctionLibrary
 {
@@ -85,4 +100,10 @@ public:
 	/** Returns this date formatted as a YYYY-MM-DD string. */
 	UFUNCTION(BlueprintPure, Category = "CleverTap|Date")
 	static FString CleverTapDateToString(const FCleverTapDate& Date) { return Date.ToString(); }
+
+	/** Convert a FString -> FCleverTapDate */
+	UFUNCTION(BlueprintPure,
+		meta = (DisplayName = "String To CleverTap Date (YYYY-MM-DD)", CompactNodeTitle = "->", BlueprintAutocast),
+		Category = "CleverTap|Date")
+	static FCleverTapDate Conv_StringToDate(const FString& InString);
 };

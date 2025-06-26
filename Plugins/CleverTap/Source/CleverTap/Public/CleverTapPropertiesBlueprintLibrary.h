@@ -213,12 +213,6 @@ public:
 		Category = "CleverTap|Utilities")
 	static int64 Conv_StringToInt64(const FString& InString);
 
-	/** Convert a FString -> FCleverTapDate */
-	UFUNCTION(BlueprintPure,
-		meta = (DisplayName = "String To CleverTap Date (YYYY-MM-DD)", CompactNodeTitle = "->", BlueprintAutocast),
-		Category = "CleverTap|Utilities")
-	static FCleverTapDate Conv_StringToDate(const FString& InString);
-
 	/** Convert a FString -> FCleverTapDoubleWrapper */
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "String To Double", CompactNodeTitle = "->", BlueprintAutocast),
 		Category = "CleverTap|Utilities")
