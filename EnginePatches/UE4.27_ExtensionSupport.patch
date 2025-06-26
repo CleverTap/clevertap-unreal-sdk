@@ -596,6 +596,7 @@ diff -ur a/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProjec
 +				ConfigSection.Append("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;" + ProjectFileGenerator.NewLine);
 +				ConfigSection.Append("\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"\";" + ProjectFileGenerator.NewLine);
 +				ConfigSection.Append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;" + ProjectFileGenerator.NewLine);
++				ConfigSection.Append("\t\t\t\tMARKETING_VERSION = 1;" + ProjectFileGenerator.NewLine);
 +				ConfigSection.Append("\t\t\t};" + ProjectFileGenerator.NewLine);
 +				ConfigSection.Append("\t\t\tname = \"" + ConfigName + "\";" + ProjectFileGenerator.NewLine);
 +				ConfigSection.Append("\t\t};" + ProjectFileGenerator.NewLine);
