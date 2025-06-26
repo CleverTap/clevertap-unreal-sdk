@@ -89,6 +89,29 @@ void UCppPushTabViewModel::PostInitProperties()
 	}
 }
 
+void UCppPushTabViewModel::Tick(float DeltaTime)
+{
+	auto* const CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
+	if (CleverTapSys == nullptr || !CleverTapSys->IsSharedInstanceInitialized())
+	{
+		return;
+	}
+
+	auto& CleverTapInst = CleverTapSys->SharedInstance();
+	const auto CurrentStatus = CleverTapInst.GetPushPermissionStatus();
+	if (CurrentStatus != PushNotificationPermissionStatus)
+	{
+		Edit([CurrentStatus, this](MutableContext& Ctx, UCppPushTabViewModel& VM) {
+			VM.PushNotificationPermissionStatus = CurrentStatus;
+		});
+	}
+}
+
+TStatId UCppPushTabViewModel::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(UCppPushTabViewModel, STATGROUP_Tickables);
+}
+
 FString UCppPushTabViewModel::GetPushNotificationData_Implementation() const
 {
 	return PushNotificationData;

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CleverTapProperties.h"
+#include "Tickable.h"
 #include "ViewModels/CppViewModelBase.h"
 #include "ViewModels/PushTabViewModelInterface.h"
 #include "CppPushTabViewModel.generated.h"
@@ -12,7 +13,7 @@ enum class ECleverTapPushPermissionStatus : uint8;
  * C++ implementation of the IPushTabViewModelInterface
  */
 UCLASS(NotBlueprintable)
-class UCppPushTabViewModel : public UCppViewModelBase, public IPushTabViewModelInterface
+class UCppPushTabViewModel : public UCppViewModelBase, public FTickableGameObject, public IPushTabViewModelInterface
 {
 	GENERATED_BODY()
 
@@ -30,6 +31,12 @@ public:
 	void BeginDestroy() override;
 	void PostInitProperties() override;
 	// </UObject>
+	//
+	// <FTickableGameObject>
+	void Tick(float DeltaTime) override;
+	TStatId GetStatId() const override;
+	ETickableTickType GetTickableTickType() const override { return ETickableTickType::Always; }
+	// </FTickableGameObject>
 
 private:
 	// <IPushTabViewModelInterface>

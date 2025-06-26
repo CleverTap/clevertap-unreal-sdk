@@ -35,7 +35,7 @@ public:
                                    const FCleverTapProperties &ActionExtras);
   void HandleInAppNotificationShown(const FCleverTapProperties &Notification);
   void HandlePushNotificationTapped(const FCleverTapProperties &Extras);
-  bool HandleUrl(FString Url, ECleverTapChannel Channel) const;
+  bool HandleUrl(FString Url, ECleverTapChannel Channel);
   void SetPushToken(const TArray<uint8> &Token);
   bool ShouldShowInAppNotification(const FCleverTapProperties &Extras) const;
 
@@ -104,8 +104,8 @@ public:
 private:
   bool IsRegisteredForPushNotificationClicked() const;
   void SetIsRegisteredForPushNotificationClicked();
-  bool IsRegisteredForDeepLinkHandler() const;
-  void SetIsRegisteredForDeepLinkHandler();
+  bool IsOpenURLEnabled() const;
+  void SetOpenURLEnabled();
   void HandleOnOpenURL(UIApplication *App, NSURL *URL, NSString *Source,
                        id Annotation);
 
@@ -113,11 +113,12 @@ private:
   mutable FCriticalSection CriticalSection;
   CleverTap *NativeInstance{};
   CleverTapSDKListener *SDKListener{};
+  TArray<FString> OpenURLQueue;
   FDelegateHandle OnURLOpenHandle;
   TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
   TUniqueFunction<bool(const FCleverTapProperties &)> InAppNotificationFilter;
-  TAtomic<uint8> PushPermissionStatus;
-  uint8 StateFlags{};
+  TAtomic<uint8> PushPermissionStatus{};
+  TAtomic<uint8> StateFlags{};
 
   static TArray<UIOSCleverTapInstance *> AllInstances;
 };

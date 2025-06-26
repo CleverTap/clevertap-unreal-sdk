@@ -381,7 +381,7 @@ FCleverTapProperties ConvertFromNSDictionary(NSDictionary* Dict)
 }
 
 constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_PUSH = 0x1;
-constexpr uint8 CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK = 0x2;
+constexpr uint8 CTSTATE_FLAGS_OPENURL_ENABLED = 0x2;
 
 constexpr int8 PUSH_PERM_STATUS_UNKNOWN = 0;
 constexpr int8 PUSH_PERM_STATUS_GRANTED = 1;
@@ -612,6 +612,7 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 
 	if (NativeInstance != nil)
 	{
+		[NativeInstance setUrlDelegate:Instance->SDKListener];
 		[NativeInstance setInAppNotificationDelegate:Instance->SDKListener];
 
 		// TODO: Not exposed
@@ -623,6 +624,12 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 		// 	  (Status != UNAuthorizationStatusNotDetermined && Status != UNAuthorizationStatusDenied);
 		//   Instance->CachePushPermissionStatus(bIsGranted);
 		// }];
+
+		if (NativeInstance == [CleverTap sharedInstance])
+		{
+			Instance->OnURLOpenHandle =
+				FIOSCoreDelegates::OnOpenURL.AddUObject(Instance, &UIOSCleverTapInstance::HandleOnOpenURL);
+		}
 	}
 
 	EnsurePushNotificationMonitoring();
@@ -878,23 +885,34 @@ void UIOSCleverTapInstance::EnableOnPushNotificationClicked()
 
 void UIOSCleverTapInstance::EnableOnOpenUrl()
 {
-	if (OnURLOpenHandle.IsValid())
+	if (!IsOpenURLEnabled())
 	{
-		return;
-	}
+		SetOpenURLEnabled();
 
-	OnURLOpenHandle = FIOSCoreDelegates::OnOpenURL.AddUObject(this, &UIOSCleverTapInstance::HandleOnOpenURL);
+		auto BroadcastQueuedUrls = [this] {
+			FScopeLock Lck{ &CriticalSection };
+
+			for (const auto& Url : OpenURLQueue)
+			{
+				OnOpenUrl.Broadcast(Url);
+			}
+			OpenURLQueue.Empty();
+		};
+
+		if (IsInGameThread())
+		{
+			BroadcastQueuedUrls();
+		}
+		else
+		{
+			AsyncTask(ENamedThreads::GameThread, MoveTemp(BroadcastQueuedUrls));
+		}
+	}
 }
 
 void UIOSCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> InUrlHandler)
 {
 	check(NativeInstance != nil);
-
-	if (!IsRegisteredForDeepLinkHandler())
-	{
-		[NativeInstance setUrlDelegate:SDKListener];
-		SetIsRegisteredForDeepLinkHandler();
-	}
 
 	{
 		FScopeLock Lck{ &CriticalSection };
@@ -959,7 +977,8 @@ bool UIOSCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FStrin
 
 bool UIOSCleverTapInstance::IsRegisteredForPushNotificationClicked() const
 {
-	return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_PUSH) != 0;
+	const uint8 Flags = StateFlags.Load();
+	return (Flags & CTSTATE_FLAGS_REGISTERED_FOR_PUSH) != 0;
 }
 
 void UIOSCleverTapInstance::SetIsRegisteredForPushNotificationClicked()
@@ -967,14 +986,15 @@ void UIOSCleverTapInstance::SetIsRegisteredForPushNotificationClicked()
 	StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_PUSH;
 }
 
-bool UIOSCleverTapInstance::IsRegisteredForDeepLinkHandler() const
+bool UIOSCleverTapInstance::IsOpenURLEnabled() const
 {
-	return (StateFlags & CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK) != 0;
+	const uint8 Flags = StateFlags.Load();
+	return (Flags & CTSTATE_FLAGS_OPENURL_ENABLED) != 0;
 }
 
-void UIOSCleverTapInstance::SetIsRegisteredForDeepLinkHandler()
+void UIOSCleverTapInstance::SetOpenURLEnabled()
 {
-	StateFlags |= CTSTATE_FLAGS_REGISTERED_FOR_DEEP_LINK;
+	StateFlags |= CTSTATE_FLAGS_OPENURL_ENABLED;
 }
 
 void UIOSCleverTapInstance::CachePushPermissionStatus(bool bIsGranted)
@@ -990,7 +1010,7 @@ void UIOSCleverTapInstance::HandlePushNotificationTapped(const FCleverTapPropert
 	this->OnPushNotificationClicked.Broadcast(Extras);
 }
 
-bool UIOSCleverTapInstance::HandleUrl(FString Url, ECleverTapChannel Channel) const
+bool UIOSCleverTapInstance::HandleUrl(FString Url, ECleverTapChannel Channel)
 {
 	if (GetSharedURLFilterList().IsFilteredURL(Url))
 	{
@@ -998,14 +1018,41 @@ bool UIOSCleverTapInstance::HandleUrl(FString Url, ECleverTapChannel Channel) co
 		return false;
 	}
 
+	// Even with a UrlHandler installed we want to make sure OnOpenUrl is always invoked
+	if (IsOpenURLEnabled())
+	{
+		AsyncTask(ENamedThreads::GameThread, [this, Url] { OnOpenUrl.Broadcast(Url); });
+
+		// Lock not needed for the above, but we need it now for the UrlHandler
+		{
+			FScopeLock Lck{ &CriticalSection };
+
+			if (UrlHandler)
+			{
+				return UrlHandler(MoveTemp(Url), Channel);
+			}
+		}
+	}
+	else
 	{
 		FScopeLock Lck{ &CriticalSection };
+
+		// It's possible that after we get the lock the state has changed so check again just in case
+		if (IsOpenURLEnabled())
+		{
+			AsyncTask(ENamedThreads::GameThread, [this, Url] { OnOpenUrl.Broadcast(Url); });
+		}
+		else
+		{
+			OpenURLQueue.Add(Url);
+		}
 
 		if (UrlHandler)
 		{
 			return UrlHandler(MoveTemp(Url), Channel);
 		}
 	}
+
 	return true;
 }
 
@@ -1048,5 +1095,5 @@ void UIOSCleverTapInstance::HandleOnOpenURL(UIApplication* App, NSURL* URL, NSSt
 		return;
 	}
 
-	AsyncTask(ENamedThreads::GameThread, [this, URLStr = MoveTemp(URLStr)] { OnOpenUrl.Broadcast(URLStr); });
+	[NativeInstance handleOpenURL:URL sourceApplication:Source];
 }
