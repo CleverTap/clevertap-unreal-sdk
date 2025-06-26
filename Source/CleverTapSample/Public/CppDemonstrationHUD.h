@@ -60,6 +60,8 @@ private:
 
 	void BeginDisplay_MainMenu();
 
+	void LocalizeAndroidNotificationChannels();
+
 private:
 	UPROPERTY(Transient)
 	UCppDemonstrationSaveGame* SaveState;

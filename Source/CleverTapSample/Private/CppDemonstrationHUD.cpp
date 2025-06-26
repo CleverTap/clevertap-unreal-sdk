@@ -24,6 +24,8 @@ void ACppDemonstrationHUD::BeginPlay()
 	check(CleverTapSys != nullptr);
 	check(CleverTapSys->IsSharedInstanceInitialized());
 
+	LocalizeAndroidNotificationChannels();
+
 	Super::BeginPlay();
 
 	// Set cursor mode for UI
@@ -276,6 +278,49 @@ void ACppDemonstrationHUD::BeginDisplay_MainMenu()
 	// Mark as we're ready to get callbacks for certain clevertap events
 	CleverTapInst.EnableOnPushNotificationClicked();
 	CleverTapInst.EnableOnOpenUrl();
+	CleverTapInst.ResumeInAppNotifications();
 
 	UE_LOG(LogCleverTapSample, Log, TEXT("Displaying UI: Main Menu"));
+}
+
+void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()
+{
+	// Localize the names and descriptions of the android notification channels & groups
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.LocalizeAndroidNotificationChannelGroup(
+		TEXT("general"), NSLOCTEXT("CleverTapSample", "ChannelGroupName_general", "General"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannelGroup(
+		TEXT("system"), NSLOCTEXT("CleverTapSample", "ChannelGroupName_system", "System"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannelGroup(
+		TEXT("marketing"), NSLOCTEXT("CleverTapSample", "ChannelGroupName_marketing", "Marketing"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("messages"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_messages", "Messages"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_messages", "Chat Messages"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("reminders"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_reminders", "Reminders"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_reminders", "Forgotten Something?"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("news"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_news", "News"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_news", "Important news and alerts"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("system_alerts"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_system_alerts", "System Alerts"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_system_alerts", "Important System Messages"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("updates"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_updates", "Updates"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_updates", "New Version Announcments"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("promotions"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_promotions", "Promotions"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_promotions", "Special offers"));
+
+	CleverTapInst.LocalizeAndroidNotificationChannel(TEXT("surveys"),
+		NSLOCTEXT("CleverTapSample", "ChannelName_surveys", "Surveys"),
+		NSLOCTEXT("CleverTapSample", "ChannelDesc_surveys", "Special offers"));
 }
