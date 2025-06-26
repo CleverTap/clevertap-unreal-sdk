@@ -612,6 +612,7 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 
 	if (NativeInstance != nil)
 	{
+		[NativeInstance suspendInAppNotifications];
 		[NativeInstance setUrlDelegate:Instance->SDKListener];
 		[NativeInstance setInAppNotificationDelegate:Instance->SDKListener];
 
