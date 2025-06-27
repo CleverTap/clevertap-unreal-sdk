@@ -323,7 +323,7 @@ diff -ur a/Engine/Source/Programs/UnrealBuildTool/ProjectFiles/Xcode/XcodeProjec
  		public Dictionary<string, XcodeBuildConfig> AllConfigs;
  
  		public string ConfigurationContents;
-@@ -361,124 +369,251 @@
+@@ -361,124 +369,252 @@
  			PBXFileReferenceSection.Append(string.Format("\t\t{0} /* {1} */ = {{isa = PBXFileReference; explicitFileType = {2}; path = {1}; sourceTree = BUILT_PRODUCTS_DIR; }};" + ProjectFileGenerator.NewLine, TargetAppGuid, TargetName, bIsAppBundle ? "wrapper.application" : "\"compiled.mach-o.executable\""));
  		}
  
