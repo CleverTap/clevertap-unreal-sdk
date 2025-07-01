@@ -9,6 +9,18 @@ RegionCode= ; Region found on CleverTap project dashboard -> Settings -> Project
 ```
 
 ## Android Configuration
+Change the Android Package name in `Config/DefaultEngine.ini` to your own identifier.
+```ini
+[/Script/AndroidRuntimeSettings.AndroidRuntimeSettings]
+PackageName=com.clevertap.android.unreal.sample
+```
+
+Follow [these instructions](https://developer.clevertap.com/docs/android-push) to create and register your firebase credentials in the CleverTap dashboard. Copy the generated `google-services.json` to somewhere in your project directory (e.g. `Config`), and ensure `AndroidGoogleServicesJsonPath` points to it.
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+AndroidGoogleServicesJsonPath=Config/Android/google-services.json
+```
 
 ## iOS Configuration
 Signing information needs to be set up for the project. See [iOS Quick
