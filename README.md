@@ -36,23 +36,8 @@ Alternatively you can edit the Plugin's settings in the UE4Editor.
 
 ## Initialization
 By default, with `bAutoInitializeSharedInstance` set to `true` in `Config\DefaultEngine.ini`, the `UCleverTapSubsystem`
-will automatically initialize the CleverTap SDK and the default shared instance.
-
-> [!NOTE]
-> Deferred initialization is only available on iOS. Android platforms must use auto initialization.<br/>
-> On iOS, initialization can be deferred if `bAutoInitializeSharedInstance` is set to `false`. An explicit call to
-> `UCleverTapSubsystem::InitializeSharedInstance()` can be made to initialize the default shared instance. Configuration
-> parameters can either be pulled from the `UCleverTapConfig` INI configuration or explicitly specified using a
-> `FCleverTapInstanceConfig` as shown below.
-> ```cpp
-> FCleverTapInstanceConfig Config;
-> Config.ProjectId = /*Your Project Id*/;
-> Config.ProjectToken = /*Your project token*/;
-> Config.RegionCode = /*Region code*/;
-> Config.LogLevel = /*ECleverTapLogLevel enum specifying your desired CleverTap SDK log verbosity*/;
-> Config.EncryptionLevel  = /* ECleverTapEncryptionLevel enum setting the PII encrytion level */
-> GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->InitializeSharedInstance(Config);
-> ```
+will automatically initialize the CleverTap SDK and the default shared instance. It is recommended not to set this to
+`false` as it is only currently partially supported on iOS.
 
 ## Encryption of PII Data
 PII data is stored across the SDK and could be sensitive information. 
@@ -122,6 +107,7 @@ AndroidNotificationChannelSlot1=ID="general" | Importance=IMPORTANCE_DEFAULT | b
 AndroidNotificationChannelSlot2=ID="news" | Importance=IMPORTANCE_HIGH | bShowBadge=True
 ```
 
+##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
@@ -129,6 +115,9 @@ CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
         NSLOCTEXT("CleverTapSample", "ChannelName_general", "General"),
         NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
 ```
+
+##### Blueprint
+![Calling LocalizeAndroidNotificationChannel in Blueprint](/Docs/Images/BP_LocalizeAndroidNotificationChannel.png)
 
 #### Channel Grouping 
 You can define up to 10 notification channel groups to categorize related channels.
@@ -143,12 +132,16 @@ AndroidNotificationChannelSlot1=ID="general" | Group="general" | Importance=IMPO
 Group names can be localized at runtime, just like channels.
 Call `LocalizeAndroidNotificationChannelGroup()` early in startup and again after locale changes.
 
+##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.LocalizeAndroidNotificationChannelGroup( TEXT("general"), 
         NSLOCTEXT("CleverTapSample", "ChannelGroupName_general", "General"));
 ```
+
+##### Blueprint
+![Calling LocalizeAndroidNotificationChannelGroup in Blueprint](/Docs/Images/BP_LocalizeAndroidNotificationChannelGroup.png)
 
 ### Default Android Notification Channel
 You can define a specific notification channel that CleverTap will use if the channel provided in the push payload is not registered by your app. This ensures that push notifications are displayed consistently even if the app's notification channels are not set up.
@@ -313,6 +306,8 @@ Please make sure the specified .mobileprovision file is installed before buildin
 
 ### Enabling OnPushNotificationClicked
 After setting up your shared CleverTap instance the `OnPushNotificationClicked` delegate can be enabled by calling `EnableOnPushNotificationClicked()`. On iOS, if the engine patch has been applied for push notifications that launch the app then this can trigger attempting to broadcast the push notification that launched the app. Therefore a delegate listener should be added before calling `EnableOnPushNotificationClicked()`.
+
+#### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
@@ -322,6 +317,9 @@ CleverTap.OnPushNotificationClicked.AddLambda([](const FCleverTapProperties& Not
 	});
 CleverTap.EnableOnPushNotificationClicked();
 ```
+
+#### Blueprint
+![Binding OnPushNotificationClicked in Blueprint](/Docs/Images/BP_OnPushNotificationClicked.png)
 
 ## In-App Notifications
 In-app notifications are initially suspended. When your callbacks are set up then call
@@ -335,6 +333,8 @@ in the property map so that the object `{"a": { "b": 3.14 }}` would have a singl
 #### OnInAppNotificationShown
 When an in-app notification is displayed this callback will be invoked with and the notification payload is passed as a
 parameter.
+
+##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
@@ -344,9 +344,14 @@ CleverTap.OnInAppNotificationShown.AddLambda([](const FCleverTapProperties& Payl
     });
 ```
 
+##### Blueprint
+![Binding OnInAppNotificationShown in Blueprint](/Docs/Images/BP_OnInAppNotificationShown.png)
+
 #### OnInAppNotificationButtonClicked
 When the user clicks on an in-app notification button this callback will be invoked with the key/value pairs associated
 with that button.
+
+##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
 ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
@@ -356,6 +361,8 @@ CleverTap.OnInAppNotificationButtonClicked.AddLambda([](const FCleverTapProperti
     });
 ```
 
+##### Blueprint
+![Binding OnInAppNotificationButtonClicked in Blueprint](/Docs/Images/BP_OnInAppNotificationButtonClicked.png)
 
 #### OnInAppNotificationDismissed
 When an in-app notification is dismissed by the user this callback will be invoked with the notification payload and any
@@ -370,6 +377,9 @@ CleverTap.OnInAppNotificationDismissed.AddLambda([](const FCleverTapProperties& 
     });
 ```
 
+##### Blueprint
+![Binding OnInAppNotificationDismissed in Blueprint](/Docs/Images/BP_OnInAppNotificationDismissed.png)
+
 ### Suspend, Resume, and Discard In-App Notifications
 In-app notifications initially start suspended. If you like to discard any notifications that were queued while they
 were suspended then you can invoke `ICleverTapInstance::DiscardInAppNotifications()` to do so. Notifications can be
@@ -377,10 +387,15 @@ resumed by calling `ICleverTapInstance::ResumeInAppNotifications()`. Any queued 
 suspended, and which has not been explicitly discarded, will be presented to the user. If you would like to suspend
 notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
 
+#### Blueprint
+![Calling SuspendInAppNotifications -> DiscardInAppNotifications -> ResumeInAppNotifications in Blueprint](/Docs/Images/BP_SuspendDiscardResume_InAppNotifications.png)
+
 ## User Profiles
 ### On User Login
 The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the
 initial "Anonymous" user profile with additional properties such as name, age, and email. See [Updating the User Profile](https://developer.clevertap.com/docs/concepts-user-profiles#updating-the-user-profile) for a list of predefined properties.
+
+#### C++
 ```cpp
 FCleverTapProperties Profile;
 Profile.Add(TEXT("Name"), TEXT("Jack Montana"));    // String
@@ -404,9 +419,14 @@ ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>
 CleverTap.OnUserLogin(Profile);
 ```
 
+#### Blueprint
+![Calling OnUserLogin in Blueprint](/Docs/Images/BP_OnUserLogin.png)
+
 ### Updating a User Profile with PushProfile()
 The user's profile can be enriched with additional properties at any time using the `PushProfile()` method. This
 supports arbitrary single value and multi-value properties like `OnUserLogin()`.
+
+#### C++
 ```cpp
 FCleverTapProperties Profile;
 // Update an existing property
@@ -421,9 +441,14 @@ ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>
 CleverTap.PushProfile(Profile);
 ```
 
+#### Blueprint
+![Calling PushProfile in Blueprint](/Docs/Images/BP_PushProfile.png)
+
 ### Increment or Decrement Scalar Properties
 If a given profile property is a `int32`, `int64`, `float`, or `double` then it can be incremented or decremented by an
 arbitrary positive value.
+
+#### C++
 ```cpp
 ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.IncrementValue(TEXT("Score"), 50);
@@ -432,9 +457,14 @@ CleverTap.IncrementValue(TEXT("Score"), 5.5);
 CleverTap.DecrementValue(TEXT("Score"), 3.14);
 ```
 
+#### Blueprint
+![Calling IncrementValue or DecrementValue in Blueprint](/Docs/Images/BP_IncrementDecrementValue.png)
+
 ## Event Recording
 ### User Events
 User Events can be recorded any time after initialization.
+
+#### C++
 ```cpp
 ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 
@@ -450,9 +480,15 @@ CleverTap.PushEvent(TEXT("Product viewed"), Actions);
 ```
 Event values can be any type that the `FCleverTapPropertyValue` variant type supports (`int32`, `int64`, `double`, `float`, `bool`, `const ANSICHAR*`, `FString`, or `FCleverTapDate`).
 
+#### Blueprint
+![Calling PushEvent in Blueprint](/Docs/Images/BP_PushEvent.png)
+![Calling PushEventWithProperties in Blueprint](/Docs/Images/BP_PushEventWithProperties.png)
+
 ### Charged Events
 Charged events are a special user event to record transaction details of a purchase. Each item in the purchase can be
 recorded and enriched with custom properties.
+
+#### C++
 ```cpp
 // charge event
 FCleverTapProperties ChargeDetails;
@@ -483,3 +519,6 @@ Items.Add(Item3);
 ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.PushChargedEvent(ChargeDetails, Items);
 ```
+
+#### Blueprint
+![Calling PushChargedEvent in Blueprint](/Docs/Images/BP_PushChargedEvent.png)
