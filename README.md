@@ -265,6 +265,7 @@ URL handling.
 ### iOS - Configuring Apple Push Notifications (APNs)
 1. Follow the [CleverTap guide](https://developer.clevertap.com/docs/push-notifications-ios#step-1-configure-push-notifications) to set up APNs for your app.
 2. In your project's `Config/DefaultEngine.ini` ensure `bEnableRemoteNotificationsSupport` is `True` in the `[/Script/IOSRuntimeSettings.IOSRuntimeSettings]` section.
+3. If you would like push notifications to appear when your app is in the foreground make sure that `bIOSPresentPushNotificationsInForeground` is set to `True` in the `[/Script/CleverTap.CleverTapConfig]` section of your project's `Config/DefaultEngine.ini`
 
 > [!NOTE]
 > The CleverTap Unreal plugin currently does not support [Push Impressions](https://developer.clevertap.com/docs/push-notifications-ios#push-impressions), [Push Primers](https://developer.clevertap.com/docs/push-notifications-ios#ios-push-primer), or [Rich Push Notifications](https://developer.clevertap.com/docs/rich-push-notifications).
