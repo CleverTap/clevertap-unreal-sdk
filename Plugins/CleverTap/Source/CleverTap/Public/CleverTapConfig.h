@@ -319,4 +319,12 @@ public:
 	 */
 	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "IOS")
 	bool bIOSPresentPushNotificationsInForeground = false;
+
+	/**
+	 * iOS Only: If true, automatically request push notification permission from the user immediately when the
+	 *  CleverTap SDK is initialized (i.e. on first app launch). When false you must call
+	 *  PromptForPushPermission manually at the appropriate time.
+	 */
+	UPROPERTY(config, EditAnywhere, BlueprintReadOnly, Category = "IOS")
+	bool bIOSAutoRequestPushPermission = false;
 };

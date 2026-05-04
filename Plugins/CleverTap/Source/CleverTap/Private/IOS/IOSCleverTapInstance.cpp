@@ -412,9 +412,99 @@ void EnsurePushNotificationMonitoring()
 
 	id<UIApplicationDelegate> AppDelegate = SharedApp.delegate;
 	Class AppDelegateClass = [AppDelegate class];
+	NSLog(@"[CleverTap] EnsurePushNotificationMonitoring running on AppDelegate class: %@", NSStringFromClass(AppDelegateClass));
 
-	// Swizzle willPresentNotification and didReceiveNotificationResponse
-	Class NotifCenterDelClass = [[UNUserNotificationCenter currentNotificationCenter].delegate class];
+	// Intercept application:didRegisterForRemoteNotificationsWithDeviceToken: so that the APNs
+	// device token is forwarded directly to CleverTap.
+	//
+	// Strategy:
+	//   1. If UE's AppDelegate already implements this method, swizzle it so we piggyback on
+	//      the existing implementation and still call the original.
+	//   2. If UE's AppDelegate does NOT implement it (some UE 5.x versions omit it), add our
+	//      own implementation directly so iOS knows to call it at all.
+	//
+	// We use NSLog for diagnostics here because UE_LOG goes to stdout (not visible in macOS
+	// Console app), while NSLog goes to the unified logging system (IS visible in Console app).
+	SEL TokenSel = @selector(application:didRegisterForRemoteNotificationsWithDeviceToken:);
+	// void (id, SEL, UIApplication*, NSData*)
+	const char* const TokenMethodTypeEncoding = "v@:@@";
+	Method OriginalTokenMethod = class_getInstanceMethod(AppDelegateClass, TokenSel);
+	if (OriginalTokenMethod)
+	{
+		// Method exists — swizzle it so we intercept the call and then forward to the original.
+		NSLog(@"[CleverTap] Swizzling application:didRegisterForRemoteNotificationsWithDeviceToken:");
+		const char* OrigTokenMethodArgs = method_getTypeEncoding(OriginalTokenMethod);
+		NSMethodSignature* OrigTokenSig = [NSMethodSignature signatureWithObjCTypes:OrigTokenMethodArgs];
+		NSInvocation* OrigTokenInvocation = [NSInvocation invocationWithMethodSignature:OrigTokenSig];
+
+		id NewTokenBlock = ^(id Obj, UIApplication* App, NSData* DeviceToken) {
+		  NSLog(@"[CleverTap] APNs token received via swizzle (%lu bytes)", (unsigned long)[DeviceToken length]);
+		  UIOSCleverTapInstance::HandleRemoteNotificationToken(DeviceToken);
+		  // Forward onto the original UE implementation so UE's own token handling still works.
+		  [OrigTokenInvocation setArgument:&App atIndex:2];
+		  [OrigTokenInvocation setArgument:&DeviceToken atIndex:3];
+		  [OrigTokenInvocation invokeWithTarget:Obj];
+		};
+		IMP NewTokenImp = imp_implementationWithBlock(NewTokenBlock);
+
+		SEL NewTokenSel = sel_registerName("_ct_didRegisterForRemoteNotificationsWithDeviceToken_swizzled");
+		class_addMethod(AppDelegateClass, NewTokenSel, NewTokenImp, OrigTokenMethodArgs);
+		OrigTokenInvocation.selector = NewTokenSel;
+		method_exchangeImplementations(
+			OriginalTokenMethod, class_getInstanceMethod(AppDelegateClass, NewTokenSel));
+	}
+	else
+	{
+		// Method does NOT exist in UE's AppDelegate — add it outright so iOS calls it.
+		NSLog(@"[CleverTap] application:didRegisterForRemoteNotificationsWithDeviceToken: not found on AppDelegate — adding it directly");
+		id NewTokenBlock = ^(id Obj, UIApplication* App, NSData* DeviceToken) {
+		  NSLog(@"[CleverTap] APNs token received via injected method (%lu bytes)", (unsigned long)[DeviceToken length]);
+		  UIOSCleverTapInstance::HandleRemoteNotificationToken(DeviceToken);
+		};
+		IMP NewTokenImp = imp_implementationWithBlock(NewTokenBlock);
+		const BOOL bAdded = class_addMethod(AppDelegateClass, TokenSel, NewTokenImp, TokenMethodTypeEncoding);
+		NSLog(@"[CleverTap] Injected token method: %@", bAdded ? @"SUCCESS" : @"FAILED (already exists in superclass?)");
+	}
+
+	// Also intercept application:didFailToRegisterForRemoteNotificationsWithError: so we can
+	// surface registration failures clearly. Without this, failures are silent.
+	SEL FailTokenSel = @selector(application:didFailToRegisterForRemoteNotificationsWithError:);
+	Method OriginalFailTokenMethod = class_getInstanceMethod(AppDelegateClass, FailTokenSel);
+	if (OriginalFailTokenMethod)
+	{
+		const char* OrigFailArgs = method_getTypeEncoding(OriginalFailTokenMethod);
+		NSMethodSignature* OrigFailSig = [NSMethodSignature signatureWithObjCTypes:OrigFailArgs];
+		NSInvocation* OrigFailInvocation = [NSInvocation invocationWithMethodSignature:OrigFailSig];
+
+		id NewFailBlock = ^(id Obj, UIApplication* App, NSError* Error) {
+		  NSLog(@"[CleverTap] ERROR: didFailToRegisterForRemoteNotificationsWithError: %@", Error);
+		  [OrigFailInvocation setArgument:&App atIndex:2];
+		  [OrigFailInvocation setArgument:&Error atIndex:3];
+		  [OrigFailInvocation invokeWithTarget:Obj];
+		};
+		IMP NewFailImp = imp_implementationWithBlock(NewFailBlock);
+		SEL NewFailSel = sel_registerName("_ct_didFailToRegisterForRemoteNotifications_swizzled");
+		class_addMethod(AppDelegateClass, NewFailSel, NewFailImp, OrigFailArgs);
+		OrigFailInvocation.selector = NewFailSel;
+		method_exchangeImplementations(
+			OriginalFailTokenMethod, class_getInstanceMethod(AppDelegateClass, NewFailSel));
+	}
+	else
+	{
+		// Add it so any future registration failure is logged.
+		id NewFailBlock = ^(id Obj, UIApplication* App, NSError* Error) {
+		  NSLog(@"[CleverTap] ERROR: didFailToRegisterForRemoteNotificationsWithError: %@", Error);
+		};
+		IMP NewFailImp = imp_implementationWithBlock(NewFailBlock);
+		class_addMethod(AppDelegateClass, FailTokenSel, NewFailImp, "v@:@@");
+	}
+
+	// Swizzle willPresentNotification and didReceiveNotificationResponse.
+	// Note: in UE the AppDelegate also implements UNUserNotificationCenterDelegate, so
+	// AppDelegateClass and NotifCenterDelClass are the same class. We fall back to AppDelegateClass
+	// if the notification center delegate is not yet set (can happen during early startup).
+	id NotifCenterDelegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
+	Class NotifCenterDelClass = (NotifCenterDelegate != nil) ? [NotifCenterDelegate class] : AppDelegateClass;
 
 	SEL PresentSel = @selector(userNotificationCenter:willPresentNotification:withCompletionHandler:);
 	Method OriginalPresentMethod = class_getInstanceMethod(AppDelegateClass, PresentSel);
@@ -620,17 +710,64 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 		// TODO: Not exposed
 		// [NativeInstance setPushPermissionDelegate:Instance->SDKListener];
 
-		// TODO: Not exposed
-		// [NativeInstance getNotificationPermissionStatusWithCompletionHandler:^(UNAuthorizationStatus Status) {
-		//   const bool bIsGranted =
-		// 	  (Status != UNAuthorizationStatusNotDetermined && Status != UNAuthorizationStatusDenied);
-		//   Instance->CachePushPermissionStatus(bIsGranted);
-		// }];
+		// Query the real iOS notification permission status so GetPushPermissionStatus()
+		// returns an accurate value immediately after initialization (not always Unknown).
+		UIOSCleverTapInstance* RawInstance = Instance;
+		[[UNUserNotificationCenter currentNotificationCenter]
+			getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings* Settings) {
+			const bool bIsGranted = (Settings.authorizationStatus == UNAuthorizationStatusAuthorized
+				|| Settings.authorizationStatus == UNAuthorizationStatusProvisional);
+			RawInstance->CachePushPermissionStatus(bIsGranted);
+		}];
 
 		if (NativeInstance == [CleverTap sharedInstance])
 		{
 			Instance->OnURLOpenHandle =
 				FIOSCoreDelegates::OnOpenURL.AddUObject(Instance, &UIOSCleverTapInstance::HandleOnOpenURL);
+		}
+
+		// Forward the APNs device token to CleverTap so push notifications can be sent.
+		// UE fires ApplicationRegisteredForRemoteNotificationsDelegate when iOS delivers
+		// the token via application:didRegisterForRemoteNotificationsWithDeviceToken:.
+		Instance->OnPushTokenHandle =
+			FCoreDelegates::ApplicationRegisteredForRemoteNotificationsDelegate.AddLambda(
+				[RawInstance](TArray<uint8> Token) { RawInstance->SetPushToken(Token); });
+
+		// Fix race condition: UE calls registerForRemoteNotifications at startup, which can
+		// deliver the APNs token BEFORE the delegate above is subscribed — causing the token
+		// to be lost. Calling registerForRemoteNotifications again forces iOS to re-deliver
+		// any already-registered token to our newly-registered listener.
+		// This is safe to call at any time; it is a no-op if not already registered.
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[[UIApplication sharedApplication] registerForRemoteNotifications];
+		});
+
+		// Automatically request push permission if configured to do so.
+		const UCleverTapConfig* const DefaultConfig =
+			UCleverTapConfig::StaticClass()->GetDefaultObject<UCleverTapConfig>();
+		if (DefaultConfig && DefaultConfig->bIOSAutoRequestPushPermission)
+		{
+			dispatch_async(dispatch_get_main_queue(), ^{
+				UNUserNotificationCenter* Center = [UNUserNotificationCenter currentNotificationCenter];
+				UNAuthorizationOptions Options =
+					UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge;
+				[Center requestAuthorizationWithOptions:Options
+									 completionHandler:^(BOOL Granted, NSError* Error) {
+					if (Error != nil)
+					{
+						UE_LOG(LogCleverTap, Warning, TEXT("Auto push permission request error: %s"),
+							*FString([Error localizedDescription]));
+					}
+					dispatch_async(dispatch_get_main_queue(), ^{
+						if (Granted)
+						{
+							[[UIApplication sharedApplication] registerForRemoteNotifications];
+						}
+						RawInstance->CachePushPermissionStatus(Granted);
+						RawInstance->OnPushPermissionResponse.Broadcast(Granted);
+					});
+				}];
+			});
 		}
 	}
 
@@ -649,6 +786,11 @@ UIOSCleverTapInstance::~UIOSCleverTapInstance()
 	if (OnURLOpenHandle.IsValid())
 	{
 		FIOSCoreDelegates::OnOpenURL.Remove(OnURLOpenHandle);
+	}
+
+	if (OnPushTokenHandle.IsValid())
+	{
+		FCoreDelegates::ApplicationRegisteredForRemoteNotificationsDelegate.Remove(OnPushTokenHandle);
 	}
 
 	[SDKListener release];
@@ -671,10 +813,32 @@ void UIOSCleverTapInstance::HandleDidReceiveNotificationResponse(NSDictionary* U
 	}
 }
 
+void UIOSCleverTapInstance::HandleRemoteNotificationToken(NSData* DeviceToken)
+{
+	if (DeviceToken == nil || [DeviceToken length] == 0)
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("HandleRemoteNotificationToken: received nil or empty token"));
+		return;
+	}
+
+	const NSUInteger TokenLen = [DeviceToken length];
+	TArray<uint8> TokenArray;
+	TokenArray.AddUninitialized(static_cast<int32>(TokenLen));
+	[DeviceToken getBytes:TokenArray.GetData() length:TokenLen];
+
+	NSLog(@"[CleverTap] HandleRemoteNotificationToken: forwarding %d-byte APNs token to %d CleverTap instance(s)",
+		TokenArray.Num(), AllInstances.Num());
+
+	for (UIOSCleverTapInstance* Inst : AllInstances)
+	{
+		Inst->SetPushToken(TokenArray);
+	}
+}
+
 void UIOSCleverTapInstance::SetPushToken(const TArray<uint8>& Token)
 {
 	check(NativeInstance != nil);
-
+	NSLog(@"[CleverTap] SetPushToken: sending %d-byte token to CleverTap native SDK", Token.Num());
 	[NativeInstance setPushToken:[NSData dataWithBytes:Token.GetData() length:Token.Num()]];
 }
 
@@ -808,9 +972,31 @@ ECleverTapPushPermissionStatus UIOSCleverTapInstance::GetPushPermissionStatus()
 void UIOSCleverTapInstance::PromptForPushPermission(bool bFallbackToSettings)
 {
 	check(NativeInstance != nil);
-	// TODO: Not exposed
-	// [NativeInstance promptForPushPermission:ConvertToNSValue(bFallbackToSettings)];
-	FPlatformMisc::RegisterForRemoteNotifications();
+
+	UNUserNotificationCenter* Center = [UNUserNotificationCenter currentNotificationCenter];
+	UNAuthorizationOptions Options =
+		UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge;
+
+	UIOSCleverTapInstance* RawSelf = this;
+
+	[Center requestAuthorizationWithOptions:Options
+						  completionHandler:^(BOOL Granted, NSError* Error) {
+		if (Error != nil)
+		{
+			UE_LOG(LogCleverTap, Warning, TEXT("Push permission request error: %s"),
+				*FString([Error localizedDescription]));
+		}
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if (Granted)
+			{
+				[[UIApplication sharedApplication] registerForRemoteNotifications];
+			}
+
+			RawSelf->CachePushPermissionStatus(Granted);
+			RawSelf->OnPushPermissionResponse.Broadcast(Granted);
+		});
+	}];
 }
 
 void UIOSCleverTapInstance::PromptForPushPermissionWithAlertPrimer(
