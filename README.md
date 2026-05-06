@@ -1,10 +1,18 @@
 # Plugin Integration
-## Clone and Copy
+
+## Getting the Plugin
+
+### Option A — Download from GitHub Releases (Recommended)
+1. Go to the [Releases page](https://github.com/CleverTap/clevertap-unreal-sdk/releases) and download `CleverTap-UnrealPlugin-v*.*.*.zip`.
+2. Extract the zip — it contains a single `CleverTap` folder.
+3. Copy the `CleverTap` folder into your Unreal project's `Plugins/` directory (create it if it doesn't exist).
+
+### Option B — Clone the Repository
 Clone the sample application repository into a temporary folder to get access to the CleverTap Unreal plugin.
 ```bash
 git clone --depth 1 https://github.com/CleverTap/clevertap-unreal-sdk.git
 ```
-Copy the `clevertap-unreal-sdk\Plugins\CleverTap` folder to your Unreal project's Plugin folder.
+Copy the `clevertap-unreal-sdk\Plugins\CleverTap` folder to your Unreal project's `Plugins/` directory.
 ## Integration
 ### Generic Integration
 Add the following to the `Plugins` section of your Unreal project's `.uproject` file.
@@ -265,10 +273,14 @@ URL handling.
 ### iOS - Configuring Apple Push Notifications (APNs)
 1. Follow the [CleverTap guide](https://developer.clevertap.com/docs/push-notifications-ios#step-1-configure-push-notifications) to set up APNs for your app.
 2. In your project's `Config/DefaultEngine.ini` ensure `bEnableRemoteNotificationsSupport` is `True` in the `[/Script/IOSRuntimeSettings.IOSRuntimeSettings]` section.
-3. If you would like push notifications to appear when your app is in the foreground make sure that `bIOSPresentPushNotificationsInForeground` is set to `True` in the `[/Script/CleverTap.CleverTapConfig]` section of your project's `Config/DefaultEngine.ini`
+3. If you would like push notifications to appear when your app is in the foreground make sure that `bIOSPresentPushNotificationsInForeground` is set to `True` in the `[/Script/CleverTap.CleverTapConfig]` section of your project's `Config/DefaultEngine.ini`.
+4. By default, push permission must be requested manually via `PromptForPushPermission()`. To instead request permission automatically on first launch, set `bIOSAutoRequestPushPermission` to `True`:
 
-> [!NOTE]
-> The CleverTap Unreal plugin currently does not support [Push Impressions](https://developer.clevertap.com/docs/push-notifications-ios#push-impressions), [Push Primers](https://developer.clevertap.com/docs/push-notifications-ios#ios-push-primer), or [Rich Push Notifications](https://developer.clevertap.com/docs/rich-push-notifications).
+```ini
+[/Script/CleverTap.CleverTapConfig]
+bIOSPresentPushNotificationsInForeground=True
+bIOSAutoRequestPushPermission=True
+```
 
 #### iOS - Optional Engine changes for Push Notifications that launch the App
 On Windows, a patch program equivalent can be installed using winget.

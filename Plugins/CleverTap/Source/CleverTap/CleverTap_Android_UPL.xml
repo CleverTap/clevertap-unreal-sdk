@@ -3,7 +3,12 @@
 	<init>
 		<setBoolIsEqual result="IsUE4" arg1="$I(EngineMajorVersion)" arg2="4" />
 
-		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="" />
+		<!-- TODO: Change the default AndroidLocalCleverTapSdkAarPath back to an empty string
+		           when the published clevertap-android-sdk has the CTInAppHtmlBannerOverlay fix.
+		           It's currently defaulting to a precompiled custom aar as a temporary measure.
+		           (Also remove the precompiled aar from the repository when this happens)
+		  -->
+		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="Plugins/CleverTap/Source/ThirdParty/Android/clevertap-android-sdk-8.0.0.aar" />
 		<setBoolIsEqual result="UsePublishedCleverTapSDK" arg1="$S(AndroidLocalCleverTapSdkAarPath)" arg2="" />
 
 		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
