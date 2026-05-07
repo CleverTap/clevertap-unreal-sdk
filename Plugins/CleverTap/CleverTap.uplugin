@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.1",
+	"VersionName": "1.1.0",
 	"FriendlyName": "CleverTap",
 	"Description": "Unreal integration of the CleverTap SDK for Android and iOS",
 	"Category": "Other",
@@ -19,7 +19,7 @@
 			"Name": "CleverTap",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"WhitelistPlatform": [
+			"AllowedPlatforms": [
 				"Win64",
 				"Mac",
 				"IOS",

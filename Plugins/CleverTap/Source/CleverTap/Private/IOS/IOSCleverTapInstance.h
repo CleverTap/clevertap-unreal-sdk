@@ -26,6 +26,7 @@ public:
 
   static void HandleWillPresentNotification(NSDictionary *UserInfo);
   static void HandleDidReceiveNotificationResponse(NSDictionary *UserInfo);
+  static void HandleRemoteNotificationToken(NSData *DeviceToken);
 
   void CachePushPermissionStatus(bool bIsGranted);
   void HandleInAppNotificationButtonClicked(
@@ -115,6 +116,7 @@ private:
   CleverTapSDKListener *SDKListener{};
   TArray<FString> OpenURLQueue;
   FDelegateHandle OnURLOpenHandle;
+  FDelegateHandle OnPushTokenHandle;
   TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler;
   TUniqueFunction<bool(const FCleverTapProperties &)> InAppNotificationFilter;
   TAtomic<uint8> PushPermissionStatus{};
