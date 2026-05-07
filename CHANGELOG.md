@@ -19,7 +19,7 @@
 - iOS CleverTap SDK upgraded from 7.2.0 to **7.6.0**
 
 ### Internal changes
-- Removed temporary local AAR workaround — Android SDK now consumed via Maven Central by default
+- Updated temporary local AAR workaround — Android SDK now consumed via Maven Central by default and aar for the htmlBanners
 - Plugin version bumped to 1.1.0
 
 ## [1.0.0] - 2025-07-17
