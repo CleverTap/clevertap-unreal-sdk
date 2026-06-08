@@ -43,6 +43,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnInAppNotificationDismissed, const FCleverTapProperties&, Extras, const FCleverTapProperties&, ActionExtras);
 
 /**
+ * Fired when variables have been fetched from the CleverTap server.
+ * bSuccess is true if the fetch succeeded, false if it failed or timed out.
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVariablesFetched, bool, bSuccess);
+
+/**
+ * Fired whenever one or more variable values have changed (either from a fetch or a server push).
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVariablesChanged);
+
+/**
  * Status of if the user has granted permission to send push notifications.
  */
 UENUM(BlueprintType)
@@ -658,6 +669,139 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetNetworkInformationRecording(bool bEnableCollection)
 		PURE_VIRTUAL(UCleverTapInstance::SetNetworkInformationRecording, ;);
+	
+	
+	// -------------------------------------------------------------------------
+	// Product Experiences (Variables)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Define a string variable. Call this at startup before FetchVariables().
+	 * If the variable already exists the default value is ignored.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void DefineStringVariable(const FString& Name, const FString& DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineStringVariable, ;);
+
+	/** Define a 32-bit integer variable (equivalent to Unity's int overload). */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void DefineIntVariable(const FString& Name, int32 DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineIntVariable, ;);
+
+	/** Define a 64-bit integer variable (equivalent to Unity's long overload). */
+	virtual void DefineInt64Variable(const FString& Name, int64 DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineInt64Variable, ;);
+
+	/**
+	 * Convenience: define a short (16-bit integer) variable.
+	 * Internally stored as a 32-bit integer; identical to DefineIntVariable.
+	 */
+	void DefineShortVariable(const FString& Name, int32 DefaultValue)
+	{
+		DefineIntVariable(Name, DefaultValue);
+	}
+
+	/**
+	 * Convenience: define a byte (8-bit unsigned integer) variable.
+	 * Internally stored as a 32-bit integer; identical to DefineIntVariable.
+	 * Valid range: 0–255.
+	 */
+	void DefineByteVariable(const FString& Name, int32 DefaultValue)
+	{
+		DefineIntVariable(Name, DefaultValue);
+	}
+
+	/** Define a single-precision float variable (equivalent to Unity's float overload). */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void DefineFloatVariable(const FString& Name, float DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineFloatVariable, ;);
+
+	/** Define a double-precision float variable (equivalent to Unity's double overload). */
+	virtual void DefineDoubleVariable(const FString& Name, double DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineDoubleVariable, ;);
+
+	/** Define a boolean variable. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void DefineBoolVariable(const FString& Name, bool DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineBoolVariable, ;);
+
+	/**
+	 * Define a string-keyed string-map variable (equivalent to Unity's Dictionary<string,string> overload).
+	 * Maps to the "group" kind in the CleverTap backend.
+	 */
+	virtual void DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue)
+		PURE_VIRTUAL(UCleverTapInstance::DefineStringMapVariable, ;);
+
+	/**
+	 * Define a file variable. The value is a local file path, populated after FetchVariables()
+	 * downloads the file (equivalent to Unity's FileVariable overload).
+	 */
+	virtual void DefineFileVariable(const FString& Name)
+		PURE_VIRTUAL(UCleverTapInstance::DefineFileVariable, ;);
+
+	/**
+	 * Fetch current variable values from CleverTap servers.
+	 * OnVariablesFetched fires when done.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void FetchVariables()
+		PURE_VIRTUAL(UCleverTapInstance::FetchVariables, ;);
+
+	/**
+	 * Sync variable definitions to the CleverTap dashboard (development tool).
+	 * Call this during development after DefineXxxVariable calls so the dashboard
+	 * can recognize the variables and let you configure their values.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual void SyncVariables()
+		PURE_VIRTUAL(UCleverTapInstance::SyncVariables, ;);
+
+	/** Get the current value of a string variable. Returns DefaultValue if not yet fetched. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual FString GetStringVariable(const FString& Name, const FString& DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetStringVariable, return DefaultValue;);
+
+	/** Get the current value of a 32-bit integer variable. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual int32 GetIntVariable(const FString& Name, int32 DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetIntVariable, return DefaultValue;);
+
+	/** Get the current value of a 64-bit integer variable. */
+	virtual int64 GetInt64Variable(const FString& Name, int64 DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetInt64Variable, return DefaultValue;);
+
+	/** Get the current value of a float variable. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual float GetFloatVariable(const FString& Name, float DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetFloatVariable, return DefaultValue;);
+
+	/** Get the current value of a double variable. */
+	virtual double GetDoubleVariable(const FString& Name, double DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetDoubleVariable, return DefaultValue;);
+
+	/** Get the current value of a boolean variable. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	virtual bool GetBoolVariable(const FString& Name, bool DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetBoolVariable, return DefaultValue;);
+
+	/** Get the current value of a string-map variable. */
+	virtual TMap<FString, FString> GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const
+		PURE_VIRTUAL(UCleverTapInstance::GetStringMapVariable, return DefaultValue;);
+
+	/**
+	 * Get the local file path of a file variable after it has been fetched.
+	 * Returns empty string if the file has not yet been downloaded.
+	 */
+	virtual FString GetFileVariablePath(const FString& Name) const
+		PURE_VIRTUAL(UCleverTapInstance::GetFileVariablePath, return TEXT(""););
+
+	/** Delegate that fires when FetchVariables() completes */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|PE")
+	FOnVariablesFetched OnVariablesFetched;
+
+	/** Delegate that fires whenever any variable value changes */
+	UPROPERTY(BlueprintAssignable, Category = "CleverTap|PE")
+	FOnVariablesChanged OnVariablesChanged;
 
 private:
 	/** Copy all matching profile properties to a UStruct-based type T */

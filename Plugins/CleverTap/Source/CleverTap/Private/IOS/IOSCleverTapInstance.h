@@ -6,6 +6,7 @@
 
 @class CleverTapSDKListener;
 @class CleverTap;
+@class CTVar;
 @class NSDictionary;
 @class NSString;
 @class NSURL;
@@ -101,6 +102,26 @@ public:
   bool LocalizeAndroidNotificationChannelGroup(const FString &GroupID,
                                                const FText &GroupName) override;
   // </UCleverTapInstance>
+	
+	//Product Experience
+	void DefineStringVariable(const FString& Name, const FString& DefaultValue) override;
+	void DefineIntVariable(const FString& Name, int32 DefaultValue) override;
+	void DefineInt64Variable(const FString& Name, int64 DefaultValue) override;
+	void DefineFloatVariable(const FString& Name, float DefaultValue) override;
+	void DefineDoubleVariable(const FString& Name, double DefaultValue) override;
+	void DefineBoolVariable(const FString& Name, bool DefaultValue) override;
+	void DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) override;
+	void DefineFileVariable(const FString& Name) override;
+	void FetchVariables() override;
+	void SyncVariables() override;
+	FString GetStringVariable(const FString& Name, const FString& DefaultValue) const override;
+	int32 GetIntVariable(const FString& Name, int32 DefaultValue) const override;
+	int64 GetInt64Variable(const FString& Name, int64 DefaultValue) const override;
+	float GetFloatVariable(const FString& Name, float DefaultValue) const override;
+	double GetDoubleVariable(const FString& Name, double DefaultValue) const override;
+	bool GetBoolVariable(const FString& Name, bool DefaultValue) const override;
+	TMap<FString, FString> GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const override;
+	FString GetFileVariablePath(const FString& Name) const override;
 
 private:
   bool IsRegisteredForPushNotificationClicked() const;
@@ -109,7 +130,7 @@ private:
   void SetOpenURLEnabled();
   void HandleOnOpenURL(UIApplication *App, NSURL *URL, NSString *Source,
                        id Annotation);
-
+	
 private:
   mutable FCriticalSection CriticalSection;
   CleverTap *NativeInstance{};
@@ -121,6 +142,8 @@ private:
   TUniqueFunction<bool(const FCleverTapProperties &)> InAppNotificationFilter;
   TAtomic<uint8> PushPermissionStatus{};
   TAtomic<uint8> StateFlags{};
-
+	
   static TArray<UIOSCleverTapInstance *> AllInstances;
+  NSMutableDictionary<NSString*, CTVar*>* Variables;
+  bool bVariablesChangedRegistered{false};
 };

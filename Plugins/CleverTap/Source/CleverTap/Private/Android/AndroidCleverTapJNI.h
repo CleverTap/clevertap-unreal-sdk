@@ -73,4 +73,24 @@ void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bo
 
 void EnableIntentNotifications(JNIEnv* Env);
 
+// Product Experiences (Variables)
+void DefineStringVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const FString& DefaultValue);
+void DefineIntVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int32 DefaultValue);
+void DefineInt64Variable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int64 DefaultValue);
+void DefineFloatVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, float DefaultValue);
+void DefineDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, double DefaultValue);
+void DefineBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue);
+void DefineStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue);
+void DefineFileVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name);
+void FetchVariables(JNIEnv* Env, jobject CleverTapInstance, jlong NativeInstancePtr);
+void SyncVariables(JNIEnv* Env, jobject CleverTapInstance);
+FString GetStringVariable(JNIEnv* Env, const FString& Name, const FString& DefaultValue);
+int32 GetIntVariable(JNIEnv* Env, const FString& Name, int32 DefaultValue);
+int64 GetInt64Variable(JNIEnv* Env, const FString& Name, int64 DefaultValue);
+float GetFloatVariable(JNIEnv* Env, const FString& Name, float DefaultValue);
+double GetDoubleVariable(JNIEnv* Env, const FString& Name, double DefaultValue);
+bool GetBoolVariable(JNIEnv* Env, const FString& Name, bool DefaultValue);
+TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, const FString& Name, const TMap<FString, FString>& DefaultValue);
+FString GetFileVariablePath(JNIEnv* Env, const FString& Name);
+
 }}} // namespace CleverTapSDK::Android::JNI

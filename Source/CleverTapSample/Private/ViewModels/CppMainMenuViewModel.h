@@ -3,6 +3,7 @@
 
 #include "ViewModels/CppViewModelBase.h"
 #include "ViewModels/MainMenuViewModelInterface.h"
+#include "ViewModels/PETabViewModelInterface.h"
 #include "CppMainMenuViewModel.generated.h"
 
 enum class ECleverTapPushPermissionStatus : uint8;
@@ -11,6 +12,7 @@ class UCppPrivacyTabViewModel;
 class UCppProfileTabViewModel;
 class UCppPushTabViewModel;
 class UCppUserProfileViewModel;
+class UCppPETabViewModel;
 
 /**
  * C++ implementation of the IMainMenuViewModelInterface
@@ -25,7 +27,9 @@ public:
 	UCppPushTabViewModel* GetPushTab() const;
 	UCppEventTabViewModel* GetEventTab() const;
 	UCppPrivacyTabViewModel* GetPrivacyTab() const;
-
+	
+	UCppPETabViewModel* GetPETab() const;
+	
 	void Edit(TFunctionRef<void(MutableContext&, UCppMainMenuViewModel&)> EditFn);
 	UCppMainMenuViewModel& SetActiveTab(MutableContext&, EMainMenuTab Value);
 
@@ -37,6 +41,7 @@ private:
 	TScriptInterface<IPushTabViewModelInterface> GetPushTab_Implementation() const override;
 	TScriptInterface<IEventTabViewModelInterface> GetEventTab_Implementation() const override;
 	TScriptInterface<IPrivacyTabViewModelInterface> GetPrivacyTab_Implementation() const override;
+	TScriptInterface<IPETabViewModelInterface> GetPETab_Implementation() const override;
 	// </IMainMenuViewModelInterface>
 
 private:
@@ -51,6 +56,9 @@ private:
 
 	UPROPERTY()
 	UCppPrivacyTabViewModel* PrivacyTab;
-
+	
+	UPROPERTY()
+	UCppPETabViewModel* PETab;
+	
 	EMainMenuTab ActiveTab{};
 };

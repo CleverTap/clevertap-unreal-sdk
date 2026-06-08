@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +18,11 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.clevertap.android.sdk.variables.Var;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
+import java.util.concurrent.ConcurrentHashMap;
 
 // Utilities to make it easier to use the CleverTapAPI from Unreal/C++ 
 public class UECleverTapBridge {
@@ -214,5 +220,136 @@ public class UECleverTapBridge {
         }
         return list;
     }
+
+    // ---- Product Experiences (Variables) ----
+
+    // Stores defined variables by name so we can read their values later
+    private static ConcurrentHashMap<String, Var<?>> sVariables = new ConcurrentHashMap<>();
+
+    // Ensures the VariablesChangedCallback is only registered once, even if fetchVariables() is called multiple times
+    private static volatile boolean sVariablesChangedCallbackRegistered = false;
+
+    public static void defineStringVariable(CleverTapAPI ct, String name, String defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineIntVariable(CleverTapAPI ct, String name, int defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineInt64Variable(CleverTapAPI ct, String name, long defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineFloatVariable(CleverTapAPI ct, String name, double defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineDoubleVariable(CleverTapAPI ct, String name, double defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineBoolVariable(CleverTapAPI ct, String name, boolean defaultValue) {
+        sVariables.put(name, ct.defineVariable(name, defaultValue));
+    }
+
+    public static void defineStringMapVariable(CleverTapAPI ct, String name, Map<String, String> defaultValue) {
+        // Cast to Map<String, Object> for the SDK
+        Map<String, Object> objMap = new HashMap<>(defaultValue);
+        sVariables.put(name, ct.defineVariable(name, objMap));
+    }
+
+    public static void defineFileVariable(CleverTapAPI ct, String name) {
+        sVariables.put(name, ct.defineFileVariable(name));
+    }
+
+    public static void fetchVariables(CleverTapAPI ct, long nativeInstancePtr) {
+        ct.fetchVariables(new FetchVariablesCallback() {
+            @Override
+            public void onVariablesFetched(boolean success) {
+                nativeOnVariablesFetched(nativeInstancePtr, success);
+            }
+        });
+        // Register the VariablesChangedCallback only once — addVariablesChangedCallback is additive,
+        // so calling this on every fetch would cause duplicate OnVariablesChanged events.
+        if (!sVariablesChangedCallbackRegistered) {
+            sVariablesChangedCallbackRegistered = true;
+            ct.addVariablesChangedCallback(new VariablesChangedCallback() {
+                @Override
+                public void variablesChanged() {
+                    nativeOnVariablesChanged(nativeInstancePtr);
+                }
+            });
+        }
+    }
+
+    public static String getStringVariable(String name, String defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof String) ? (String) val : defaultValue;
+    }
+
+    public static int getIntVariable(String name, int defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof Number) ? ((Number) val).intValue() : defaultValue;
+    }
+
+    public static long getInt64Variable(String name, long defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof Number) ? ((Number) val).longValue() : defaultValue;
+    }
+
+    public static double getFloatVariable(String name, double defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof Number) ? ((Number) val).doubleValue() : defaultValue;
+    }
+
+    public static double getDoubleVariable(String name, double defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof Number) ? ((Number) val).doubleValue() : defaultValue;
+    }
+
+    public static boolean getBoolVariable(String name, boolean defaultValue) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return defaultValue;
+        Object val = v.value();
+        return (val instanceof Boolean) ? (Boolean) val : defaultValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, String> getStringMapVariable(String name) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return new HashMap<>();
+        Object val = v.value();
+        if (!(val instanceof Map)) return new HashMap<>();
+        Map<?, ?> raw = (Map<?, ?>) val;
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<?, ?> entry : raw.entrySet()) {
+            String k = entry.getKey() != null ? entry.getKey().toString() : "";
+            String sv = entry.getValue() != null ? entry.getValue().toString() : "";
+            result.put(k, sv);
+        }
+        return result;
+    }
+
+    public static String getFileVariablePath(String name) {
+        Var<?> v = sVariables.get(name);
+        if (v == null) return "";
+        Object val = v.value();
+        return (val instanceof String) ? (String) val : "";
+    }
+
+    // These are implemented on the C++ side
+    private static native void nativeOnVariablesFetched(long nativeInstancePtr, boolean success);
+    private static native void nativeOnVariablesChanged(long nativeInstancePtr);
 
 }

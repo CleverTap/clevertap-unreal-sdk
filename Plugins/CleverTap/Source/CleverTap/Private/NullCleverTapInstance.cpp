@@ -173,3 +173,53 @@ void UNullCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollecti
 {
 	CleverTapSDK::Ignore(bEnableCollection);
 }
+
+void UNullCleverTapInstance::DefineStringVariable(const FString& Name, const FString& DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineIntVariable(const FString& Name, int32 DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineInt64Variable(const FString& Name, int64 DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineFloatVariable(const FString& Name, float DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineDoubleVariable(const FString& Name, double DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineBoolVariable(const FString& Name, bool DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue)
+	{ CleverTapSDK::Ignore(Name, DefaultValue); }
+
+void UNullCleverTapInstance::DefineFileVariable(const FString& Name)
+	{ CleverTapSDK::Ignore(Name); }
+
+void UNullCleverTapInstance::FetchVariables() {}
+
+FString UNullCleverTapInstance::GetStringVariable(const FString& Name, const FString& DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+int32 UNullCleverTapInstance::GetIntVariable(const FString& Name, int32 DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+int64 UNullCleverTapInstance::GetInt64Variable(const FString& Name, int64 DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+float UNullCleverTapInstance::GetFloatVariable(const FString& Name, float DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+double UNullCleverTapInstance::GetDoubleVariable(const FString& Name, double DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+bool UNullCleverTapInstance::GetBoolVariable(const FString& Name, bool DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+TMap<FString, FString> UNullCleverTapInstance::GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const
+	{ CleverTapSDK::Ignore(Name); return DefaultValue; }
+
+FString UNullCleverTapInstance::GetFileVariablePath(const FString& Name) const
+	{ CleverTapSDK::Ignore(Name); return TEXT(""); }

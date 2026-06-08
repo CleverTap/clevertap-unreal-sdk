@@ -400,6 +400,13 @@
 
 					implementation("androidx.multidex:multidex:2.0.1")
 
+					// Required by CleverTap SDK 8.0.0+ — InAppTimerManager uses Kotlin coroutines with lifecycle scope.
+					// Note: kotlin-stdlib is intentionally omitted — Unreal Engine's build chain already
+					// ships it, and declaring it again bloats the primary DEX past the 64K method limit,
+					// which causes ClassNotFoundException for GameApplication at startup.
+					implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+					implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
 					// Import the BoM for the Firebase platform
 					implementation platform("com.google.firebase:firebase-bom:33.2.0")
 

@@ -6,6 +6,7 @@
 #include "ViewModels/CppPrivacyTabViewModel.h"
 #include "ViewModels/CppProfileTabViewModel.h"
 #include "ViewModels/CppPushTabViewModel.h"
+#include "ViewModels/CppPETabViewModel.h"
 
 UCppMainMenuViewModel::UCppMainMenuViewModel(const FObjectInitializer& ObjectInitializer)
 	: Super{ ObjectInitializer }
@@ -21,6 +22,9 @@ UCppMainMenuViewModel::UCppMainMenuViewModel(const FObjectInitializer& ObjectIni
 
 	PrivacyTab = CreateDefaultSubobject<UCppPrivacyTabViewModel>("Privacy Tab");
 	PrivacyTab->OnViewModelChanged().AddDynamic(this, &UCppMainMenuViewModel::PropogateViewModelChanged);
+	
+	PETab = CreateDefaultSubobject<UCppPETabViewModel>("PE Tab");
+	PETab->OnViewModelChanged().AddDynamic(this, &UCppMainMenuViewModel::PropogateViewModelChanged);
 }
 
 UCppProfileTabViewModel* UCppMainMenuViewModel::GetProfileTab() const
@@ -41,6 +45,11 @@ UCppEventTabViewModel* UCppMainMenuViewModel::GetEventTab() const
 UCppPrivacyTabViewModel* UCppMainMenuViewModel::GetPrivacyTab() const
 {
 	return PrivacyTab;
+}
+
+UCppPETabViewModel* UCppMainMenuViewModel::GetPETab() const
+{
+	return PETab;
 }
 
 void UCppMainMenuViewModel::Edit(TFunctionRef<void(MutableContext&, UCppMainMenuViewModel&)> EditFn)
@@ -77,6 +86,11 @@ TScriptInterface<IEventTabViewModelInterface> UCppMainMenuViewModel::GetEventTab
 TScriptInterface<IPrivacyTabViewModelInterface> UCppMainMenuViewModel::GetPrivacyTab_Implementation() const
 {
 	return PrivacyTab;
+}
+
+TScriptInterface<IPETabViewModelInterface> UCppMainMenuViewModel::GetPETab_Implementation() const
+{
+	return TScriptInterface<IPETabViewModelInterface>(PETab);
 }
 
 void UCppMainMenuViewModel::SetActiveTab_Implementation(EMainMenuTab Value)
