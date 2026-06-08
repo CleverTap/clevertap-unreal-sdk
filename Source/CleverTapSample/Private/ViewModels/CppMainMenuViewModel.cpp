@@ -90,7 +90,7 @@ TScriptInterface<IPrivacyTabViewModelInterface> UCppMainMenuViewModel::GetPrivac
 
 TScriptInterface<IPETabViewModelInterface> UCppMainMenuViewModel::GetPETab_Implementation() const
 {
-	return TScriptInterface<IPETabViewModelInterface>(PETab);
+	return PETab;
 }
 
 void UCppMainMenuViewModel::SetActiveTab_Implementation(EMainMenuTab Value)

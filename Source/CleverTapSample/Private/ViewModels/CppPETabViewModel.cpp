@@ -92,7 +92,7 @@ void UCppPETabViewModel::RegisterFloatVar(const FString& Name, float Default)
 {
 	GetCT().DefineFloatVariable(Name, Default);
 	if (!VariableNames.Contains(Name)) VariableNames.Add(Name);
-	VariableDisplayValues.Add(Name, FString::SanitizeFloat(Default));
+	VariableDisplayValues.Add(Name, FString::Printf(TEXT("%.8g"), (double)Default));
 	VariableTypes.Add(Name, EPEVarType::Float);
 }
 
@@ -100,7 +100,7 @@ void UCppPETabViewModel::RegisterDoubleVar(const FString& Name, double Default)
 {
 	GetCT().DefineDoubleVariable(Name, Default);
 	if (!VariableNames.Contains(Name)) VariableNames.Add(Name);
-	VariableDisplayValues.Add(Name, FString::Printf(TEXT("%g"), Default));
+	VariableDisplayValues.Add(Name, FString::Printf(TEXT("%.8g"), Default));
 	VariableTypes.Add(Name, EPEVarType::Double);
 }
 
@@ -220,10 +220,10 @@ void UCppPETabViewModel::IncrementVariable_Implementation(const FString& Name)
 			NewValue = FString::Printf(TEXT("%lld"), FCString::Atoi64(**Current) + 1);
 			break;
 		case EPEVarType::Float:
-			NewValue = FString::SanitizeFloat(FCString::Atof(**Current) + 1.0f);
+			NewValue = FString::Printf(TEXT("%.8g"), FCString::Atod(**Current) + 1.0);
 			break;
 		case EPEVarType::Double:
-			NewValue = FString::Printf(TEXT("%g"), FCString::Atod(**Current) + 1.0);
+			NewValue = FString::Printf(TEXT("%.8g"), FCString::Atod(**Current) + 1.0);
 			break;
 		case EPEVarType::Bool:
 			NewValue = (*Current == TEXT("true")) ? TEXT("false") : TEXT("true");
@@ -232,7 +232,7 @@ void UCppPETabViewModel::IncrementVariable_Implementation(const FString& Name)
 			return; // string, map, file — no numeric increment
 	}
 
-	Edit([&Name, &NewValue](MutableContext& Ctx, UCppPETabViewModel& VM) {
+	Edit([Name, NewValue](MutableContext& Ctx, UCppPETabViewModel& VM) {
 		VM.SetVariableDisplayValue(Ctx, Name, NewValue);
 	});
 }
@@ -253,10 +253,10 @@ void UCppPETabViewModel::DecrementVariable_Implementation(const FString& Name)
 			NewValue = FString::Printf(TEXT("%lld"), FCString::Atoi64(**Current) - 1);
 			break;
 		case EPEVarType::Float:
-			NewValue = FString::SanitizeFloat(FCString::Atof(**Current) - 1.0f);
+			NewValue = FString::Printf(TEXT("%.8g"), FCString::Atod(**Current) - 1.0);
 			break;
 		case EPEVarType::Double:
-			NewValue = FString::Printf(TEXT("%g"), FCString::Atod(**Current) - 1.0);
+			NewValue = FString::Printf(TEXT("%.8g"), FCString::Atod(**Current) - 1.0);
 			break;
 		case EPEVarType::Bool:
 			NewValue = (*Current == TEXT("true")) ? TEXT("false") : TEXT("true");
@@ -265,7 +265,7 @@ void UCppPETabViewModel::DecrementVariable_Implementation(const FString& Name)
 			return;
 	}
 
-	Edit([&Name, &NewValue](MutableContext& Ctx, UCppPETabViewModel& VM) {
+	Edit([Name, NewValue](MutableContext& Ctx, UCppPETabViewModel& VM) {
 		VM.SetVariableDisplayValue(Ctx, Name, NewValue);
 	});
 }

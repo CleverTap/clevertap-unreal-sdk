@@ -19,7 +19,7 @@ PE Variables let your CleverTap dashboard operators change values inside your ga
 
 ## How It Works
 
-```
+```text
 Your Code                         CleverTap Dashboard
 ─────────                         ───────────────────
 DefineIntVariable("lives", 3)
@@ -200,7 +200,6 @@ Every `GetXxx` call takes a `DefaultValue` argument — this is returned if the 
 | File path | `DefineFileVariable` | `GetFileVariablePath` | Returns local path after download; empty until ready |
 
 > **Float precision note:** Float variables are stored as 64-bit doubles in both the Android and iOS SDKs. `GetFloatVariable()` casts the double to `float` at the boundary, which can introduce small representation noise (e.g. server value `67.3` → `67.300003f`). For display purposes, use `GetDoubleVariable()` on a float-type variable and format with `%.8g`.
-
 > **short / byte:** There are no 16-bit or 8-bit variable types on the CleverTap backend. Use `DefineIntVariable` for these — the values are stored as 32-bit integers.
 
 ---
@@ -299,7 +298,7 @@ Variable names are **global per CleverTap account**. If a variable with the same
 
 ### File variable path is empty
 
-`GetFileVariablePath()` returns an empty string until `FetchVariables()` has completed **and** the SDK has finished downloading the file. Wait for `OnVariablesChanged` (or `onVariablesChangedAndNoDownloadsPending` if you need to be sure the download is done) before accessing the path.
+`GetFileVariablePath()` returns an empty string until `FetchVariables()` has completed **and** the SDK has finished downloading the file. Wait for `OnVariablesChanged` before accessing the path, and always check for an empty string before use.
 
 ### Blueprint — `int64` and `double` are not available
 

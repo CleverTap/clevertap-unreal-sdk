@@ -223,114 +223,129 @@ public class UECleverTapBridge {
 
     // ---- Product Experiences (Variables) ----
 
-    // Stores defined variables by name so we can read their values later
-    private static ConcurrentHashMap<String, Var<?>> sVariables = new ConcurrentHashMap<>();
+    // Per-instance variable map: keyed by CleverTapAPI so multiple SDK instances stay isolated.
+    private static ConcurrentHashMap<CleverTapAPI, ConcurrentHashMap<String, Var<?>>> sVariablesByInstance =
+            new ConcurrentHashMap<>();
 
-    // Ensures the VariablesChangedCallback is only registered once, even if fetchVariables() is called multiple times
-    private static volatile boolean sVariablesChangedCallbackRegistered = false;
+    // Per-instance guard: ensures VariablesChangedCallback is registered only once per instance.
+    private static ConcurrentHashMap<CleverTapAPI, Boolean> sVariablesChangedCallbackRegistered =
+            new ConcurrentHashMap<>();
+
+    // Tracks the latest nativeInstancePtr per CleverTapAPI so the VariablesChangedCallback
+    // always fires with the current pointer even if fetchVariables() is called multiple times.
+    private static ConcurrentHashMap<CleverTapAPI, Long> sNativePtrByInstance =
+            new ConcurrentHashMap<>();
+
+    private static ConcurrentHashMap<String, Var<?>> getOrCreateVars(CleverTapAPI ct) {
+        return sVariablesByInstance.computeIfAbsent(ct, k -> new ConcurrentHashMap<>());
+    }
 
     public static void defineStringVariable(CleverTapAPI ct, String name, String defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineIntVariable(CleverTapAPI ct, String name, int defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineInt64Variable(CleverTapAPI ct, String name, long defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineFloatVariable(CleverTapAPI ct, String name, double defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineDoubleVariable(CleverTapAPI ct, String name, double defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineBoolVariable(CleverTapAPI ct, String name, boolean defaultValue) {
-        sVariables.put(name, ct.defineVariable(name, defaultValue));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, defaultValue));
     }
 
     public static void defineStringMapVariable(CleverTapAPI ct, String name, Map<String, String> defaultValue) {
         // Cast to Map<String, Object> for the SDK
         Map<String, Object> objMap = new HashMap<>(defaultValue);
-        sVariables.put(name, ct.defineVariable(name, objMap));
+        getOrCreateVars(ct).put(name, ct.defineVariable(name, objMap));
     }
 
     public static void defineFileVariable(CleverTapAPI ct, String name) {
-        sVariables.put(name, ct.defineFileVariable(name));
+        getOrCreateVars(ct).put(name, ct.defineFileVariable(name));
     }
 
     public static void fetchVariables(CleverTapAPI ct, long nativeInstancePtr) {
+        // Always update the pointer so the VariablesChangedCallback (registered once) fires
+        // with the current native instance even if fetchVariables() is called again later.
+        sNativePtrByInstance.put(ct, nativeInstancePtr);
         ct.fetchVariables(new FetchVariablesCallback() {
             @Override
             public void onVariablesFetched(boolean success) {
                 nativeOnVariablesFetched(nativeInstancePtr, success);
             }
         });
-        // Register the VariablesChangedCallback only once — addVariablesChangedCallback is additive,
-        // so calling this on every fetch would cause duplicate OnVariablesChanged events.
-        if (!sVariablesChangedCallbackRegistered) {
-            sVariablesChangedCallbackRegistered = true;
+        // Register the VariablesChangedCallback only once per instance — addVariablesChangedCallback
+        // is additive, so calling this on every fetch would cause duplicate OnVariablesChanged events.
+        if (sVariablesChangedCallbackRegistered.putIfAbsent(ct, Boolean.TRUE) == null) {
             ct.addVariablesChangedCallback(new VariablesChangedCallback() {
                 @Override
                 public void variablesChanged() {
-                    nativeOnVariablesChanged(nativeInstancePtr);
+                    Long ptr = sNativePtrByInstance.get(ct);
+                    if (ptr != null) nativeOnVariablesChanged(ptr);
                 }
             });
         }
     }
 
-    public static String getStringVariable(String name, String defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static String getStringVariable(CleverTapAPI ct, String name, String defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof String) ? (String) val : defaultValue;
     }
 
-    public static int getIntVariable(String name, int defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static int getIntVariable(CleverTapAPI ct, String name, int defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof Number) ? ((Number) val).intValue() : defaultValue;
     }
 
-    public static long getInt64Variable(String name, long defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static long getInt64Variable(CleverTapAPI ct, String name, long defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof Number) ? ((Number) val).longValue() : defaultValue;
     }
 
-    public static double getFloatVariable(String name, double defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static double getFloatVariable(CleverTapAPI ct, String name, double defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof Number) ? ((Number) val).doubleValue() : defaultValue;
     }
 
-    public static double getDoubleVariable(String name, double defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static double getDoubleVariable(CleverTapAPI ct, String name, double defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof Number) ? ((Number) val).doubleValue() : defaultValue;
     }
 
-    public static boolean getBoolVariable(String name, boolean defaultValue) {
-        Var<?> v = sVariables.get(name);
+    public static boolean getBoolVariable(CleverTapAPI ct, String name, boolean defaultValue) {
+        Var<?> v = getOrCreateVars(ct).get(name);
         if (v == null) return defaultValue;
         Object val = v.value();
         return (val instanceof Boolean) ? (Boolean) val : defaultValue;
     }
 
+    // Returns null when variable not found so the C++ caller falls back to its DefaultValue.
     @SuppressWarnings("unchecked")
-    public static Map<String, String> getStringMapVariable(String name) {
-        Var<?> v = sVariables.get(name);
-        if (v == null) return new HashMap<>();
+    public static Map<String, String> getStringMapVariable(CleverTapAPI ct, String name) {
+        Var<?> v = getOrCreateVars(ct).get(name);
+        if (v == null) return null;
         Object val = v.value();
-        if (!(val instanceof Map)) return new HashMap<>();
+        if (!(val instanceof Map)) return null;
         Map<?, ?> raw = (Map<?, ?>) val;
         Map<String, String> result = new HashMap<>();
         for (Map.Entry<?, ?> entry : raw.entrySet()) {
@@ -341,11 +356,12 @@ public class UECleverTapBridge {
         return result;
     }
 
-    public static String getFileVariablePath(String name) {
-        Var<?> v = sVariables.get(name);
-        if (v == null) return "";
+    // Returns null when variable not found so the C++ caller falls back to empty string.
+    public static String getFileVariablePath(CleverTapAPI ct, String name) {
+        Var<?> v = getOrCreateVars(ct).get(name);
+        if (v == null) return null;
         Object val = v.value();
-        return (val instanceof String) ? (String) val : "";
+        return (val instanceof String) ? (String) val : null;
     }
 
     // These are implemented on the C++ side

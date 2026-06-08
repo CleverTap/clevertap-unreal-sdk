@@ -596,35 +596,35 @@ void UAndroidCleverTapInstance::SyncVariables()
 }
 FString UAndroidCleverTapInstance::GetStringVariable(const FString& Name, const FString& DefaultValue) const
 {
-	return JNI::GetStringVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetStringVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 int32 UAndroidCleverTapInstance::GetIntVariable(const FString& Name, int32 DefaultValue) const
 {
-	return JNI::GetIntVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetIntVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 int64 UAndroidCleverTapInstance::GetInt64Variable(const FString& Name, int64 DefaultValue) const
 {
-	return JNI::GetInt64Variable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetInt64Variable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 float UAndroidCleverTapInstance::GetFloatVariable(const FString& Name, float DefaultValue) const
 {
-	return JNI::GetFloatVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetFloatVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 double UAndroidCleverTapInstance::GetDoubleVariable(const FString& Name, double DefaultValue) const
 {
-	return JNI::GetDoubleVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetDoubleVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 bool UAndroidCleverTapInstance::GetBoolVariable(const FString& Name, bool DefaultValue) const
 {
-	return JNI::GetBoolVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetBoolVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 TMap<FString, FString> UAndroidCleverTapInstance::GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const
 {
-	return JNI::GetStringMapVariable(JNI::GetJNIEnv(), Name, DefaultValue);
+	return JNI::GetStringMapVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
 }
 FString UAndroidCleverTapInstance::GetFileVariablePath(const FString& Name) const
 {
-	return JNI::GetFileVariablePath(JNI::GetJNIEnv(), Name);
+	return JNI::GetFileVariablePath(JNI::GetJNIEnv(), JavaCleverTapInstance, Name);
 }
 
 void UAndroidCleverTapInstance::BroadcastOnVariablesFetched(jlong NativeInstancePtr, bool bSuccess)

@@ -694,21 +694,22 @@ public:
 
 	/**
 	 * Convenience: define a short (16-bit integer) variable.
-	 * Internally stored as a 32-bit integer; identical to DefineIntVariable.
+	 * Internally stored as a 32-bit integer; clamped to [-32768, 32767].
+	 * Clamping is enforced unconditionally at this layer and cannot be overridden.
 	 */
 	void DefineShortVariable(const FString& Name, int32 DefaultValue)
 	{
-		DefineIntVariable(Name, DefaultValue);
+		DefineIntVariable(Name, FMath::Clamp(DefaultValue, -32768, 32767));
 	}
 
 	/**
 	 * Convenience: define a byte (8-bit unsigned integer) variable.
-	 * Internally stored as a 32-bit integer; identical to DefineIntVariable.
-	 * Valid range: 0–255.
+	 * Internally stored as a 32-bit integer; clamped to [0, 255].
+	 * Clamping is enforced unconditionally at this layer and cannot be overridden.
 	 */
 	void DefineByteVariable(const FString& Name, int32 DefaultValue)
 	{
-		DefineIntVariable(Name, DefaultValue);
+		DefineIntVariable(Name, FMath::Clamp(DefaultValue, 0, 255));
 	}
 
 	/** Define a single-precision float variable (equivalent to Unity's float overload). */

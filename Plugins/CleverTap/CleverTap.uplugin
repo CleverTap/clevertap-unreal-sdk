@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"Version": 1,
+	"Version": 2,
 	"VersionName": "1.2.0",
 	"FriendlyName": "CleverTap",
 	"Description": "Unreal integration of the CleverTap SDK for Android and iOS",

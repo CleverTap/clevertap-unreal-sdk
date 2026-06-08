@@ -698,6 +698,7 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 {
 	auto* const Instance = NewObject<UIOSCleverTapInstance>(GEngine->GetEngineSubsystem<UCleverTapSubsystem>());
 	Instance->NativeInstance = NativeInstance;
+	Instance->Variables = [NSMutableDictionary new];
 	Instance->SDKListener = [[CleverTapSDKListener alloc] initWithCppInstance:Instance];
 	Instance->PushPermissionStatus = static_cast<uint8>(ECleverTapPushPermissionStatus::Unknown);
 
@@ -1293,42 +1294,42 @@ void UIOSCleverTapInstance::DefineStringVariable(const FString& Name, const FStr
 	NSString* NSName = Name.GetNSString();
 	NSString* NSDefault = DefaultValue.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withString:NSDefault];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineStringVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineIntVariable(const FString& Name, int32 DefaultValue)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withInt:DefaultValue];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineIntVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineInt64Variable(const FString& Name, int64 DefaultValue)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withLongLong:(long long)DefaultValue];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineInt64Variable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineFloatVariable(const FString& Name, float DefaultValue)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withFloat:DefaultValue];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineFloatVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineDoubleVariable(const FString& Name, double DefaultValue)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withDouble:DefaultValue];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineDoubleVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineBoolVariable(const FString& Name, bool DefaultValue)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineVar:NSName withBool:DefaultValue ? YES : NO];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineBoolVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue)
@@ -1340,21 +1341,21 @@ void UIOSCleverTapInstance::DefineStringMapVariable(const FString& Name, const T
 		NSDefault[Pair.Key.GetNSString()] = Pair.Value.GetNSString();
 	}
 	CTVar* Var = [NativeInstance defineVar:NSName withDictionary:NSDefault];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineStringMapVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 void UIOSCleverTapInstance::DefineFileVariable(const FString& Name)
 {
 	NSString* NSName = Name.GetNSString();
 	CTVar* Var = [NativeInstance defineFileVar:NSName];
-	if (Variables == nil) Variables = [NSMutableDictionary new];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineFileVariable: SDK returned nil for '%s'"), *Name); return; }
 	Variables[NSName] = Var;
 }
 
 void UIOSCleverTapInstance::FetchVariables()
 {
 	UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — requesting server values"));
-	UIOSCleverTapInstance* RawSelf = this;
+	TWeakObjectPtr<UIOSCleverTapInstance> WeakSelf(this);
 
 	// Register onVariablesChanged BEFORE kicking off the fetch to eliminate any race
 	// where the SDK fires the callback before we've subscribed.
@@ -1364,16 +1365,22 @@ void UIOSCleverTapInstance::FetchVariables()
 		bVariablesChangedRegistered = true;
 		[NativeInstance onVariablesChanged:^{
 			UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — onVariablesChanged fired"));
-			AsyncTask(ENamedThreads::GameThread, [RawSelf]() {
-				RawSelf->OnVariablesChanged.Broadcast();
+			AsyncTask(ENamedThreads::GameThread, [WeakSelf]() {
+				if (UIOSCleverTapInstance* Self = WeakSelf.Get())
+				{
+					Self->OnVariablesChanged.Broadcast();
+				}
 			});
 		}];
 	}
 
 	[NativeInstance fetchVariables:^(BOOL Success) {
 		UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — callback: success=%s"), Success ? TEXT("YES") : TEXT("NO"));
-		AsyncTask(ENamedThreads::GameThread, [RawSelf, Success]() {
-			RawSelf->OnVariablesFetched.Broadcast((bool)Success);
+		AsyncTask(ENamedThreads::GameThread, [WeakSelf, Success]() {
+			if (UIOSCleverTapInstance* Self = WeakSelf.Get())
+			{
+				Self->OnVariablesFetched.Broadcast((bool)Success);
+			}
 		});
 	}];
 }

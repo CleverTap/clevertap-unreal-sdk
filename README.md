@@ -461,6 +461,8 @@ void UMyClass::OnChanged()
 | `DefineBoolVariable` | `GetBoolVariable` | `bool` |
 | `DefineStringMapVariable` | `GetStringMapVariable` | `TMap<FString,FString>` |
 | `DefineFileVariable` | `GetFileVariablePath` | file path (`FString`) |
+| `DefineShortVariable` *(convenience)* | `GetIntVariable` | `int32` — clamped to [-32768, 32767] |
+| `DefineByteVariable` *(convenience)* | `GetIntVariable` | `int32` — clamped to [0, 255] |
 
 
 ### Delegates

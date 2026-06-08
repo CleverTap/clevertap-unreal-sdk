@@ -84,13 +84,13 @@ void DefineStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FStri
 void DefineFileVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name);
 void FetchVariables(JNIEnv* Env, jobject CleverTapInstance, jlong NativeInstancePtr);
 void SyncVariables(JNIEnv* Env, jobject CleverTapInstance);
-FString GetStringVariable(JNIEnv* Env, const FString& Name, const FString& DefaultValue);
-int32 GetIntVariable(JNIEnv* Env, const FString& Name, int32 DefaultValue);
-int64 GetInt64Variable(JNIEnv* Env, const FString& Name, int64 DefaultValue);
-float GetFloatVariable(JNIEnv* Env, const FString& Name, float DefaultValue);
-double GetDoubleVariable(JNIEnv* Env, const FString& Name, double DefaultValue);
-bool GetBoolVariable(JNIEnv* Env, const FString& Name, bool DefaultValue);
-TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, const FString& Name, const TMap<FString, FString>& DefaultValue);
-FString GetFileVariablePath(JNIEnv* Env, const FString& Name);
+FString GetStringVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const FString& DefaultValue);
+int32 GetIntVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int32 DefaultValue);
+int64 GetInt64Variable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int64 DefaultValue);
+float GetFloatVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, float DefaultValue);
+double GetDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, double DefaultValue);
+bool GetBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue);
+TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue);
+FString GetFileVariablePath(JNIEnv* Env, jobject CleverTapInstance, const FString& Name);
 
 }}} // namespace CleverTapSDK::Android::JNI

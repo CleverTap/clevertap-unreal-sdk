@@ -198,7 +198,13 @@ void UNullCleverTapInstance::DefineStringMapVariable(const FString& Name, const 
 void UNullCleverTapInstance::DefineFileVariable(const FString& Name)
 	{ CleverTapSDK::Ignore(Name); }
 
-void UNullCleverTapInstance::FetchVariables() {}
+void UNullCleverTapInstance::FetchVariables()
+{
+	// Immediately complete with failure so callers don't wait indefinitely on the Editor/null platform
+	OnVariablesFetched.Broadcast(false);
+}
+
+void UNullCleverTapInstance::SyncVariables() {}
 
 FString UNullCleverTapInstance::GetStringVariable(const FString& Name, const FString& DefaultValue) const
 	{ CleverTapSDK::Ignore(Name); return DefaultValue; }

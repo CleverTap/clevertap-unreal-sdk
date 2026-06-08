@@ -15,7 +15,7 @@ long
 float
 double
 String
-File 
+File
 Dictionary
 
 ### Fixed — iOS

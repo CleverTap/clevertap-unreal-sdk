@@ -3,7 +3,6 @@
 
 #include "ViewModels/CppViewModelBase.h"
 #include "ViewModels/MainMenuViewModelInterface.h"
-#include "ViewModels/PETabViewModelInterface.h"
 #include "CppMainMenuViewModel.generated.h"
 
 enum class ECleverTapPushPermissionStatus : uint8;

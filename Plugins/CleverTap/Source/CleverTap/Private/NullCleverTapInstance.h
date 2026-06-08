@@ -77,7 +77,7 @@ public:
 	void DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) override;
 	void DefineFileVariable(const FString& Name) override;
 	void FetchVariables() override;
-	void SyncVariables() override {}
+	void SyncVariables() override;
 	FString GetStringVariable(const FString& Name, const FString& DefaultValue) const override;
 	int32 GetIntVariable(const FString& Name, int32 DefaultValue) const override;
 	int64 GetInt64Variable(const FString& Name, int64 DefaultValue) const override;

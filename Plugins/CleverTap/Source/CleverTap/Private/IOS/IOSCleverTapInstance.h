@@ -145,5 +145,5 @@ private:
 	
   static TArray<UIOSCleverTapInstance *> AllInstances;
   NSMutableDictionary<NSString*, CTVar*>* Variables;
-  bool bVariablesChangedRegistered{false};
+  TAtomic<bool> bVariablesChangedRegistered{false};
 };
