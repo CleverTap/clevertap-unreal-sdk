@@ -550,3 +550,112 @@ extern "C" JNIEXPORT void JNICALL Java_com_clevertap_android_unreal_UECleverTapL
 				NativeInstancePtr, NativeButtonProperties);
 		});
 }
+
+//Product Experience
+
+void UAndroidCleverTapInstance::DefineStringVariable(const FString& Name, const FString& DefaultValue)
+{
+	JNI::DefineStringVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineIntVariable(const FString& Name, int32 DefaultValue)
+{
+	JNI::DefineIntVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineInt64Variable(const FString& Name, int64 DefaultValue)
+{
+	JNI::DefineInt64Variable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineFloatVariable(const FString& Name, float DefaultValue)
+{
+	JNI::DefineFloatVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineDoubleVariable(const FString& Name, double DefaultValue)
+{
+	JNI::DefineDoubleVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineBoolVariable(const FString& Name, bool DefaultValue)
+{
+	JNI::DefineBoolVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue)
+{
+	JNI::DefineStringMapVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+void UAndroidCleverTapInstance::DefineFileVariable(const FString& Name)
+{
+	JNI::DefineFileVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name);
+}
+void UAndroidCleverTapInstance::FetchVariables()
+{
+	JNI::FetchVariables(JNI::GetJNIEnv(), JavaCleverTapInstance,
+		reinterpret_cast<jlong>(this));
+}
+void UAndroidCleverTapInstance::SyncVariables()
+{
+	JNI::SyncVariables(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+FString UAndroidCleverTapInstance::GetStringVariable(const FString& Name, const FString& DefaultValue) const
+{
+	return JNI::GetStringVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+int32 UAndroidCleverTapInstance::GetIntVariable(const FString& Name, int32 DefaultValue) const
+{
+	return JNI::GetIntVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+int64 UAndroidCleverTapInstance::GetInt64Variable(const FString& Name, int64 DefaultValue) const
+{
+	return JNI::GetInt64Variable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+float UAndroidCleverTapInstance::GetFloatVariable(const FString& Name, float DefaultValue) const
+{
+	return JNI::GetFloatVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+double UAndroidCleverTapInstance::GetDoubleVariable(const FString& Name, double DefaultValue) const
+{
+	return JNI::GetDoubleVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+bool UAndroidCleverTapInstance::GetBoolVariable(const FString& Name, bool DefaultValue) const
+{
+	return JNI::GetBoolVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+TMap<FString, FString> UAndroidCleverTapInstance::GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const
+{
+	return JNI::GetStringMapVariable(JNI::GetJNIEnv(), JavaCleverTapInstance, Name, DefaultValue);
+}
+FString UAndroidCleverTapInstance::GetFileVariablePath(const FString& Name) const
+{
+	return JNI::GetFileVariablePath(JNI::GetJNIEnv(), JavaCleverTapInstance, Name);
+}
+
+void UAndroidCleverTapInstance::BroadcastOnVariablesFetched(jlong NativeInstancePtr, bool bSuccess)
+{
+	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr, bSuccess]() {
+		if (auto* Inst = CheckedInstancePtr(NativeInstancePtr))
+			Inst->OnVariablesFetched.Broadcast(bSuccess);
+	});
+}
+void UAndroidCleverTapInstance::BroadcastOnVariablesChanged(jlong NativeInstancePtr)
+{
+	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr]() {
+		if (auto* Inst = CheckedInstancePtr(NativeInstancePtr))
+			Inst->OnVariablesChanged.Broadcast();
+	});
+}
+
+// JNI entry points — Java calls these
+extern "C"
+{
+JNIEXPORT void JNICALL
+Java_com_clevertap_android_unreal_UECleverTapBridge_nativeOnVariablesFetched__JZ(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr, jboolean Success)
+{
+	UAndroidCleverTapInstance::BroadcastOnVariablesFetched(NativeInstancePtr, (bool)Success);
+}
+
+JNIEXPORT void JNICALL
+Java_com_clevertap_android_unreal_UECleverTapBridge_nativeOnVariablesChanged__J(
+	JNIEnv* Env, jclass Class, jlong NativeInstancePtr)
+{
+	UAndroidCleverTapInstance::BroadcastOnVariablesChanged(NativeInstancePtr);
+}
+}

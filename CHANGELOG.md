@@ -1,6 +1,29 @@
 # Changelog
 ==========
 
+## [1.2.0] - 2026-06-08
+
+### Added — Product Experiences (PE) Variables
+Full PE Variables support on Android and iOS, matching the CleverTap Unity SDK's variable type coverage.
+
+**Supported variable types:**
+boolean
+byte
+short
+int
+long
+float
+double
+String
+File
+Dictionary
+
+### Fixed — iOS
+- `enablePersonalization` is now called during SDK initialisation on iOS. This is required for PE Variables (and the Personalization API in general) to function — without it, variable definitions and fetch calls are silently ignored.
+
+### Internal
+- Android: added `androidx.lifecycle:lifecycle-runtime-ktx:2.6.2` and `kotlinx-coroutines-android:1.7.3` to the local-AAR dependency block. SDK 8.0.0 introduced `InAppTimerManager.kt` which uses Kotlin coroutines with lifecycle scope; Gradle does not resolve transitive dependencies for local AARs so these must be declared explicitly. `kotlin-stdlib` is intentionally omitted to prevent DEX method-count overflow (the Unreal build chain already bundles it).
+
 ## [1.1.0] - 2026-05-04
 
 ### Fixed — iOS push notifications

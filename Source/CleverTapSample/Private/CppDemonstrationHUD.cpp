@@ -12,7 +12,6 @@
 #include "ViewModels/CppPrivacyTabViewModel.h"
 #include "ViewModels/CppProfileTabViewModel.h"
 #include "ViewModels/CppUserProfileViewModel.h"
-
 namespace {
 const FString SAVE_GAME_SLOT_NAME = TEXT("CppSaveState");
 } // namespace
@@ -33,21 +32,24 @@ void ACppDemonstrationHUD::BeginPlay()
 	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	Mode.SetHideCursorDuringCapture(false);
 	PlayerOwner->SetInputMode(Mode);
-
+	
+	//UE_LOG(LogTemp, Display, TEXT("Hello, World!"));
+	
 	// Try to load the save state and switch to the main menu if we've logged in before
-	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
-	{
-		SaveState =
-			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
-		ApplyPrivacySettingsFromSaveState();
+//	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
+//	{
+//		SaveState =
+//			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
+//		ApplyPrivacySettingsFromSaveState();
 
 		// This will transition to the MainMenu
-		Login(SaveState->Name, SaveState->Email, SaveState->Phone, SaveState->Identity, SaveState->CustomCleverTapId);
-	}
-	else
-	{
-		SetUIState(ECppDemonstrationUIState::Login);
-	}
+		//Login(SaveState->Name, SaveState->Email, SaveState->Phone, SaveState->Identity, SaveState->CustomCleverTapId);
+//	}
+//	else
+//	{
+//		SetUIState(ECppDemonstrationUIState::Login);
+//	}
+	SetUIState(ECppDemonstrationUIState::MainMenu);
 }
 
 void ACppDemonstrationHUD::DeleteSaveState()
@@ -269,7 +271,8 @@ void ACppDemonstrationHUD::BeginDisplay_MainMenu()
 			.SetOffline(Ctx, Save.bIsOffline)
 			.SetNetworkRecording(Ctx, !Save.bIsNotRecordingNetInfo);
 	});
-	MainMenuVM->AttachToView(NewView);
+
+	MainMenuVM->AttachToView(NewView); 
 	MainMenuVM->OnViewModelChanged().AddDynamic(this, &ACppDemonstrationHUD::SyncSaveStateToViewModels);
 
 	ActiveView = NewView;

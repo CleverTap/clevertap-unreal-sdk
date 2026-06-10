@@ -10,7 +10,7 @@ class IPrivacyTabViewModelInterface;
 class IProfileTabViewModelInterface;
 class IPushTabViewModelInterface;
 class IUserProfileViewModelInterface;
-
+class IPETabViewModelInterface;
 /**
  * UI Tabs for the main menu
  */
@@ -21,6 +21,7 @@ enum class EMainMenuTab : uint8
 	Push,
 	Events,
 	Privacy,
+	PE,
 };
 
 /**
@@ -57,4 +58,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu")
 	TScriptInterface<IPrivacyTabViewModelInterface> GetPrivacyTab() const;
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu")
+	TScriptInterface<IPETabViewModelInterface> GetPETab() const;
 };

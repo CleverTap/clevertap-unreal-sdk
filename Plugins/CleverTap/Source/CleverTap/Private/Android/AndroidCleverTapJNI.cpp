@@ -1034,4 +1034,303 @@ void EnableIntentNotifications(JNIEnv* Env)
 	HandleException(Env, "enableIntentNotifications()");
 }
 
+// Product Experiences (Variables)
+
+void DefineStringVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const FString& DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineStringVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;Ljava/lang/String;)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jstring JDefault = Env->NewStringUTF(TCHAR_TO_UTF8(*DefaultValue));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, JDefault);
+	HandleException(Env, TEXT("defineStringVariable()"));
+	Env->DeleteLocalRef(JName);
+	Env->DeleteLocalRef(JDefault);
+}
+
+void DefineIntVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int32 DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineIntVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;I)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, (jint)DefaultValue);
+	HandleException(Env, TEXT("defineIntVariable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void DefineInt64Variable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int64 DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineInt64Variable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;J)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, (jlong)DefaultValue);
+	HandleException(Env, TEXT("defineInt64Variable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void DefineFloatVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, float DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineFloatVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;D)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, (jdouble)DefaultValue);
+	HandleException(Env, TEXT("defineFloatVariable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void DefineDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, double DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineDoubleVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;D)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, (jdouble)DefaultValue);
+	HandleException(Env, TEXT("defineDoubleVariable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void DefineBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineBoolVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;Z)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, (jboolean)DefaultValue);
+	HandleException(Env, TEXT("defineBoolVariable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void DefineStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineStringMapVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;Ljava/util/Map;)V");
+	if (!Method) return;
+
+	// Build a java.util.HashMap<String,String>
+	static jclass HashMapClass = CacheClass(Env, "java/util/HashMap");
+	static jmethodID HashMapCtor = Env->GetMethodID(HashMapClass, "<init>", "(I)V");
+	static jmethodID PutMethod = Env->GetMethodID(HashMapClass, "put",
+		"(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+	jobject JMap = Env->NewObject(HashMapClass, HashMapCtor, (jint)DefaultValue.Num());
+	for (const auto& Pair : DefaultValue)
+	{
+		jstring JKey = Env->NewStringUTF(TCHAR_TO_UTF8(*Pair.Key));
+		jstring JVal = Env->NewStringUTF(TCHAR_TO_UTF8(*Pair.Value));
+		Env->CallObjectMethod(JMap, PutMethod, JKey, JVal);
+		Env->DeleteLocalRef(JKey);
+		Env->DeleteLocalRef(JVal);
+	}
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName, JMap);
+	HandleException(Env, TEXT("defineStringMapVariable()"));
+	Env->DeleteLocalRef(JName);
+	Env->DeleteLocalRef(JMap);
+}
+
+void DefineFileVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "defineFileVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;)V");
+	if (!Method) return;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, JName);
+	HandleException(Env, TEXT("defineFileVariable()"));
+	Env->DeleteLocalRef(JName);
+}
+
+void FetchVariables(JNIEnv* Env, jobject CleverTapInstance, jlong NativeInstancePtr)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "fetchVariables",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;J)V");
+	if (!Method) return;
+	Env->CallStaticVoidMethod(BridgeClass, Method, CleverTapInstance, NativeInstancePtr);
+	HandleException(Env, TEXT("fetchVariables()"));
+}
+
+void SyncVariables(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jmethodID Method = Env->GetMethodID(GetCleverTapAPIClass(Env), "syncVariables", "()V");
+	if (!Method) return;
+	Env->CallVoidMethod(CleverTapInstance, Method);
+	HandleException(Env, TEXT("syncVariables()"));
+}
+
+FString GetStringVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const FString& DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getStringVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jstring JDefault = Env->NewStringUTF(TCHAR_TO_UTF8(*DefaultValue));
+	jstring JResult = (jstring)Env->CallStaticObjectMethod(BridgeClass, Method, CleverTapInstance, JName, JDefault);
+	Env->DeleteLocalRef(JName);
+	Env->DeleteLocalRef(JDefault);
+	if (HandleExceptionOrError(Env, !JResult, TEXT("getStringVariable failed"))) return DefaultValue;
+	const char* ResultChars = Env->GetStringUTFChars(JResult, nullptr);
+	FString Result = FString(ResultChars);
+	Env->ReleaseStringUTFChars(JResult, ResultChars);
+	Env->DeleteLocalRef(JResult);
+	return Result;
+}
+
+int32 GetIntVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int32 DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getIntVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;I)I");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jint Result = Env->CallStaticIntMethod(BridgeClass, Method, CleverTapInstance, JName, (jint)DefaultValue);
+	Env->DeleteLocalRef(JName);
+	if (HandleException(Env, TEXT("getIntVariable()"))) return DefaultValue;
+	return (int32)Result;
+}
+
+int64 GetInt64Variable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, int64 DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getInt64Variable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;J)J");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jlong Result = Env->CallStaticLongMethod(BridgeClass, Method, CleverTapInstance, JName, (jlong)DefaultValue);
+	Env->DeleteLocalRef(JName);
+	if (HandleException(Env, TEXT("getInt64Variable()"))) return DefaultValue;
+	return (int64)Result;
+}
+
+float GetFloatVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, float DefaultValue)
+{
+	// Float variables are stored as Var<Double> in the Java SDK (no 32-bit float generic).
+	// The C++ float is widened to jdouble here and narrowed back on return — this is the
+	// documented precision trade-off (server value e.g. 67.3 may return as 67.300003f).
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getFloatVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;D)D");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jdouble Result = Env->CallStaticDoubleMethod(BridgeClass, Method, CleverTapInstance, JName, (jdouble)DefaultValue);
+	Env->DeleteLocalRef(JName);
+	if (HandleException(Env, TEXT("getFloatVariable()"))) return DefaultValue;
+	return (float)Result;
+}
+
+double GetDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, double DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getDoubleVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;D)D");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jdouble Result = Env->CallStaticDoubleMethod(BridgeClass, Method, CleverTapInstance, JName, (jdouble)DefaultValue);
+	Env->DeleteLocalRef(JName);
+	if (HandleException(Env, TEXT("getDoubleVariable()"))) return DefaultValue;
+	return (double)Result;
+}
+
+bool GetBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getBoolVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;Z)Z");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jboolean Result = Env->CallStaticBooleanMethod(BridgeClass, Method, CleverTapInstance, JName, (jboolean)DefaultValue);
+	Env->DeleteLocalRef(JName);
+	if (HandleException(Env, TEXT("getBoolVariable()"))) return DefaultValue;
+	return (bool)Result;
+}
+
+TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getStringMapVariable",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;)Ljava/util/Map;");
+	if (!Method) return DefaultValue;
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jobject JResult = Env->CallStaticObjectMethod(BridgeClass, Method, CleverTapInstance, JName);
+	Env->DeleteLocalRef(JName);
+	if (HandleExceptionOrError(Env, !JResult, TEXT("getStringMapVariable failed"))) return DefaultValue;
+
+	// Convert java Map<String,String> -> TMap<FString,FString>
+	static jclass MapClass = CacheClass(Env, "java/util/Map");
+	static jmethodID EntrySetMethod = Env->GetMethodID(MapClass, "entrySet", "()Ljava/util/Set;");
+	static jclass SetClass = CacheClass(Env, "java/util/Set");
+	static jmethodID IteratorMethod = Env->GetMethodID(SetClass, "iterator", "()Ljava/util/Iterator;");
+	static jclass IteratorClass = CacheClass(Env, "java/util/Iterator");
+	static jmethodID HasNextMethod = Env->GetMethodID(IteratorClass, "hasNext", "()Z");
+	static jmethodID NextMethod = Env->GetMethodID(IteratorClass, "next", "()Ljava/lang/Object;");
+	static jclass EntryClass = CacheClass(Env, "java/util/Map$Entry");
+	static jmethodID GetKeyMethod = Env->GetMethodID(EntryClass, "getKey", "()Ljava/lang/Object;");
+	static jmethodID GetValueMethod = Env->GetMethodID(EntryClass, "getValue", "()Ljava/lang/Object;");
+
+	TMap<FString, FString> Result;
+	jobject EntrySet = Env->CallObjectMethod(JResult, EntrySetMethod);
+	if (HandleExceptionOrError(Env, !EntrySet, TEXT("getStringMapVariable.entrySet()")))
+	{
+		Env->DeleteLocalRef(JResult);
+		return DefaultValue;
+	}
+	jobject Iterator = Env->CallObjectMethod(EntrySet, IteratorMethod);
+	if (HandleExceptionOrError(Env, !Iterator, TEXT("getStringMapVariable.iterator()")))
+	{
+		Env->DeleteLocalRef(EntrySet);
+		Env->DeleteLocalRef(JResult);
+		return DefaultValue;
+	}
+	while (Env->CallBooleanMethod(Iterator, HasNextMethod))
+	{
+		jobject Entry = Env->CallObjectMethod(Iterator, NextMethod);
+		jstring JKey = (jstring)Env->CallObjectMethod(Entry, GetKeyMethod);
+		jstring JVal = (jstring)Env->CallObjectMethod(Entry, GetValueMethod);
+		if (JKey && JVal)
+		{
+			const char* KeyChars = Env->GetStringUTFChars(JKey, nullptr);
+			const char* ValChars = Env->GetStringUTFChars(JVal, nullptr);
+			Result.Add(FString(KeyChars), FString(ValChars));
+			Env->ReleaseStringUTFChars(JKey, KeyChars);
+			Env->ReleaseStringUTFChars(JVal, ValChars);
+		}
+		if (JKey) Env->DeleteLocalRef(JKey);
+		if (JVal) Env->DeleteLocalRef(JVal);
+		Env->DeleteLocalRef(Entry);
+	}
+	Env->DeleteLocalRef(Iterator);
+	Env->DeleteLocalRef(EntrySet);
+	Env->DeleteLocalRef(JResult);
+	return Result;
+}
+
+FString GetFileVariablePath(JNIEnv* Env, jobject CleverTapInstance, const FString& Name)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getFileVariablePath",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;Ljava/lang/String;)Ljava/lang/String;");
+	if (!Method) return TEXT("");
+	jstring JName = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+	jstring JResult = (jstring)Env->CallStaticObjectMethod(BridgeClass, Method, CleverTapInstance, JName);
+	Env->DeleteLocalRef(JName);
+	if (HandleExceptionOrError(Env, !JResult, TEXT("getFileVariablePath failed"))) return TEXT("");
+	const char* ResultChars = Env->GetStringUTFChars(JResult, nullptr);
+	FString Result = FString(ResultChars);
+	Env->ReleaseStringUTFChars(JResult, ResultChars);
+	Env->DeleteLocalRef(JResult);
+	return Result;
+}
+
 }}} // namespace CleverTapSDK::Android::JNI

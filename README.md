@@ -403,6 +403,96 @@ notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
 #### Blueprint
 ![Calling SuspendInAppNotifications -> DiscardInAppNotifications -> ResumeInAppNotifications in Blueprint](/Docs/Images/BP_SuspendDiscardResume_InAppNotifications.png)
 
+## Product Experiences (Variables)
+
+Product Experiences (PE) Variables let you define named, typed variables in your game code and override their values remotely from the CleverTap dashboard — without a code change or resubmission. Typical uses include tuning gameplay parameters, running A/B tests, and toggling features.
+
+### How it works
+
+1. **Define** — register each variable with a name, type, and default value. Call at startup, before `FetchVariables`.
+2. **Sync** (development only) — send definitions to the dashboard so operators can see and override them.
+3. **Fetch** — pull the current server overrides. Bind `OnVariablesFetched` / `OnVariablesChanged` before calling this.
+4. **Get** — read the effective value (server override if available, otherwise the code default).
+
+### Quick Start (C++)
+
+```cpp
+UCleverTapInstance& CT = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+
+// Step 1 — bind delegates before defining so you never miss a callback
+CT.OnVariablesFetched.AddDynamic(this, &UMyClass::OnFetched);
+CT.OnVariablesChanged.AddDynamic(this, &UMyClass::OnChanged);
+
+// Step 2 — define variables (do this once at startup)
+CT.DefineStringVariable(TEXT("welcome_msg"),  TEXT("Hello!"));
+CT.DefineIntVariable(TEXT("spawn_count"),     5);
+CT.DefineFloatVariable(TEXT("gravity_scale"), 1.0f);
+CT.DefineBoolVariable(TEXT("new_ui_enabled"), false);
+CT.DefineStringMapVariable(TEXT("theme"),     { {TEXT("bg"), TEXT("#FFFFFF")} });
+CT.DefineFileVariable(TEXT("banner_image"));   // path populated after fetch
+
+// Step 3 — sync definitions to dashboard (development builds only)
+CT.SyncVariables();
+
+// Step 4 — fetch server overrides (call at startup and/or on demand)
+CT.FetchVariables();
+```
+
+```cpp
+// Step 5 — read values inside OnVariablesChanged (or after OnVariablesFetched fires with bSuccess=true)
+void UMyClass::OnChanged()
+{
+    FString Msg   = CT.GetStringVariable(TEXT("welcome_msg"),  TEXT("Hello!"));
+    int32   Count = CT.GetIntVariable(TEXT("spawn_count"),     5);
+    float   Grav  = CT.GetFloatVariable(TEXT("gravity_scale"), 1.0f);
+    bool    NewUI = CT.GetBoolVariable(TEXT("new_ui_enabled"), false);
+}
+```
+
+### Supported Variable Types
+
+| Define method | Get method | C++ type |
+|---|---|---|
+| `DefineStringVariable` | `GetStringVariable` | `FString` |
+| `DefineIntVariable` | `GetIntVariable` | `int32` |
+| `DefineInt64Variable` | `GetInt64Variable` | `int64` |
+| `DefineFloatVariable` | `GetFloatVariable` | `float` |
+| `DefineDoubleVariable` | `GetDoubleVariable` | `double` |
+| `DefineBoolVariable` | `GetBoolVariable` | `bool` |
+| `DefineStringMapVariable` | `GetStringMapVariable` | `TMap<FString,FString>` |
+| `DefineFileVariable` | `GetFileVariablePath` | file path (`FString`) |
+| `DefineShortVariable` *(convenience)* | `GetIntVariable` | `int32` — clamped to [-32768, 32767] |
+| `DefineByteVariable` *(convenience)* | `GetIntVariable` | `int32` — clamped to [0, 255] |
+
+
+### Delegates
+
+| Delegate | Fires when |
+|---|---|
+| `OnVariablesFetched(bool bSuccess)` | The `FetchVariables()` HTTP call completes. `bSuccess=false` means timeout or error — local defaults remain. |
+| `OnVariablesChanged` | One or more variable values changed (after a successful fetch or server push). |
+
+Always bind delegates **before** calling `FetchVariables()` to avoid missing a callback if values are resolved from cache.
+
+### SyncVariables — requirements
+
+`SyncVariables()` is a **development-only tool**. Two conditions must be met for it to work:
+
+1. **Development build** — both Android and iOS enforce this at runtime. Shipping builds silently no-op.
+2. **Test Profile enabled** on the CleverTap dashboard — the server uses this as a backend gate to accept sync requests.
+
+`FetchVariables()` has **no such restrictions** and works in all build configurations including Shipping.
+
+### Notes
+
+- Variables are **immutable after first define** — calling `DefineIntVariable("x", 99)` after `DefineIntVariable("x", 10)` is a no-op. The default is fixed at the first registration.
+- `SyncVariables()` sends the definitions to the dashboard. It does **not** clear or override existing server-side values; those must be reset from the dashboard (Product Experiences → Variables).
+- **Float precision:** float variables are stored as `double` in the SDK internally. `GetFloatVariable()` casts back to `float` at the JNI boundary (Android), which can introduce minor IEEE 754 noise (e.g. `67.3 → 67.300003f`). Use `GetDoubleVariable()` if you need full precision.
+- **File variables:** `GetFileVariablePath()` returns an empty string until `FetchVariables()` has completed and the file has been downloaded. Always check for empty before use.
+- **Variable naming:** use unique prefixes to avoid collisions with variables already defined on the same CleverTap account from other sessions or platforms.
+
+For the full reference including all API signatures, dashboard workflow, and common issues, see [Docs/ProductExperiencesVariables.md](Docs/ProductExperiencesVariables.md).
+
 ## User Profiles
 ### On User Login
 The `OnUserLogin()` method can be used when a user is identifier and logs into the app. Upon first login this enriches the

@@ -16,6 +16,8 @@
 #import <CleverTapSDK/CleverTapURLDelegate.h>
 #import <CleverTapSDK/CleverTap+InAppNotifications.h>
 #import <CleverTapSDK/CTLocalInApp.h>
+#import <CleverTapSDK/CTVar.h>
+#import <CleverTapSDK/CleverTap+CTVar.h>
 #import <objc/runtime.h>
 #import <UserNotifications/UserNotifications.h>
 
@@ -696,6 +698,7 @@ UIOSCleverTapInstance* UIOSCleverTapInstance::CreateFromNativeInstance(CleverTap
 {
 	auto* const Instance = NewObject<UIOSCleverTapInstance>(GEngine->GetEngineSubsystem<UCleverTapSubsystem>());
 	Instance->NativeInstance = NativeInstance;
+	Instance->Variables = [NSMutableDictionary new];
 	Instance->SDKListener = [[CleverTapSDKListener alloc] initWithCppInstance:Instance];
 	Instance->PushPermissionStatus = static_cast<uint8>(ECleverTapPushPermissionStatus::Unknown);
 
@@ -1284,4 +1287,170 @@ void UIOSCleverTapInstance::HandleOnOpenURL(UIApplication* App, NSURL* URL, NSSt
 	}
 
 	[NativeInstance handleOpenURL:URL sourceApplication:Source];
+}
+//Product Experience
+void UIOSCleverTapInstance::DefineStringVariable(const FString& Name, const FString& DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	NSString* NSDefault = DefaultValue.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withString:NSDefault];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineStringVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineIntVariable(const FString& Name, int32 DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withInt:DefaultValue];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineIntVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineInt64Variable(const FString& Name, int64 DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withLongLong:(long long)DefaultValue];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineInt64Variable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineFloatVariable(const FString& Name, float DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withFloat:DefaultValue];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineFloatVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineDoubleVariable(const FString& Name, double DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withDouble:DefaultValue];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineDoubleVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineBoolVariable(const FString& Name, bool DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineVar:NSName withBool:DefaultValue ? YES : NO];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineBoolVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue)
+{
+	NSString* NSName = Name.GetNSString();
+	NSMutableDictionary<NSString*, NSString*>* NSDefault = [NSMutableDictionary new];
+	for (const auto& Pair : DefaultValue)
+	{
+		NSDefault[Pair.Key.GetNSString()] = Pair.Value.GetNSString();
+	}
+	CTVar* Var = [NativeInstance defineVar:NSName withDictionary:NSDefault];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineStringMapVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+void UIOSCleverTapInstance::DefineFileVariable(const FString& Name)
+{
+	NSString* NSName = Name.GetNSString();
+	CTVar* Var = [NativeInstance defineFileVar:NSName];
+	if (Var == nil) { UE_LOG(LogCleverTap, Warning, TEXT("DefineFileVariable: SDK returned nil for '%s'"), *Name); return; }
+	Variables[NSName] = Var;
+}
+
+void UIOSCleverTapInstance::FetchVariables()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — requesting server values"));
+	TWeakObjectPtr<UIOSCleverTapInstance> WeakSelf(this);
+
+	// Register onVariablesChanged BEFORE kicking off the fetch to eliminate any race
+	// where the SDK fires the callback before we've subscribed.
+	// Guard: onVariablesChanged is additive — register only once per instance.
+	if (!bVariablesChangedRegistered)
+	{
+		bVariablesChangedRegistered = true;
+		[NativeInstance onVariablesChanged:^{
+			UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — onVariablesChanged fired"));
+			AsyncTask(ENamedThreads::GameThread, [WeakSelf]() {
+				if (UIOSCleverTapInstance* Self = WeakSelf.Get())
+				{
+					Self->OnVariablesChanged.Broadcast();
+				}
+			});
+		}];
+	}
+
+	[NativeInstance fetchVariables:^(BOOL Success) {
+		UE_LOG(LogCleverTap, Log, TEXT("FetchVariables() — callback: success=%s"), Success ? TEXT("YES") : TEXT("NO"));
+		AsyncTask(ENamedThreads::GameThread, [WeakSelf, Success]() {
+			if (UIOSCleverTapInstance* Self = WeakSelf.Get())
+			{
+				Self->OnVariablesFetched.Broadcast((bool)Success);
+			}
+		});
+	}];
+}
+
+void UIOSCleverTapInstance::SyncVariables()
+{
+	// Pass isProduction:YES so variable definitions appear in the Production section
+	// of the CleverTap dashboard — the same section where Android-synced variables show.
+	// (isProduction:NO sends to the separate Development slot which is not visible by default.)
+	UE_LOG(LogCleverTap, Log, TEXT("SyncVariables() — uploading %d variable definition(s) to dashboard"),
+		Variables != nil ? (int)[Variables count] : 0);
+	[NativeInstance syncVariables:YES];
+}
+
+FString UIOSCleverTapInstance::GetStringVariable(const FString& Name, const FString& DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSString class]]) return DefaultValue;
+	return FString((NSString*)Var.value);
+}
+int32 UIOSCleverTapInstance::GetIntVariable(const FString& Name, int32 DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSNumber class]]) return DefaultValue;
+	return [(NSNumber*)Var.value intValue];
+}
+int64 UIOSCleverTapInstance::GetInt64Variable(const FString& Name, int64 DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSNumber class]]) return DefaultValue;
+	return (int64)[(NSNumber*)Var.value longLongValue];
+}
+float UIOSCleverTapInstance::GetFloatVariable(const FString& Name, float DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSNumber class]]) return DefaultValue;
+	return [(NSNumber*)Var.value floatValue];
+}
+double UIOSCleverTapInstance::GetDoubleVariable(const FString& Name, double DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSNumber class]]) return DefaultValue;
+	return (double)[(NSNumber*)Var.value doubleValue];
+}
+bool UIOSCleverTapInstance::GetBoolVariable(const FString& Name, bool DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSNumber class]]) return DefaultValue;
+	return [(NSNumber*)Var.value boolValue];
+}
+TMap<FString, FString> UIOSCleverTapInstance::GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil || ![Var.value isKindOfClass:[NSDictionary class]]) return DefaultValue;
+	NSDictionary* NSDict = (NSDictionary*)Var.value;
+	TMap<FString, FString> Result;
+	for (NSString* Key in NSDict)
+	{
+		id Val = NSDict[Key];
+		// Values defined via DefineStringMapVariable are always NSString; fall back to description for safety
+		NSString* ValStr = [Val isKindOfClass:[NSString class]] ? (NSString*)Val : [Val description];
+		FString ValFStr = (ValStr != nil) ? FString(ValStr) : TEXT("");
+		Result.Add(FString(Key), ValFStr);
+	}
+	return Result;
+}
+FString UIOSCleverTapInstance::GetFileVariablePath(const FString& Name) const
+{
+	CTVar* Var = Variables[Name.GetNSString()];
+	if (Var == nil) return TEXT("");
+	NSString* Path = Var.fileValue;
+	return (Path != nil) ? FString(Path) : TEXT("");
 }

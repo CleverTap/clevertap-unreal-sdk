@@ -45,6 +45,7 @@ UCleverTapInstance* FPlatformSDK::InitializeSharedInstance(const FCleverTapInsta
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
+	[CleverTap enablePersonalization];
 	CleverTap* const SharedInst = [CleverTap sharedInstance];
 	return UIOSCleverTapInstance::CreateFromNativeInstance(SharedInst);
 }
@@ -59,6 +60,7 @@ UCleverTapInstance* FPlatformSDK::InitializeSharedInstance(
 	NSString* Region = Config.RegionCode.GetNSString();
 	[CleverTap setCredentialsWithAccountID:AccountId token:Token region:Region];
 
+	[CleverTap enablePersonalization];
 	CleverTap* const SharedInst = [CleverTap sharedInstanceWithCleverTapID:CleverTapId.GetNSString()];
 	return UIOSCleverTapInstance::CreateFromNativeInstance(SharedInst);
 }
