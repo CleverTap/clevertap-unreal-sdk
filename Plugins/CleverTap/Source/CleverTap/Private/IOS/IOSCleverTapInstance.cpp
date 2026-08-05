@@ -1,5 +1,9 @@
 // Copyright CleverTap All Rights Reserved.
 #include "IOSCleverTapInstance.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 #include "CleverTapConfig.h"
 #include "CleverTapInstance.h"
@@ -1453,4 +1457,39 @@ FString UIOSCleverTapInstance::GetFileVariablePath(const FString& Name) const
 	if (Var == nil) return TEXT("");
 	NSString* Path = Var.fileValue;
 	return (Path != nil) ? FString(Path) : TEXT("");
+}
+
+TArray<TMap<FString, FString>> UIOSCleverTapInstance::GetVariants()
+{
+	TArray<TMap<FString, FString>> Result;
+	NSArray<NSDictionary<NSString*, id>*>* Variants = [NativeInstance variants];
+	if (!Variants || Variants.count == 0) return Result;
+
+	NSError* Error = nil;
+	NSData* JsonData = [NSJSONSerialization dataWithJSONObject:Variants options:0 error:&Error];
+	if (Error || !JsonData) return Result;
+
+	NSString* JsonNSString = [[NSString alloc] initWithData:JsonData encoding:NSUTF8StringEncoding];
+	if (!JsonNSString) return Result;
+
+	FString JsonString = FString(JsonNSString);
+	TArray<TSharedPtr<FJsonValue>> JsonArray;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+	if (!FJsonSerializer::Deserialize(Reader, JsonArray)) return Result;
+
+	for (const TSharedPtr<FJsonValue>& Element : JsonArray)
+	{
+		const TSharedPtr<FJsonObject>* ObjPtr;
+		if (!Element->TryGetObject(ObjPtr)) continue;
+		TMap<FString, FString> Entry;
+		for (const auto& KV : (*ObjPtr)->Values)
+		{
+			FString StrVal;
+			if (!KV.Value->TryGetString(StrVal))
+				StrVal = KV.Value->AsString();
+			Entry.Add(KV.Key, StrVal);
+		}
+		Result.Add(Entry);
+	}
+	return Result;
 }

@@ -5,6 +5,8 @@ import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import androidx.core.content.FileProvider;
 import android.os.Build;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.inapp.CTLocalInApp;
@@ -362,6 +364,71 @@ public class UECleverTapBridge {
         if (v == null) return null;
         Object val = v.value();
         return (val instanceof String) ? (String) val : null;
+    }
+
+    // Returns a JSON array string of active A/B test variant dictionaries.
+    // Mirrors Unity's CleverTapUnityPlugin.getVariants().
+    public static String getVariants(CleverTapAPI ct) {
+        if (ct == null) return "[]";
+        try {
+            List<Map<String, Object>> variants = ct.variants();
+            if (variants == null) return "[]";
+            JSONArray array = new JSONArray();
+            for (Map<String, Object> map : variants) {
+                JSONObject obj = new JSONObject();
+                for (Map.Entry<String, Object> entry : map.entrySet()) {
+                    obj.put(entry.getKey(), entry.getValue());
+                }
+                array.put(obj);
+            }
+            return array.toString();
+        } catch (Exception e) {
+            return "[]";
+        }
+    }
+
+    /**
+     * Opens a local file using the device's default viewer app (e.g. gallery for images).
+     * Uses FileProvider on Android 7+ so the receiving app can access the private-storage path.
+     */
+    public static void openFile(Context context, String filePath) {
+        try {
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                android.util.Log.e("CleverTap_UE", "openFile: file does not exist: " + filePath);
+                return;
+            }
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Resolve symlink (/data/user/0/ → /data/data/) so FileProvider path matching works
+                java.io.File canonicalFile = file.getCanonicalFile();
+                uri = FileProvider.getUriForFile(context,
+                    context.getPackageName() + ".clevertap.fileprovider", canonicalFile);
+            } else {
+                uri = Uri.fromFile(file);
+            }
+            // Detect MIME type from file content (CleverTap files have no extension)
+            String mimeType = null;
+            try {
+                java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(file));
+                mimeType = java.net.URLConnection.guessContentTypeFromStream(is);
+                is.close();
+            } catch (Exception ignored) {}
+            if (mimeType == null) {
+                String ext = android.webkit.MimeTypeMap.getFileExtensionFromUrl(filePath);
+                if (ext != null && !ext.isEmpty()) {
+                    mimeType = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+                }
+            }
+            if (mimeType == null) mimeType = "image/*";
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, mimeType);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            android.util.Log.e("CleverTap_UE", "openFile: failed for " + filePath, e);
+        }
     }
 
     // These are implemented on the C++ side

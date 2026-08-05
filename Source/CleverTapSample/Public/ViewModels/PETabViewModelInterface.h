@@ -36,6 +36,10 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|PE")
 	void PrintVariables();
 
+	/** Fetch and log active A/B test variants for the current user. Results printed to log, status updated in UI. */
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|PE")
+	void GetVariants();
+
 	// ---- Per-variable increment/decrement (for testing round-trips) ----
 
 	/**
@@ -66,4 +70,5 @@ public:
 	/** True if DefineVariables() has been called. */
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|PE")
 	bool AreVariablesDefined() const;
+
 };

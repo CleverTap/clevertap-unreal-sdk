@@ -92,5 +92,6 @@ double GetDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& 
 bool GetBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue);
 TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue);
 FString GetFileVariablePath(JNIEnv* Env, jobject CleverTapInstance, const FString& Name);
+TArray<TMap<FString, FString>> GetVariants(JNIEnv* Env, jobject CleverTapInstance);
 
 }}} // namespace CleverTapSDK::Android::JNI

@@ -796,6 +796,15 @@ public:
 	virtual FString GetFileVariablePath(const FString& Name) const
 		PURE_VIRTUAL(UCleverTapInstance::GetFileVariablePath, return TEXT(""););
 
+	/**
+	 * Returns the active A/B test variants assigned to the current user.
+	 * Each entry is a dictionary of variant properties (e.g. "name", "id").
+	 * Returns an empty array if no variants are assigned.
+	 * Note: TArray<TMap> is not Blueprint-serializable; call from C++ only.
+	 */
+	virtual TArray<TMap<FString, FString>> GetVariants()
+		PURE_VIRTUAL(UCleverTapInstance::GetVariants, return {};);
+
 	/** Delegate that fires when FetchVariables() completes */
 	UPROPERTY(BlueprintAssignable, Category = "CleverTap|PE")
 	FOnVariablesFetched OnVariablesFetched;

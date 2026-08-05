@@ -118,6 +118,11 @@
 					dst="$S(BuildDir)/res/raw/" />
 			</false>
 		</if>
+
+		<!-- FileProvider paths XML — required for openFile() on Android 7+ -->
+		<copyFile src="$S(PluginDir)/Private/Android/res/xml/clevertap_file_provider_paths.xml"
+			dst="$S(BuildDir)/res/xml/clevertap_file_provider_paths.xml" />
+
 	</resourceCopies>
 
 	<androidManifestUpdates>
@@ -335,6 +340,20 @@
 				<addElement tag="application" name="CLEVERTAP_INAPP_EXCLUDE" />
 			</false>
 		</if>
+
+		<!-- FileProvider — required for openFile() to share private-storage paths on Android 7+ -->
+		<addElements tag="application">
+			<provider
+				android:name="androidx.core.content.FileProvider"
+				android:authorities="${applicationId}.clevertap.fileprovider"
+				android:exported="false"
+				android:grantUriPermissions="true">
+				<meta-data
+					android:name="android.support.FILE_PROVIDER_PATHS"
+					android:resource="@xml/clevertap_file_provider_paths" />
+			</provider>
+		</addElements>
+
 	</androidManifestUpdates>
 
 

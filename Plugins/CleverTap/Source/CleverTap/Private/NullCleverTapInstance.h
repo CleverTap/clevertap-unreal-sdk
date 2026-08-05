@@ -86,4 +86,5 @@ public:
 	bool GetBoolVariable(const FString& Name, bool DefaultValue) const override;
 	TMap<FString, FString> GetStringMapVariable(const FString& Name, const TMap<FString, FString>& DefaultValue) const override;
 	FString GetFileVariablePath(const FString& Name) const override;
+	TArray<TMap<FString, FString>> GetVariants() override;
 };

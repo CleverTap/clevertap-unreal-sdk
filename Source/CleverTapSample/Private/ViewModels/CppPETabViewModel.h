@@ -38,6 +38,7 @@ private:
 	void SyncVariables_Implementation() override;
 	void FetchVariables_Implementation() override;
 	void PrintVariables_Implementation() override;
+	void GetVariants_Implementation() override;
 	void IncrementVariable_Implementation(const FString& Name) override;
 	void DecrementVariable_Implementation(const FString& Name) override;
 	FString GetVariableDisplayValue_Implementation(const FString& Name) const override;

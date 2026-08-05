@@ -627,6 +627,11 @@ FString UAndroidCleverTapInstance::GetFileVariablePath(const FString& Name) cons
 	return JNI::GetFileVariablePath(JNI::GetJNIEnv(), JavaCleverTapInstance, Name);
 }
 
+TArray<TMap<FString, FString>> UAndroidCleverTapInstance::GetVariants()
+{
+	return JNI::GetVariants(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+
 void UAndroidCleverTapInstance::BroadcastOnVariablesFetched(jlong NativeInstancePtr, bool bSuccess)
 {
 	AsyncTask(ENamedThreads::GameThread, [NativeInstancePtr, bSuccess]() {

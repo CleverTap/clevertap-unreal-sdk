@@ -229,3 +229,6 @@ TMap<FString, FString> UNullCleverTapInstance::GetStringMapVariable(const FStrin
 
 FString UNullCleverTapInstance::GetFileVariablePath(const FString& Name) const
 	{ CleverTapSDK::Ignore(Name); return TEXT(""); }
+
+TArray<TMap<FString, FString>> UNullCleverTapInstance::GetVariants()
+	{ return {}; }

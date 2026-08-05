@@ -1,5 +1,9 @@
 // Copyright CleverTap All Rights Reserved.
 #include "Android/AndroidCleverTapJNI.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 #include "Android/AndroidJNIUtilities.h"
 #include "Android/AndroidCleverTapPropertiesJNI.h"
@@ -1330,6 +1334,43 @@ FString GetFileVariablePath(JNIEnv* Env, jobject CleverTapInstance, const FStrin
 	FString Result = FString(ResultChars);
 	Env->ReleaseStringUTFChars(JResult, ResultChars);
 	Env->DeleteLocalRef(JResult);
+	return Result;
+}
+
+TArray<TMap<FString, FString>> GetVariants(JNIEnv* Env, jobject CleverTapInstance)
+{
+	TArray<TMap<FString, FString>> Result;
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getVariants",
+		"(Lcom/clevertap/android/sdk/CleverTapAPI;)Ljava/lang/String;");
+	if (!Method) return Result;
+
+	jstring JJson = (jstring)Env->CallStaticObjectMethod(BridgeClass, Method, CleverTapInstance);
+	if (HandleExceptionOrError(Env, !JJson, TEXT("getVariants failed"))) return Result;
+
+	const char* JsonChars = Env->GetStringUTFChars(JJson, nullptr);
+	FString JsonString = FString(JsonChars);
+	Env->ReleaseStringUTFChars(JJson, JsonChars);
+	Env->DeleteLocalRef(JJson);
+
+	TArray<TSharedPtr<FJsonValue>> JsonArray;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+	if (!FJsonSerializer::Deserialize(Reader, JsonArray)) return Result;
+
+	for (const TSharedPtr<FJsonValue>& Element : JsonArray)
+	{
+		const TSharedPtr<FJsonObject>* ObjPtr;
+		if (!Element->TryGetObject(ObjPtr)) continue;
+		TMap<FString, FString> Entry;
+		for (const auto& KV : (*ObjPtr)->Values)
+		{
+			FString StrVal;
+			if (!KV.Value->TryGetString(StrVal))
+				StrVal = KV.Value->AsString();
+			Entry.Add(KV.Key, StrVal);
+		}
+		Result.Add(Entry);
+	}
 	return Result;
 }
 

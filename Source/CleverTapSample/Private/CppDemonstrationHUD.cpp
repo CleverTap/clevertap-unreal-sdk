@@ -35,21 +35,17 @@ void ACppDemonstrationHUD::BeginPlay()
 	
 	//UE_LOG(LogTemp, Display, TEXT("Hello, World!"));
 	
-	// Try to load the save state and switch to the main menu if we've logged in before
-//	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
-//	{
-//		SaveState =
-//			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
-//		ApplyPrivacySettingsFromSaveState();
-
-		// This will transition to the MainMenu
-		//Login(SaveState->Name, SaveState->Email, SaveState->Phone, SaveState->Identity, SaveState->CustomCleverTapId);
-//	}
-//	else
-//	{
-//		SetUIState(ECppDemonstrationUIState::Login);
-//	}
-	SetUIState(ECppDemonstrationUIState::MainMenu);
+	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
+	{
+		SaveState =
+			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
+		ApplyPrivacySettingsFromSaveState();
+		SetUIState(ECppDemonstrationUIState::MainMenu);
+	}
+	else
+	{
+		SetUIState(ECppDemonstrationUIState::Login);
+	}
 }
 
 void ACppDemonstrationHUD::DeleteSaveState()

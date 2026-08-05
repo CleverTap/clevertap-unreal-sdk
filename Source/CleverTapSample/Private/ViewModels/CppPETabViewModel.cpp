@@ -183,6 +183,30 @@ void UCppPETabViewModel::FetchVariables_Implementation()
 	GetCT().FetchVariables();
 }
 
+void UCppPETabViewModel::GetVariants_Implementation()
+{
+	TArray<TMap<FString, FString>> Variants = GetCT().GetVariants();
+
+	UE_LOG(LogCleverTapSample, Log, TEXT("PE: ---- Active Variants (%d) ----"), Variants.Num());
+	for (int32 i = 0; i < Variants.Num(); i++)
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("PE:   Variant [%d]:"), i);
+		for (const auto& KV : Variants[i])
+		{
+			UE_LOG(LogCleverTapSample, Log, TEXT("PE:     %s = %s"), *KV.Key, *KV.Value);
+		}
+	}
+	UE_LOG(LogCleverTapSample, Log, TEXT("PE: ---------------------------"));
+
+	FString StatusText = Variants.Num() > 0
+		? FString::Printf(TEXT("Variants: %d active (see log)"), Variants.Num())
+		: TEXT("Variants: none assigned");
+
+	Edit([StatusText](MutableContext& Ctx, UCppPETabViewModel& VM) {
+		VM.SetFetchStatus(Ctx, StatusText);
+	});
+}
+
 void UCppPETabViewModel::PrintVariables_Implementation()
 {
 	UE_LOG(LogCleverTapSample, Log, TEXT("PE: ---- Variable Values ----"));
@@ -364,3 +388,4 @@ void UCppPETabViewModel::OnVariablesChanged()
 		VM.RefreshDisplayValues(Ctx);
 	});
 }
+
