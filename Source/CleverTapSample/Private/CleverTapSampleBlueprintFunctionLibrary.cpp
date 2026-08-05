@@ -222,8 +222,9 @@ void UCleverTapSampleBlueprintFunctionLibrary::OpenPEFileVariable(const FString&
 		// Copy to a temp path with the correct extension so QLPreviewController can identify the type
 		NSString* TempPath = [NSTemporaryDirectory() stringByAppendingPathComponent:
 			[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:ext]];
-		[[NSFileManager defaultManager] copyItemAtPath:NSPath toPath:TempPath error:nil];
-		PreviewURL = [NSURL fileURLWithPath:TempPath];
+		NSError* CopyError = nil;
+		BOOL Copied = [[NSFileManager defaultManager] copyItemAtPath:NSPath toPath:TempPath error:&CopyError];
+		PreviewURL = Copied ? [NSURL fileURLWithPath:TempPath] : [NSURL fileURLWithPath:NSPath];
 	} else {
 		PreviewURL = [NSURL fileURLWithPath:NSPath];
 	}

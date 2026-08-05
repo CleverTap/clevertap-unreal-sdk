@@ -39,8 +39,15 @@ void ACppDemonstrationHUD::BeginPlay()
 	{
 		SaveState =
 			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
-		ApplyPrivacySettingsFromSaveState();
-		SetUIState(ECppDemonstrationUIState::MainMenu);
+		if (SaveState)
+		{
+			ApplyPrivacySettingsFromSaveState();
+			SetUIState(ECppDemonstrationUIState::MainMenu);
+		}
+		else
+		{
+			SetUIState(ECppDemonstrationUIState::Login);
+		}
 	}
 	else
 	{

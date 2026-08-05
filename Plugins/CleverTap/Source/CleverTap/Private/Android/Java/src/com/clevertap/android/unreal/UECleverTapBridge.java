@@ -402,6 +402,12 @@ public class UECleverTapBridge {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 // Resolve symlink (/data/user/0/ → /data/data/) so FileProvider path matching works
                 java.io.File canonicalFile = file.getCanonicalFile();
+                // Verify the file is within the app's private storage — reject path traversal attempts
+                java.io.File appDataDir = context.getDataDir().getCanonicalFile();
+                if (!canonicalFile.getPath().startsWith(appDataDir.getPath())) {
+                    android.util.Log.e("CleverTap_UE", "openFile: path is outside app data dir, rejected: " + canonicalFile.getPath());
+                    return;
+                }
                 uri = FileProvider.getUriForFile(context,
                     context.getPackageName() + ".clevertap.fileprovider", canonicalFile);
             } else {
