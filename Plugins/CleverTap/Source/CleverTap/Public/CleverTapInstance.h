@@ -642,17 +642,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
 	virtual void SuspendInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::SuspendInAppNotifications, ;);
 
-	/** Disables or enables sending events to the server.
-	 *
-	 * To stop recorded events from being sent to the server, use this method to set the SDK instance to
-	 * offline. Once offline, events will be recorded and queued locally but will not be sent to the server until
-	 * offline is disabled.
-	 *
-	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
-	 * the SDK instance will immediately attempt to send events that have been queued while offline.
-	 */
 	/**
-	 * Unmutes network traffic from the app. Call this to resume event sending if the SDK has been muted.
+	 * Resumes event recording and network traffic after the SDK has been muted.
+	 * Android only — iOS SDK has no equivalent; logs "unsupported" on iOS and is a no-op on Null/Editor.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void Unmute() PURE_VIRTUAL(UCleverTapInstance::Unmute, ;);
@@ -664,6 +656,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|DisplayUnit")
 	virtual void RecordDisplayUnitClickedEventForID(const FString& UnitID) PURE_VIRTUAL(UCleverTapInstance::RecordDisplayUnitClickedEventForID, ;);
 
+	/** Disables or enables sending events to the server.
+	 *
+	 * To stop recorded events from being sent to the server, use this method to set the SDK instance to
+	 * offline. Once offline, events will be recorded and queued locally but will not be sent to the server until
+	 * offline is disabled.
+	 *
+	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
+	 * the SDK instance will immediately attempt to send events that have been queued while offline.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetOffline(bool bIsOffline) PURE_VIRTUAL(UCleverTapInstance::SetOffline, ;);
 
