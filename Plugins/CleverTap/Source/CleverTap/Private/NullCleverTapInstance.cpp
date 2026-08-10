@@ -159,6 +159,10 @@ void UNullCleverTapInstance::DiscardInAppNotifications() {}
 void UNullCleverTapInstance::ResumeInAppNotifications() {}
 void UNullCleverTapInstance::SuspendInAppNotifications() {}
 
+void UNullCleverTapInstance::Unmute() {}
+void UNullCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
+	{ CleverTapSDK::Ignore(UnitID); }
+
 void UNullCleverTapInstance::SetOffline(bool bIsOffline)
 {
 	CleverTapSDK::Ignore(bIsOffline);

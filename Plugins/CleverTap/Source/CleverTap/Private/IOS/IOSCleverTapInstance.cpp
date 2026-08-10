@@ -532,6 +532,8 @@ void EnsurePushNotificationMonitoring()
 		id NewPresentBlock = ^(id Obj, UNUserNotificationCenter* Center, UNNotification* Notification,
 			void (^CompletionHandler)(UNNotificationPresentationOptions Options)) {
 		  UIOSCleverTapInstance::HandleWillPresentNotification(Notification.request.content.userInfo);
+		  // iOS SDK 7.7.1+ — let the SDK process the notification for silent-in-foreground (wzrk_sif) support
+		  [[CleverTap sharedInstance] handleWillPresentNotification:Notification.request];
 
 		  // Forward onto the original implementation, but make the completion handler a no-op
 		  void (^EmptyHandler)(UNNotificationPresentationOptions Options) =
@@ -1137,6 +1139,16 @@ void UIOSCleverTapInstance::SuspendInAppNotifications()
 {
 	check(NativeInstance != nil);
 	[NativeInstance suspendInAppNotifications];
+}
+
+void UIOSCleverTapInstance::Unmute()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("Unmute() — not supported on iOS SDK"));
+}
+
+void UIOSCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
+{
+	CleverTapSDK::Ignore(UnitID);
 }
 
 void UIOSCleverTapInstance::SetOffline(bool bIsOffline)

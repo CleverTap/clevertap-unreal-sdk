@@ -651,6 +651,19 @@ public:
 	 * Calling this method again with bIsOffline set to false will allow events to be sent to server and
 	 * the SDK instance will immediately attempt to send events that have been queued while offline.
 	 */
+	/**
+	 * Unmutes network traffic from the app. Call this to resume event sending if the SDK has been muted.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void Unmute() PURE_VIRTUAL(UCleverTapInstance::Unmute, ;);
+
+	/**
+	 * Records a Notification Clicked event for a specific Display Unit element.
+	 * Not currently implemented — no-op placeholder for API parity with Android/iOS SDK 8.4.0/7.8.0.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|DisplayUnit")
+	virtual void RecordDisplayUnitClickedEventForID(const FString& UnitID) PURE_VIRTUAL(UCleverTapInstance::RecordDisplayUnitClickedEventForID, ;);
+
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetOffline(bool bIsOffline) PURE_VIRTUAL(UCleverTapInstance::SetOffline, ;);
 

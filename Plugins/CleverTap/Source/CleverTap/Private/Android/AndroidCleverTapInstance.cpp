@@ -444,6 +444,17 @@ void UAndroidCleverTapInstance::SuspendInAppNotifications()
 	JNI::SuspendInAppNotifications(JNI::GetJNIEnv(), JavaCleverTapInstance);
 }
 
+void UAndroidCleverTapInstance::Unmute()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("Unmute()"));
+	JNI::Unmute(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+
+void UAndroidCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
+{
+	CleverTapSDK::Ignore(UnitID);
+}
+
 void UAndroidCleverTapInstance::SetOffline(bool bIsOffline)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("SetOffline(bIsOffline=%s)"), DEBUG_TEXT(bIsOffline));

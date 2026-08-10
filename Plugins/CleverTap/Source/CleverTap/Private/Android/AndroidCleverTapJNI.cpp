@@ -989,6 +989,18 @@ void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConf
 	}
 }
 
+void Unmute(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID Method = GetMethodID(Env, CleverTapAPIClass, "unmute", "()V");
+	if (!Method)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, Method);
+	HandleException(Env, "unmute()");
+}
+
 void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
