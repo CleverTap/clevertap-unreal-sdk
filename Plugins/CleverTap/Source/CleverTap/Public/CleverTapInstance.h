@@ -119,7 +119,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
 	virtual void OnUserLoginWithCleverTapId(const FCleverTapProperties& Profile, const FString& CleverTapId)
 		PURE_VIRTUAL(UCleverTapInstance::OnUserLoginWithCleverTapId, ;);
-	;
 
 	/**
 	 * Called to enrich an anonymous user profile with identifying information about the user and provide them a custom
@@ -628,7 +627,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
 	virtual void DiscardInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::DiscardInAppNotifications, ;);
-	;
 
 	/** Resumes displaying in-app notifications.
 	 *
@@ -667,6 +665,23 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetOffline(bool bIsOffline) PURE_VIRTUAL(UCleverTapInstance::SetOffline, ;);
+
+	/**
+	 * Pauses all CleverTap network activity. Call at the start of active gameplay (boss fights, cutscenes,
+	 * latency-sensitive sequences) to prevent SDK network calls from causing frame stutters.
+	 * Events are still recorded locally and will be sent when ResumeSDK() is called.
+	 * Alias for SetOffline(true) with gaming context.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	void PauseSDK() { SetOffline(true); }
+
+	/**
+	 * Resumes CleverTap network activity after PauseSDK(). Call when the latency-sensitive sequence ends.
+	 * The SDK will immediately flush any events that were queued while paused.
+	 * Alias for SetOffline(false) with gaming context.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	void ResumeSDK() { SetOffline(false); }
 
 	/**
 	 * Can be used to stop sending events to CleverTap for GDPR compliance. Calling this method with bIsOptingOut

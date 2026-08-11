@@ -149,8 +149,8 @@ void ACppDemonstrationHUD::Login(const FString& Name, const FString& Email, cons
 	Save.Identity = Identity;
 	Save.CustomCleverTapId = CustomCleverTapId;
 	const bool bSaved = SaveGameToFile(Save);
-	UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Login save %s to %s (Name=%s Email=%s Identity=%s)"),
-		bSaved ? TEXT("succeeded") : TEXT("FAILED"), *GetSaveFilePath(), *Name, *Email, *Identity);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Login save %s to %s"),
+		bSaved ? TEXT("succeeded") : TEXT("FAILED"), *GetSaveFilePath());
 
 	SetUIState(ECppDemonstrationUIState::MainMenu);
 }
