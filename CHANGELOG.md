@@ -1,6 +1,33 @@
 # Changelog
 ==========
 
+## [1.3.0] - 2026-08-12
+
+### Updated
+- Android CleverTap SDK upgraded from **8.0.0** to **8.4.1** (local custom-patched AAR replaced with Maven Central release)
+- iOS CleverTap SDK upgraded from **7.6.0** to **7.8.1** (framework built from source and bundled)
+
+### Added
+- `Unmute()` — resumes event recording and network traffic after the SDK has been muted. Android-only; no-op on iOS and Null/Editor. Added in Android SDK 8.1.0.
+- `DismissPipInApp()` — dismisses the currently visible Picture-in-Picture (PIP) in-app notification, freeing the display slot for the next queued in-app. Full implementation on Android (SDK 8.4.1) and iOS (SDK 7.8.1); no-op on Null/Editor.
+- `RecordDisplayUnitClickedEventForID(UnitID)` — no-op placeholder for API parity with Android SDK 8.4.1 / iOS SDK 7.8.1. Display Units not yet implemented in the Unreal plugin.
+- `PauseSDK()` / `ResumeSDK()` — gaming-context aliases for `SetOffline(true/false)`. Call `PauseSDK()` at the start of latency-sensitive gameplay sequences (boss fights, cutscenes) to prevent SDK network calls from causing frame stutters; call `ResumeSDK()` when the sequence ends to flush queued events. Exposed as Blueprint nodes under `CleverTap|Gaming`.
+- `GetVariants()` — returns the active A/B test variants currently assigned to the user as `TArray<TMap<FString,FString>>`. Each entry is a property dictionary for one variant (e.g. `"id"`, `"name"`). Returns an empty array if no variants are active. C++ only (TArray<TMap> is not Blueprint-serializable).
+
+### Fixed — Android
+- **Removed local AAR workaround**: The custom-patched `clevertap-android-sdk-8.4.0.aar` has been deleted. The SDK is now consumed from Maven Central (`com.clevertap.android:clevertap-android-sdk:8.4.1`), which includes the fragmentless banner support natively. The `AndroidLocalCleverTapSdkAarPath` config key is still supported for overriding to a local AAR if needed.
+- **Fragment-based in-app notifications crashing on `GameActivity`**: Unreal Engine's `GameActivity` does not extend `AppCompatActivity`, causing fragment-based in-app renderers (header, footer) to throw `ClassCastException` at display time. Added `CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS=1` metadata to `AndroidManifest.xml` via UPL to enable the SDK's fragment-free rendering path. Note: campaigns must use **HTML** banner type (not Native) for this path to apply.
+- **FileProvider registration**: Added `androidx.core.content.FileProvider` declaration to `AndroidManifest.xml` via UPL, along with a `clevertap_file_provider_paths.xml` resource. Required for sharing private-storage file paths (e.g. PE file variables) on Android 7+.
+
+### Fixed — Sample App
+- **Login not persisted across restarts on Android**: `SaveGameToSlot` silently failed on Android 11+ due to scoped storage blocking writes outside the app's `files/` directory. Fixed by bypassing UE's `ISaveGameSystem` — save/load/delete now use `FPlatformMisc::GamePersistentDownloadDir()` (maps to `getExternalFilesDir()`) with `FFileHelper` for direct file I/O.
+- **"Delete Login Info" not logging out**: `DeleteSaveState()` deleted the save file but `SyncSaveStateToViewModels` (bound to `OnViewModelChanged`) immediately re-created it when ViewModel changes fired during UI teardown. Fixed by adding `EndDisplay_MainMenu()` which unbinds the delegate before teardown, and calling `SetUIState(Login)` from `DeleteSaveState()` to navigate back to the Login screen.
+- **SaveState null crash on first launch**: `CppDemonstrationHUD` now correctly handles a null result from `LoadGameFromSlot` (first launch, no save file) and falls back to the Login state instead of dereferencing a null pointer.
+- **PE tab: file variable preview**: Added `OpenPEFileVariable()` to `CleverTapSampleBlueprintFunctionLibrary`. Opens a PE file variable using the OS viewer (QuickLook on iOS, FileProvider intent on Android).
+
+### Internal
+- Android: Media3 / ExoPlayer dependency block added as commented-out opt-in. Uncomment in `CleverTap_Android_UPL.xml` if PIP video in-app notifications are needed.
+
 ## [1.2.0] - 2026-06-08
 
 ### Added — Product Experiences (PE) Variables
