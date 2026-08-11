@@ -450,6 +450,12 @@ void UAndroidCleverTapInstance::Unmute()
 	JNI::Unmute(JNI::GetJNIEnv(), JavaCleverTapInstance);
 }
 
+void UAndroidCleverTapInstance::DismissPipInApp()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("DismissPipInApp()"));
+	JNI::DismissPipInApp(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+
 void UAndroidCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
 {
 	CleverTapSDK::Ignore(UnitID);

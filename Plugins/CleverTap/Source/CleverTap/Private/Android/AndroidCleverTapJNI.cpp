@@ -1001,6 +1001,18 @@ void Unmute(JNIEnv* Env, jobject CleverTapInstance)
 	HandleException(Env, "unmute()");
 }
 
+void DismissPipInApp(JNIEnv* Env, jobject CleverTapInstance)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID Method = GetMethodID(Env, CleverTapAPIClass, "dismissPipInApp", "()V");
+	if (!Method)
+	{
+		return;
+	}
+	Env->CallVoidMethod(CleverTapInstance, Method);
+	HandleException(Env, "dismissPipInApp()");
+}
+
 void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);

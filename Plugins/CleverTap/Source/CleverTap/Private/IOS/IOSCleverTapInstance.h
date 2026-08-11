@@ -92,6 +92,7 @@ public:
   void SuspendInAppNotifications() override;
 
   void Unmute() override;
+  void DismissPipInApp() override;
   void RecordDisplayUnitClickedEventForID(const FString& UnitID) override;
   void SetOffline(bool bIsOffline) override;
   void SetOptOut(bool bIsOptingOut) override;

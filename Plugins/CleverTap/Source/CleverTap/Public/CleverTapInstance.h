@@ -648,8 +648,16 @@ public:
 	virtual void Unmute() PURE_VIRTUAL(UCleverTapInstance::Unmute, ;);
 
 	/**
+	 * Dismisses the currently visible Picture-in-Picture (PIP) in-app notification.
+	 * Frees the in-app display slot — the next queued in-app may appear immediately.
+	 * No-op when no PIP in-app is visible. Added in Android SDK 8.4.1 / iOS SDK 7.8.1.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
+	virtual void DismissPipInApp() PURE_VIRTUAL(UCleverTapInstance::DismissPipInApp, ;);
+
+	/**
 	 * Records a Notification Clicked event for a specific Display Unit element.
-	 * Not currently implemented — no-op placeholder for API parity with Android/iOS SDK 8.4.0/7.8.0.
+	 * Not currently implemented — no-op placeholder for API parity with Android/iOS SDK 8.4.1/7.8.1.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|DisplayUnit")
 	virtual void RecordDisplayUnitClickedEventForID(const FString& UnitID) PURE_VIRTUAL(UCleverTapInstance::RecordDisplayUnitClickedEventForID, ;);

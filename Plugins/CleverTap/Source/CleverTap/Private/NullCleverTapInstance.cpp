@@ -160,6 +160,7 @@ void UNullCleverTapInstance::ResumeInAppNotifications() {}
 void UNullCleverTapInstance::SuspendInAppNotifications() {}
 
 void UNullCleverTapInstance::Unmute() {}
+void UNullCleverTapInstance::DismissPipInApp() {}
 void UNullCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
 	{ CleverTapSDK::Ignore(UnitID); }
 

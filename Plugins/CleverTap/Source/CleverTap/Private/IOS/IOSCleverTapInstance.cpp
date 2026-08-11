@@ -1144,6 +1144,13 @@ void UIOSCleverTapInstance::Unmute()
 	UE_LOG(LogCleverTap, Log, TEXT("Unmute() — not supported on iOS SDK"));
 }
 
+void UIOSCleverTapInstance::DismissPipInApp()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("DismissPipInApp()"));
+	check(NativeInstance != nil);
+	[NativeInstance dismissPipInApp];
+}
+
 void UIOSCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
 {
 	CleverTapSDK::Ignore(UnitID);
