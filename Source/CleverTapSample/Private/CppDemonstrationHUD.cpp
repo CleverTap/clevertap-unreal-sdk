@@ -89,14 +89,12 @@ void ACppDemonstrationHUD::BeginPlay()
 	}
 	else if (!SaveState->HasLoginData())
 	{
-		UE_LOG(LogCleverTapSample, Warning, TEXT("[SaveGame] Save file found but no login data (Name=%s Email=%s Identity=%s)."),
-			*SaveState->Name, *SaveState->Email, *SaveState->Identity);
+		UE_LOG(LogCleverTapSample, Warning, TEXT("[SaveGame] Save file found but no login data."));
 		SetUIState(ECppDemonstrationUIState::Login);
 	}
 	else
 	{
-		UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Restoring login: Name=%s Email=%s Identity=%s"),
-			*SaveState->Name, *SaveState->Email, *SaveState->Identity);
+		UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Restoring login state."));
 		ApplyPrivacySettingsFromSaveState();
 		RestoreLoginFromSaveState();
 		SetUIState(ECppDemonstrationUIState::MainMenu);
@@ -216,7 +214,10 @@ void ACppDemonstrationHUD::SyncSaveStateToViewModels(TScriptInterface<IViewModel
 	Save.bIsOffline = Privacy->GetOffline();
 	Save.bIsNotRecordingNetInfo = !Privacy->GetNetworkRecording();
 
-	SaveGameToFile(Save);
+	if (!SaveGameToFile(Save))
+	{
+		UE_LOG(LogCleverTapSample, Warning, TEXT("[SaveGame] Failed to save state to file."));
+	}
 }
 
 void ACppDemonstrationHUD::SetUIState(ECppDemonstrationUIState Value)
