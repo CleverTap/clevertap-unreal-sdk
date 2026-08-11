@@ -37,4 +37,10 @@ public:
 
 	UPROPERTY()
 	bool bIsNotRecordingNetInfo{};
+
+	bool HasLoginData() const
+	{
+		return !Name.IsEmpty() || !Email.IsEmpty() || !Phone.IsEmpty()
+			|| !Identity.IsEmpty() || !CustomCleverTapId.IsEmpty();
+	}
 };

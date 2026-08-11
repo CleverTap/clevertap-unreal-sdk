@@ -49,6 +49,7 @@ protected:
 private:
 	UCppDemonstrationSaveGame& GetOrCreateSaveState();
 	void ApplyPrivacySettingsFromSaveState();
+	void RestoreLoginFromSaveState();
 
 	UFUNCTION() // For dynamic binding
 	void SyncSaveStateToViewModels(TScriptInterface<IViewModelInterface> VM);
@@ -59,6 +60,7 @@ private:
 	void EndDisplay_LoginPage();
 
 	void BeginDisplay_MainMenu();
+	void EndDisplay_MainMenu();
 
 	void LocalizeAndroidNotificationChannels();
 

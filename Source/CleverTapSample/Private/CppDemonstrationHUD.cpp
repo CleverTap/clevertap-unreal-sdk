@@ -6,14 +6,59 @@
 #include "CppDemonstrationSaveGame.h"
 #include "Engine.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
 #include "UserWidgetView.h"
 #include "ViewModels/CppLoginPageViewModel.h"
 #include "ViewModels/CppMainMenuViewModel.h"
 #include "ViewModels/CppPrivacyTabViewModel.h"
 #include "ViewModels/CppProfileTabViewModel.h"
 #include "ViewModels/CppUserProfileViewModel.h"
+
 namespace {
 const FString SAVE_GAME_SLOT_NAME = TEXT("CppSaveState");
+
+// On Android, FPaths::ProjectSavedDir() expands to ../../../CleverTapSample/Saved/
+// which normalises to a path outside the app's writable files/ directory
+// (3 levels above GFilePathBase lands at .../Android/data/{package}/ where
+// creating subdirectories is blocked by Android 11+ scoped storage).
+// GamePersistentDownloadDir() returns getExternalFilesDir() — always writable.
+FString GetSaveFilePath()
+{
+#if PLATFORM_ANDROID
+	return FString(FPlatformMisc::GamePersistentDownloadDir()) / TEXT("SaveGames") / (SAVE_GAME_SLOT_NAME + TEXT(".sav"));
+#else
+	return FPaths::ProjectSavedDir() / TEXT("SaveGames") / (SAVE_GAME_SLOT_NAME + TEXT(".sav"));
+#endif
+}
+
+bool SaveGameToFile(UCppDemonstrationSaveGame& SaveGameObj)
+{
+	TArray<uint8> Data;
+	if (!UGameplayStatics::SaveGameToMemory(&SaveGameObj, Data))
+	{
+		return false;
+	}
+	const FString FilePath = GetSaveFilePath();
+	IFileManager::Get().MakeDirectory(*FPaths::GetPath(FilePath), /*Tree=*/true);
+	return FFileHelper::SaveArrayToFile(Data, *FilePath);
+}
+
+UCppDemonstrationSaveGame* LoadGameFromFile()
+{
+	const FString FilePath = GetSaveFilePath();
+	TArray<uint8> Data;
+	if (!FFileHelper::LoadFileToArray(Data, *FilePath))
+	{
+		return nullptr;
+	}
+	return Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromMemory(Data));
+}
+
+void DeleteGameFile()
+{
+	IFileManager::Get().Delete(*GetSaveFilePath());
+}
+
 } // namespace
 
 void ACppDemonstrationHUD::BeginPlay()
@@ -35,33 +80,34 @@ void ACppDemonstrationHUD::BeginPlay()
 	
 	//UE_LOG(LogTemp, Display, TEXT("Hello, World!"));
 	
-	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
+	UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Loading from: %s"), *GetSaveFilePath());
+	SaveState = LoadGameFromFile();
+	if (SaveState == nullptr)
 	{
-		SaveState =
-			Cast<UCppDemonstrationSaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0));
-		if (SaveState)
-		{
-			ApplyPrivacySettingsFromSaveState();
-			SetUIState(ECppDemonstrationUIState::MainMenu);
-		}
-		else
-		{
-			SetUIState(ECppDemonstrationUIState::Login);
-		}
+		UE_LOG(LogCleverTapSample, Warning, TEXT("[SaveGame] Load returned null — no save file on disk."));
+		SetUIState(ECppDemonstrationUIState::Login);
+	}
+	else if (!SaveState->HasLoginData())
+	{
+		UE_LOG(LogCleverTapSample, Warning, TEXT("[SaveGame] Save file found but no login data (Name=%s Email=%s Identity=%s)."),
+			*SaveState->Name, *SaveState->Email, *SaveState->Identity);
+		SetUIState(ECppDemonstrationUIState::Login);
 	}
 	else
 	{
-		SetUIState(ECppDemonstrationUIState::Login);
+		UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Restoring login: Name=%s Email=%s Identity=%s"),
+			*SaveState->Name, *SaveState->Email, *SaveState->Identity);
+		ApplyPrivacySettingsFromSaveState();
+		RestoreLoginFromSaveState();
+		SetUIState(ECppDemonstrationUIState::MainMenu);
 	}
 }
 
 void ACppDemonstrationHUD::DeleteSaveState()
 {
 	SaveState = nullptr;
-	if (UGameplayStatics::DoesSaveGameExist(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0))
-	{
-		UGameplayStatics::DeleteGameInSlot(SAVE_GAME_SLOT_NAME, /*UserIndex=*/0);
-	}
+	DeleteGameFile();
+	SetUIState(ECppDemonstrationUIState::Login);
 }
 
 void ACppDemonstrationHUD::Login(const FString& Name, const FString& Email, const FString& Phone,
@@ -104,7 +150,9 @@ void ACppDemonstrationHUD::Login(const FString& Name, const FString& Email, cons
 	Save.Phone = Phone;
 	Save.Identity = Identity;
 	Save.CustomCleverTapId = CustomCleverTapId;
-	UGameplayStatics::SaveGameToSlot(&Save, SAVE_GAME_SLOT_NAME, /*UserIndex=*/0);
+	const bool bSaved = SaveGameToFile(Save);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[SaveGame] Login save %s to %s (Name=%s Email=%s Identity=%s)"),
+		bSaved ? TEXT("succeeded") : TEXT("FAILED"), *GetSaveFilePath(), *Name, *Email, *Identity);
 
 	SetUIState(ECppDemonstrationUIState::MainMenu);
 }
@@ -129,9 +177,33 @@ void ACppDemonstrationHUD::ApplyPrivacySettingsFromSaveState()
 	CleverTapInst.SetNetworkInformationRecording(!SaveState->bIsNotRecordingNetInfo);
 }
 
+void ACppDemonstrationHUD::RestoreLoginFromSaveState()
+{
+	check(SaveState != nullptr);
+	FCleverTapProperties Profile;
+	if (!SaveState->Name.IsEmpty())     Profile.Map.Add("Name", SaveState->Name);
+	if (!SaveState->Email.IsEmpty())    Profile.Map.Add("Email", SaveState->Email);
+	if (!SaveState->Phone.IsEmpty())    Profile.Map.Add("Phone", SaveState->Phone);
+	if (!SaveState->Identity.IsEmpty()) Profile.Map.Add("Identity", SaveState->Identity);
+
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	if (SaveState->CustomCleverTapId.IsEmpty())
+	{
+		CleverTapInst.OnUserLogin(Profile);
+	}
+	else
+	{
+		CleverTapInst.OnUserLoginWithCleverTapId(Profile, SaveState->CustomCleverTapId);
+	}
+}
+
 void ACppDemonstrationHUD::SyncSaveStateToViewModels(TScriptInterface<IViewModelInterface> VM)
 {
 	check(MainMenuVM != nullptr);
+	if (SaveState == nullptr)
+	{
+		return;
+	}
 	UCppDemonstrationSaveGame& Save = GetOrCreateSaveState();
 
 	auto const Profile = MainMenuVM->GetProfileTab()->GetUserProfile();
@@ -144,7 +216,7 @@ void ACppDemonstrationHUD::SyncSaveStateToViewModels(TScriptInterface<IViewModel
 	Save.bIsOffline = Privacy->GetOffline();
 	Save.bIsNotRecordingNetInfo = !Privacy->GetNetworkRecording();
 
-	UGameplayStatics::SaveGameToSlot(&Save, SAVE_GAME_SLOT_NAME, /*UserIndex=*/0);
+	SaveGameToFile(Save);
 }
 
 void ACppDemonstrationHUD::SetUIState(ECppDemonstrationUIState Value)
@@ -159,6 +231,12 @@ void ACppDemonstrationHUD::SetUIState(ECppDemonstrationUIState Value)
 		case ECppDemonstrationUIState::Login:
 		{
 			EndDisplay_LoginPage();
+		}
+		break;
+
+		case ECppDemonstrationUIState::MainMenu:
+		{
+			EndDisplay_MainMenu();
 		}
 		break;
 
@@ -287,6 +365,20 @@ void ACppDemonstrationHUD::BeginDisplay_MainMenu()
 	CleverTapInst.ResumeInAppNotifications();
 
 	UE_LOG(LogCleverTapSample, Log, TEXT("Displaying UI: Main Menu"));
+}
+
+void ACppDemonstrationHUD::EndDisplay_MainMenu()
+{
+	check(ActiveView != nullptr);
+	check(MainMenuVM != nullptr);
+
+	UE_LOG(LogCleverTapSample, Log, TEXT("Removing UI: Main Menu"));
+	MainMenuVM->OnViewModelChanged().RemoveDynamic(this, &ACppDemonstrationHUD::SyncSaveStateToViewModels);
+	MainMenuVM->AttachToView(nullptr);
+	MainMenuVM = nullptr;
+
+	ActiveView->RemoveFromViewport();
+	ActiveView = nullptr;
 }
 
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()
