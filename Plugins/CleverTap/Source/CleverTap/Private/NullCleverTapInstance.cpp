@@ -159,6 +159,11 @@ void UNullCleverTapInstance::DiscardInAppNotifications() {}
 void UNullCleverTapInstance::ResumeInAppNotifications() {}
 void UNullCleverTapInstance::SuspendInAppNotifications() {}
 
+void UNullCleverTapInstance::Unmute() {}
+void UNullCleverTapInstance::DismissPipInApp() {}
+void UNullCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
+	{ CleverTapSDK::Ignore(UnitID); }
+
 void UNullCleverTapInstance::SetOffline(bool bIsOffline)
 {
 	CleverTapSDK::Ignore(bIsOffline);
@@ -229,3 +234,6 @@ TMap<FString, FString> UNullCleverTapInstance::GetStringMapVariable(const FStrin
 
 FString UNullCleverTapInstance::GetFileVariablePath(const FString& Name) const
 	{ CleverTapSDK::Ignore(Name); return TEXT(""); }
+
+TArray<TMap<FString, FString>> UNullCleverTapInstance::GetVariants()
+	{ return {}; }

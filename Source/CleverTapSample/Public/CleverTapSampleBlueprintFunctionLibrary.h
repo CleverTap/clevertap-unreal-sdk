@@ -17,4 +17,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|ViewModels|Properties")
 	static bool IsProfilePropertyValueValid(const FProfilePropertyViewModel& Property);
+
+	/** Copies a PE file variable's local path to clipboard and opens it with the OS file viewer. No-op if not downloaded yet. */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|PE")
+	static void OpenPEFileVariable(const FString& VariableName);
 };

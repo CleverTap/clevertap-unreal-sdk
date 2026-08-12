@@ -31,6 +31,8 @@ private:
 	void SetOffline_Implementation(bool bInIsOffline) override;
 	bool GetNetworkRecording_Implementation() const override;
 	void SetNetworkRecording_Implementation(bool bInIsRecording) override;
+	void PauseSDK_Implementation() override;
+	void ResumeSDK_Implementation() override;
 	// </IPrivacyTabViewModelInterface>
 
 private:

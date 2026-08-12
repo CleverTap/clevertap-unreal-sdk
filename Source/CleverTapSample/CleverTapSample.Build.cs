@@ -10,7 +10,17 @@ public class CleverTapSample : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "CleverTap", "SlateCore", "Slate", "UMG" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "CleverTap", "SlateCore", "Slate", "UMG", "ApplicationCore" });
+
+		if (Target.Platform == UnrealTargetPlatform.Android)
+		{
+			PrivateDependencyModuleNames.Add("Launch");
+		}
+
+		if (Target.Platform == UnrealTargetPlatform.IOS)
+		{
+			PublicFrameworks.AddRange(new string[] { "QuickLook", "UIKit" });
+		}
 		
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");

@@ -39,4 +39,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
 	void SetNetworkRecording(bool bIsRecording);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
+	void PauseSDK();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "CleverTap|ViewModels|MainMenu|Privacy")
+	void ResumeSDK();
 };

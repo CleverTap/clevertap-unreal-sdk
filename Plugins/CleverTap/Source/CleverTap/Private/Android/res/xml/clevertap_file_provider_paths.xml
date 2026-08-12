@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- root-path covers all app-private storage including context.getDir() paths
+         that CleverTap uses (app_CleverTap.Files/) which are not under files/ or cache/ -->
+    <root-path name="root" path="/" />
+</paths>

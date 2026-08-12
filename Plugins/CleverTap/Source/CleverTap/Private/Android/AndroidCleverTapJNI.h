@@ -67,6 +67,8 @@ jobject CreatePushPrimerConfigJSON(
 	JNIEnv* Env, const FCleverTapPushPrimerHalfInterstitialConfig& PushPrimerHalfInterstitialConfig);
 void PromptPushPrimer(JNIEnv* Env, jobject CleverTapInstance, jobject PrimerConfigJSON);
 
+void Unmute(JNIEnv* Env, jobject CleverTapInstance);
+void DismissPipInApp(JNIEnv* Env, jobject CleverTapInstance);
 void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline);
 void SetOptOut(JNIEnv* Env, jobject CleverTapInstance, bool bIsOptingOut);
 void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bool bEnableCollection);
@@ -92,5 +94,6 @@ double GetDoubleVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& 
 bool GetBoolVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, bool DefaultValue);
 TMap<FString, FString> GetStringMapVariable(JNIEnv* Env, jobject CleverTapInstance, const FString& Name, const TMap<FString, FString>& DefaultValue);
 FString GetFileVariablePath(JNIEnv* Env, jobject CleverTapInstance, const FString& Name);
+TArray<TMap<FString, FString>> GetVariants(JNIEnv* Env, jobject CleverTapInstance);
 
 }}} // namespace CleverTapSDK::Android::JNI

@@ -444,6 +444,23 @@ void UAndroidCleverTapInstance::SuspendInAppNotifications()
 	JNI::SuspendInAppNotifications(JNI::GetJNIEnv(), JavaCleverTapInstance);
 }
 
+void UAndroidCleverTapInstance::Unmute()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("Unmute()"));
+	JNI::Unmute(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+
+void UAndroidCleverTapInstance::DismissPipInApp()
+{
+	UE_LOG(LogCleverTap, Log, TEXT("DismissPipInApp()"));
+	JNI::DismissPipInApp(JNI::GetJNIEnv(), JavaCleverTapInstance);
+}
+
+void UAndroidCleverTapInstance::RecordDisplayUnitClickedEventForID(const FString& UnitID)
+{
+	CleverTapSDK::Ignore(UnitID);
+}
+
 void UAndroidCleverTapInstance::SetOffline(bool bIsOffline)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("SetOffline(bIsOffline=%s)"), DEBUG_TEXT(bIsOffline));
@@ -625,6 +642,11 @@ TMap<FString, FString> UAndroidCleverTapInstance::GetStringMapVariable(const FSt
 FString UAndroidCleverTapInstance::GetFileVariablePath(const FString& Name) const
 {
 	return JNI::GetFileVariablePath(JNI::GetJNIEnv(), JavaCleverTapInstance, Name);
+}
+
+TArray<TMap<FString, FString>> UAndroidCleverTapInstance::GetVariants()
+{
+	return JNI::GetVariants(JNI::GetJNIEnv(), JavaCleverTapInstance);
 }
 
 void UAndroidCleverTapInstance::BroadcastOnVariablesFetched(jlong NativeInstancePtr, bool bSuccess)

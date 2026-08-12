@@ -119,7 +119,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
 	virtual void OnUserLoginWithCleverTapId(const FCleverTapProperties& Profile, const FString& CleverTapId)
 		PURE_VIRTUAL(UCleverTapInstance::OnUserLoginWithCleverTapId, ;);
-	;
 
 	/**
 	 * Called to enrich an anonymous user profile with identifying information about the user and provide them a custom
@@ -628,7 +627,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
 	virtual void DiscardInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::DiscardInAppNotifications, ;);
-	;
 
 	/** Resumes displaying in-app notifications.
 	 *
@@ -642,6 +640,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
 	virtual void SuspendInAppNotifications() PURE_VIRTUAL(UCleverTapInstance::SuspendInAppNotifications, ;);
 
+	/**
+	 * Resumes event recording and network traffic after the SDK has been muted.
+	 * Android only — iOS SDK has no equivalent; logs "unsupported" on iOS and is a no-op on Null/Editor.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void Unmute() PURE_VIRTUAL(UCleverTapInstance::Unmute, ;);
+
+	/**
+	 * Dismisses the currently visible Picture-in-Picture (PIP) in-app notification.
+	 * Frees the in-app display slot — the next queued in-app may appear immediately.
+	 * No-op when no PIP in-app is visible. Added in Android SDK 8.4.1 / iOS SDK 7.8.1.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|InApp")
+	virtual void DismissPipInApp() PURE_VIRTUAL(UCleverTapInstance::DismissPipInApp, ;);
+
+	/**
+	 * Records a Notification Clicked event for a specific Display Unit element.
+	 * Not currently implemented — no-op placeholder for API parity with Android/iOS SDK 8.4.1/7.8.1.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|DisplayUnit")
+	virtual void RecordDisplayUnitClickedEventForID(const FString& UnitID) PURE_VIRTUAL(UCleverTapInstance::RecordDisplayUnitClickedEventForID, ;);
+
 	/** Disables or enables sending events to the server.
 	 *
 	 * To stop recorded events from being sent to the server, use this method to set the SDK instance to
@@ -653,6 +673,23 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetOffline(bool bIsOffline) PURE_VIRTUAL(UCleverTapInstance::SetOffline, ;);
+
+	/**
+	 * Pauses all CleverTap network activity. Call at the start of active gameplay (boss fights, cutscenes,
+	 * latency-sensitive sequences) to prevent SDK network calls from causing frame stutters.
+	 * Events are still recorded locally and will be sent when ResumeSDK() is called.
+	 * Alias for SetOffline(true) with gaming context.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	void PauseSDK() { SetOffline(true); }
+
+	/**
+	 * Resumes CleverTap network activity after PauseSDK(). Call when the latency-sensitive sequence ends.
+	 * The SDK will immediately flush any events that were queued while paused.
+	 * Alias for SetOffline(false) with gaming context.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	void ResumeSDK() { SetOffline(false); }
 
 	/**
 	 * Can be used to stop sending events to CleverTap for GDPR compliance. Calling this method with bIsOptingOut
@@ -795,6 +832,15 @@ public:
 	 */
 	virtual FString GetFileVariablePath(const FString& Name) const
 		PURE_VIRTUAL(UCleverTapInstance::GetFileVariablePath, return TEXT(""););
+
+	/**
+	 * Returns the active A/B test variants assigned to the current user.
+	 * Each entry is a dictionary of variant properties (e.g. "name", "id").
+	 * Returns an empty array if no variants are assigned.
+	 * Note: TArray<TMap> is not Blueprint-serializable; call from C++ only.
+	 */
+	virtual TArray<TMap<FString, FString>> GetVariants()
+		PURE_VIRTUAL(UCleverTapInstance::GetVariants, return {};);
 
 	/** Delegate that fires when FetchVariables() completes */
 	UPROPERTY(BlueprintAssignable, Category = "CleverTap|PE")

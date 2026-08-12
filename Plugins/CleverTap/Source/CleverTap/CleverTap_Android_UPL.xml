@@ -3,12 +3,7 @@
 	<init>
 		<setBoolIsEqual result="IsUE4" arg1="$I(EngineMajorVersion)" arg2="4" />
 
-		<!-- TODO: Change the default AndroidLocalCleverTapSdkAarPath back to an empty string
-		           when the published clevertap-android-sdk has the CTInAppHtmlBannerOverlay fix.
-		           It's currently defaulting to a precompiled custom aar as a temporary measure.
-		           (Also remove the precompiled aar from the repository when this happens)
-		  -->
-		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="Plugins/CleverTap/Source/ThirdParty/Android/clevertap-android-sdk-8.0.0.aar" />
+		<setStringFromProperty result="AndroidLocalCleverTapSdkAarPath" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="AndroidLocalCleverTapSdkAarPath" default="" />
 		<setBoolIsEqual result="UsePublishedCleverTapSDK" arg1="$S(AndroidLocalCleverTapSdkAarPath)" arg2="" />
 
 		<setBoolFromProperty result="CTAutoInit" ini="Engine" section="/Script/CleverTap.CleverTapConfig" property="bAutoInitializeSharedInstance" default="false" />
@@ -118,6 +113,11 @@
 					dst="$S(BuildDir)/res/raw/" />
 			</false>
 		</if>
+
+		<!-- FileProvider paths XML — required for openFile() on Android 7+ -->
+		<copyFile src="$S(PluginDir)/Private/Android/res/xml/clevertap_file_provider_paths.xml"
+			dst="$S(BuildDir)/res/xml/clevertap_file_provider_paths.xml" />
+
 	</resourceCopies>
 
 	<androidManifestUpdates>
@@ -251,6 +251,13 @@
 			</false>
 		</if>
 
+		<!-- Enables fragmentless rendering for header/footer in-app banners.
+		     Required where the Activity does not extend AppCompatActivity. -->
+		<setElement result="CT_FRAGMENTLESS_BANNERS" xml="&lt;meta-data/&gt;" />
+		<addAttribute tag="$CT_FRAGMENTLESS_BANNERS" name="android:name" value="CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS" />
+		<addAttribute tag="$CT_FRAGMENTLESS_BANNERS" name="android:value" value="1" />
+		<addElement tag="application" name="CT_FRAGMENTLESS_BANNERS" />
+
 		<!-- OpenUrlActivity - Intent Filters for deep link handling
 
 		This block adds an OpenUrlActivity <activity> with <intent-filter>s 
@@ -335,6 +342,20 @@
 				<addElement tag="application" name="CLEVERTAP_INAPP_EXCLUDE" />
 			</false>
 		</if>
+
+		<!-- FileProvider — required for openFile() to share private-storage paths on Android 7+ -->
+		<addElements tag="application">
+			<provider
+				android:name="androidx.core.content.FileProvider"
+				android:authorities="${applicationId}.clevertap.fileprovider"
+				android:exported="false"
+				android:grantUriPermissions="true">
+				<meta-data
+					android:name="android.support.FILE_PROVIDER_PATHS"
+					android:resource="@xml/clevertap_file_provider_paths" />
+			</provider>
+		</addElements>
+
 	</androidManifestUpdates>
 
 
@@ -353,7 +374,7 @@
 			<true>
 				<!-- The default version of clevertap-android-sdk to use is specified here. -->
 				<insert>
-					dependencies { implementation "com.clevertap.android:clevertap-android-sdk:8.0.0" }
+					dependencies { implementation "com.clevertap.android:clevertap-android-sdk:8.4.1" }
 </insert>
 				<!-- Check the latest sdk version at
 					 https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation

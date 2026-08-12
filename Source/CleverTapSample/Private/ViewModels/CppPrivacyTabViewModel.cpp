@@ -89,3 +89,17 @@ void UCppPrivacyTabViewModel::SetNetworkRecording_Implementation(bool bInIsRecor
 	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 	CleverTapInst.SetNetworkInformationRecording(bInIsRecording);
 }
+
+void UCppPrivacyTabViewModel::PauseSDK_Implementation()
+{
+	UE_LOG(LogTemp, Display, TEXT("[CleverTap] PauseSDK called — SDK going offline, events will queue."));
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.PauseSDK();
+}
+
+void UCppPrivacyTabViewModel::ResumeSDK_Implementation()
+{
+	UE_LOG(LogTemp, Display, TEXT("[CleverTap] ResumeSDK called — SDK back online, flushing queued events."));
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.ResumeSDK();
+}

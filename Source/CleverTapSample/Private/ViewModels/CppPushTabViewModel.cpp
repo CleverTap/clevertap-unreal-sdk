@@ -6,6 +6,7 @@
 #include "CleverTapSample.h"
 #include "CppMainMenuViewModel.h"
 #include "Engine.h"
+#include "HAL/PlatformApplicationMisc.h"
 
 void UCppPushTabViewModel::Edit(TFunctionRef<void(MutableContext&, UCppPushTabViewModel&)> EditFn)
 {
@@ -264,6 +265,8 @@ void UCppPushTabViewModel::OnPushNotificationClicked(const FCleverTapProperties&
 		this->PushNotificationData = ToDebugString(NotificationPayload);
 		MainMenuVM.SetActiveTab(Ctx, EMainMenuTab::Push);
 	});
+
+	FPlatformApplicationMisc::ClipboardCopy(*PushNotificationData);
 }
 
 void UCppPushTabViewModel::OnOpenURL(const FString& Url)

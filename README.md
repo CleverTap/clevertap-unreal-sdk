@@ -403,6 +403,48 @@ notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
 #### Blueprint
 ![Calling SuspendInAppNotifications -> DiscardInAppNotifications -> ResumeInAppNotifications in Blueprint](/Docs/Images/BP_SuspendDiscardResume_InAppNotifications.png)
 
+### Dismiss PIP In-App Notification
+
+Picture-in-Picture (PIP) in-app notifications can appear as floating overlays while your game is running. If you need to programmatically dismiss a visible PIP in-app — for example, when starting a cutscene or a critical gameplay sequence — call `DismissPipInApp()`. This frees the in-app display slot, allowing the next queued in-app to appear once the slot is available again.
+
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.DismissPipInApp();
+```
+
+Calling `DismissPipInApp()` when no PIP in-app is currently visible is a no-op.
+
+## Gaming Performance — PauseSDK / ResumeSDK
+
+During latency-sensitive gameplay sequences (boss fights, loading screens, cutscenes), use `PauseSDK()` to stop CleverTap from uploading events. Events are still recorded locally while paused and will be uploaded when `ResumeSDK()` is called — no data is lost.
+
+Both methods are exposed as Blueprint nodes under the `CleverTap|Gaming` category.
+
+### C++
+
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+
+// Before a boss fight / cutscene / loading screen
+CleverTap.PauseSDK();
+
+// ... gameplay runs with no SDK network traffic ...
+
+// When the sequence ends — queued events are flushed immediately
+CleverTap.ResumeSDK();
+```
+
+`PauseSDK()` and `ResumeSDK()` are thin aliases for `SetOffline(true)` and `SetOffline(false)`.
+
+## SDK Control — Unmute
+
+`Unmute()` resumes event recording and network traffic after the CleverTap SDK has been muted server-side (via a dashboard mute operation). This is an Android-only feature; calling it on iOS or in the Editor is a no-op.
+
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.Unmute();
+```
+
 ## Product Experiences (Variables)
 
 Product Experiences (PE) Variables let you define named, typed variables in your game code and override their values remotely from the CleverTap dashboard — without a code change or resubmission. Typical uses include tuning gameplay parameters, running A/B tests, and toggling features.
@@ -492,6 +534,23 @@ Always bind delegates **before** calling `FetchVariables()` to avoid missing a c
 - **Variable naming:** use unique prefixes to avoid collisions with variables already defined on the same CleverTap account from other sessions or platforms.
 
 For the full reference including all API signatures, dashboard workflow, and common issues, see [Docs/ProductExperiencesVariables.md](Docs/ProductExperiencesVariables.md).
+
+### GetVariants
+
+`GetVariants()` returns the A/B test variants currently active for the user. Each entry in the returned array is a property map for one variant (typically containing keys like `"id"` and `"name"` as set up in the CleverTap dashboard).
+
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+
+TArray<TMap<FString, FString>> Variants = CleverTap.GetVariants();
+for (const TMap<FString, FString>& Variant : Variants)
+{
+    const FString* VariantId = Variant.Find(TEXT("id"));
+    UE_LOG(LogTemp, Log, TEXT("Active variant: %s"), VariantId ? *VariantId : TEXT("(no id)"));
+}
+```
+
+Returns an empty array if no variants are currently assigned to the user. This method is C++ only — `TArray<TMap>` is not Blueprint-serializable.
 
 ## User Profiles
 ### On User Login

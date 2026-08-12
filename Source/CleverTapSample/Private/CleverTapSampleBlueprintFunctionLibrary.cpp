@@ -2,9 +2,42 @@
 #include "CleverTapSampleBlueprintFunctionLibrary.h"
 
 #include "Algo/AllOf.h"
+#include "CleverTapInstance.h"
 #include "CleverTapSample.h"
+#include "CleverTapSubsystem.h"
+#include "Engine.h"
+#include "HAL/PlatformApplicationMisc.h"
 #include "Math/NumericLimits.h"
 #include "Misc/Optional.h"
+#if PLATFORM_ANDROID
+#include "Android/AndroidJNI.h"
+#include "Android/AndroidApplication.h"
+#elif PLATFORM_IOS
+#import <QuickLook/QuickLook.h>
+#import <UIKit/UIKit.h>
+
+@interface UECTFilePreviewSource : NSObject <QLPreviewControllerDataSource>
+@property (nonatomic, strong) NSURL* fileURL;
++ (NSString*)extensionFromMagicBytes:(NSString*)path;
+@end
+@implementation UECTFilePreviewSource
+- (NSInteger)numberOfPreviewItemsInPreviewController:(QLPreviewController*)c { return 1; }
+- (id<QLPreviewItem>)previewController:(QLPreviewController*)c previewItemAtIndex:(NSInteger)i { return _fileURL; }
++ (NSString*)extensionFromMagicBytes:(NSString*)path {
+    NSFileHandle* fh = [NSFileHandle fileHandleForReadingAtPath:path];
+    NSData* header = [fh readDataOfLength:12];
+    [fh closeFile];
+    if (header.length < 4) return nil;
+    const uint8_t* b = (const uint8_t*)header.bytes;
+    if (b[0]==0x47 && b[1]==0x49 && b[2]==0x46) return @"gif";          // GIF8
+    if (b[0]==0xFF && b[1]==0xD8) return @"jpg";                         // JPEG
+    if (b[0]==0x89 && b[1]==0x50 && b[2]==0x4E && b[3]==0x47) return @"png"; // PNG
+    if (header.length>=12 && b[0]==0x52 && b[1]==0x49 && b[2]==0x46 && b[3]==0x41
+        && b[8]==0x57 && b[9]==0x45 && b[10]==0x42 && b[11]==0x50) return @"webp";
+    return nil;
+}
+@end
+#endif
 
 namespace {
 TOptional<int64> CleverTapProperty_TryParseInt64(FStringView Str)
@@ -135,6 +168,78 @@ bool CleverTapProperty_IsDate(FStringView Str)
 }
 
 } // namespace
+
+void UCleverTapSampleBlueprintFunctionLibrary::OpenPEFileVariable(const FString& VariableName)
+{
+	auto& CT = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	const FString FilePath = CT.GetFileVariablePath(VariableName);
+	if (FilePath.IsEmpty())
+	{
+		UE_LOG(LogCleverTapSample, Warning, TEXT("PE: File variable '%s' has no path (not yet downloaded)"), *VariableName);
+		return;
+	}
+
+	// Non-file variables return their string value from GetFileVariablePath — filter them out
+	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
+	{
+		UE_LOG(LogCleverTapSample, Log, TEXT("PE: '%s' is not a file variable or file not yet downloaded"), *VariableName);
+		return;
+	}
+
+	FPlatformApplicationMisc::ClipboardCopy(*FilePath);
+	UE_LOG(LogCleverTapSample, Log, TEXT("PE: File path copied to clipboard: %s"), *FilePath);
+
+#if PLATFORM_ANDROID
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jclass BridgeClass = FAndroidApplication::FindJavaClass("com/clevertap/android/unreal/UECleverTapBridge");
+		if (BridgeClass)
+		{
+			jmethodID OpenFileMethod = Env->GetStaticMethodID(BridgeClass, "openFile",
+				"(Landroid/content/Context;Ljava/lang/String;)V");
+			if (OpenFileMethod)
+			{
+				jobject Context = FAndroidApplication::GetGameActivityThis();
+				jstring JFilePath = Env->NewStringUTF(TCHAR_TO_UTF8(*FilePath));
+				Env->CallStaticVoidMethod(BridgeClass, OpenFileMethod, Context, JFilePath);
+				Env->DeleteLocalRef(JFilePath);
+				if (Env->ExceptionCheck())
+				{
+					Env->ExceptionDescribe();
+					Env->ExceptionClear();
+					UE_LOG(LogCleverTapSample, Warning, TEXT("PE: openFile JNI threw an exception"));
+				}
+			}
+			Env->DeleteLocalRef(BridgeClass);
+		}
+	}
+#elif PLATFORM_IOS
+	NSString* NSPath = [NSString stringWithUTF8String:TCHAR_TO_UTF8(*FilePath)];
+	// Detect extension from magic bytes — CleverTap stores files without extension
+	NSString* ext = [UECTFilePreviewSource extensionFromMagicBytes:NSPath];
+	NSURL* PreviewURL;
+	if (ext.length > 0) {
+		// Copy to a temp path with the correct extension so QLPreviewController can identify the type
+		NSString* TempPath = [NSTemporaryDirectory() stringByAppendingPathComponent:
+			[[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:ext]];
+		NSError* CopyError = nil;
+		BOOL Copied = [[NSFileManager defaultManager] copyItemAtPath:NSPath toPath:TempPath error:&CopyError];
+		PreviewURL = Copied ? [NSURL fileURLWithPath:TempPath] : [NSURL fileURLWithPath:NSPath];
+	} else {
+		PreviewURL = [NSURL fileURLWithPath:NSPath];
+	}
+	dispatch_async(dispatch_get_main_queue(), ^{
+		static UECTFilePreviewSource* PreviewSource;
+		PreviewSource = [[UECTFilePreviewSource alloc] init];
+		PreviewSource.fileURL = PreviewURL;
+		QLPreviewController* Preview = [[QLPreviewController alloc] init];
+		Preview.dataSource = PreviewSource;
+		UIViewController* Root = [UIApplication sharedApplication].keyWindow.rootViewController;
+		while (Root.presentedViewController) { Root = Root.presentedViewController; }
+		[Root presentViewController:Preview animated:YES completion:nil];
+	});
+#endif
+}
 
 bool UCleverTapSampleBlueprintFunctionLibrary::IsEventPropertyValueValid(const FEventPropertyViewModel& Property)
 {
