@@ -13,6 +13,7 @@
 #include "ViewModels/CppPrivacyTabViewModel.h"
 #include "ViewModels/CppProfileTabViewModel.h"
 #include "ViewModels/CppUserProfileViewModel.h"
+#include "CleverTapGameEvents.h"
 
 namespace {
 const FString SAVE_GAME_SLOT_NAME = TEXT("CppSaveState");
@@ -380,6 +381,32 @@ void ACppDemonstrationHUD::EndDisplay_MainMenu()
 
 	ActiveView->RemoveFromViewport();
 	ActiveView = nullptr;
+}
+
+void ACppDemonstrationHUD::CallTypedEvents() // static
+{
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Firing 5 typed game events..."));
+
+	UCleverTapGameEvents::RecordResourceEvent(
+		ECleverTapResourceFlow::Earned, TEXT("Gems"), 100.f, TEXT("DailyReward"), TEXT("LoginBonus"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Resource fired: flow=Earned currency=Gems amount=100 category=DailyReward item=LoginBonus"));
+
+	UCleverTapGameEvents::RecordLevelEvent(
+		ECleverTapLevelStatus::Completed, TEXT("World1"), TEXT("Level3"), TEXT(""), 4200);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Level fired: status=Completed world=World1 level=Level3 score=4200"));
+
+	UCleverTapGameEvents::RecordGameEvent(TEXT("Chest:Opened:Rare"), 1.f);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Design fired: event=Chest:Opened:Rare value=1.0"));
+
+	UCleverTapGameEvents::RecordAdEvent(
+		ECleverTapAdEvent::RewardGranted, ECleverTapAdFormat::RewardedVideo, TEXT("PostLevel"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Ad fired: action=RewardGranted format=RewardedVideo placement=PostLevel"));
+
+	UCleverTapGameEvents::RecordErrorEvent(
+		ECleverTapErrorSeverity::Low, TEXT("Inventory failed to load"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Error fired: severity=Low description=Inventory failed to load"));
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 5 typed game events sent."));
 }
 
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()
