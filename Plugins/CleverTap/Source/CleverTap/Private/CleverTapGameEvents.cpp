@@ -43,12 +43,14 @@ void UCleverTapGameEvents::RecordLevelEvent(
 {
 	auto* CT = GetCT(); if (!CT) return;
 	static const TCHAR* StatusStr[] = { TEXT("Started"), TEXT("Completed"), TEXT("Failed") };
+	const uint8 StatusIdx = static_cast<uint8>(Status);
+	if (StatusIdx >= UE_ARRAY_COUNT(StatusStr)) return;
 	FCleverTapProperties Props;
-	Props.Map.Add(TEXT("status"), FString(StatusStr[static_cast<uint8>(Status)]));
+	Props.Map.Add(TEXT("status"), FString(StatusStr[StatusIdx]));
 	Props.Map.Add(TEXT("world"),  World);
 	if (!Level.IsEmpty()) Props.Map.Add(TEXT("level"), Level);
 	if (!Stage.IsEmpty()) Props.Map.Add(TEXT("stage"), Stage);
-	if (Score >= 0)       Props.Map.Add(TEXT("score"), Score);
+	if (Score != -1)      Props.Map.Add(TEXT("score"), Score);
 	CT->PushEventWithProperties(TEXT("GameEvent_Level"), Props);
 }
 
@@ -59,7 +61,7 @@ void UCleverTapGameEvents::RecordGameEvent(
 	auto* CT = GetCT(); if (!CT) return;
 	FCleverTapProperties Props;
 	Props.Map.Add(TEXT("event"), EventName);
-	if (Value >= 0.0f) Props.Map.Add(TEXT("value"), Value);
+	if (Value != -1.0f) Props.Map.Add(TEXT("value"), Value);
 	CT->PushEventWithProperties(TEXT("GameEvent_Design"), Props);
 }
 
@@ -71,9 +73,13 @@ void UCleverTapGameEvents::RecordAdEvent(
 	auto* CT = GetCT(); if (!CT) return;
 	static const TCHAR* ActionStr[] = { TEXT("Shown"), TEXT("Clicked"), TEXT("Skipped"), TEXT("RewardGranted") };
 	static const TCHAR* FormatStr[] = { TEXT(""), TEXT("Banner"), TEXT("Interstitial"), TEXT("RewardedVideo"), TEXT("OfferWall"), TEXT("Playable") };
+	const uint8 ActionIdx = static_cast<uint8>(Action);
+	const uint8 FormatIdx = static_cast<uint8>(Format);
+	if (ActionIdx >= UE_ARRAY_COUNT(ActionStr)) return;
+	if (FormatIdx >= UE_ARRAY_COUNT(FormatStr)) return;
 	FCleverTapProperties Props;
-	Props.Map.Add(TEXT("action"), FString(ActionStr[static_cast<uint8>(Action)]));
-	const FString Fmt = FormatStr[static_cast<uint8>(Format)];
+	Props.Map.Add(TEXT("action"), FString(ActionStr[ActionIdx]));
+	const FString Fmt = FormatStr[FormatIdx];
 	if (!Fmt.IsEmpty())       Props.Map.Add(TEXT("format"),    Fmt);
 	if (!Placement.IsEmpty()) Props.Map.Add(TEXT("placement"), Placement);
 	CT->PushEventWithProperties(TEXT("GameEvent_Ad"), Props);
@@ -85,8 +91,10 @@ void UCleverTapGameEvents::RecordErrorEvent(
 {
 	auto* CT = GetCT(); if (!CT) return;
 	static const TCHAR* SeverityStr[] = { TEXT("Low"), TEXT("Medium"), TEXT("High"), TEXT("Critical") };
+	const uint8 SeverityIdx = static_cast<uint8>(Severity);
+	if (SeverityIdx >= UE_ARRAY_COUNT(SeverityStr)) return;
 	FCleverTapProperties Props;
-	Props.Map.Add(TEXT("severity"),    FString(SeverityStr[static_cast<uint8>(Severity)]));
+	Props.Map.Add(TEXT("severity"),    FString(SeverityStr[SeverityIdx]));
 	Props.Map.Add(TEXT("description"), Description);
 	CT->PushEventWithProperties(TEXT("GameEvent_Error"), Props);
 }
