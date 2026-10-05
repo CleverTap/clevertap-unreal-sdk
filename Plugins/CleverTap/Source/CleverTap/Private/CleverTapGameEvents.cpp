@@ -98,6 +98,41 @@ void UCleverTapGameEvents::RecordErrorEvent(
 	Props.Map.Add(TEXT("description"), Description);
 	CT->PushEventWithProperties(TEXT("GameEvent_Error"), Props);
 }
+
+
+void UCleverTapGameEvents::RecordSubscriptionEvent(
+	ECleverTapSubscriptionStatus Status,
+	const FString& ProductId,
+	float Price,
+	const FString& Currency,
+	ECleverTapSubscriptionPeriod Period)
+{
+	auto* CT = GetCT(); if (!CT) return;
+
+	static const TCHAR* StatusStr[] = {
+		TEXT("TrialStarted"), TEXT("PaidConversion"), TEXT("Renewed"), TEXT("Cancelled"),
+		TEXT("BillingFailed"), TEXT("Expired"), TEXT("Restored"), TEXT("Refunded")
+	};
+	static const TCHAR* PeriodStr[] = { TEXT(""), TEXT("Weekly"), TEXT("Monthly"), TEXT("Yearly") };
+
+	const uint8 StatusIdx = static_cast<uint8>(Status);
+	const uint8 PeriodIdx = static_cast<uint8>(Period);
+	if (StatusIdx >= UE_ARRAY_COUNT(StatusStr)) return;
+	if (PeriodIdx >= UE_ARRAY_COUNT(PeriodStr)) return;
+
+	FCleverTapProperties Props;
+	Props.Map.Add(TEXT("status"),     FString(StatusStr[StatusIdx]));
+	Props.Map.Add(TEXT("product_id"), ProductId);
+	if (Price != -1.0f)      Props.Map.Add(TEXT("price"),    Price);
+	if (!Currency.IsEmpty()) Props.Map.Add(TEXT("currency"), Currency);
+	const FString PeriodVal = PeriodStr[PeriodIdx];
+	if (!PeriodVal.IsEmpty()) Props.Map.Add(TEXT("period"),  PeriodVal);
+
+	CT->PushEventWithProperties(TEXT("GameEvent_Subscription"), Props);
+}
+
+
+
 //
 //  Created by Nilesh Sharma on 28/09/26.
 //  Copyright © 2026 Epic Games, Inc. All rights reserved.

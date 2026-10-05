@@ -51,16 +51,43 @@ enum class ECleverTapErrorSeverity : uint8
 	Critical UMETA(DisplayName = "Critical"),
 };
 
+UENUM(BlueprintType)
+enum class ECleverTapSubscriptionStatus : uint8
+{
+	TrialStarted   UMETA(DisplayName = "TrialStarted"),
+	PaidConversion UMETA(DisplayName = "PaidConversion"),
+	Renewed        UMETA(DisplayName = "Renewed"),
+	Cancelled      UMETA(DisplayName = "Cancelled"),
+	BillingFailed  UMETA(DisplayName = "BillingFailed"),
+	Expired        UMETA(DisplayName = "Expired"),
+	Restored       UMETA(DisplayName = "Restored"),
+	Refunded       UMETA(DisplayName = "Refunded"),
+};
+
+UENUM(BlueprintType)
+enum class ECleverTapSubscriptionPeriod : uint8
+{
+	None    UMETA(DisplayName = "None (omit)"),
+	Weekly  UMETA(DisplayName = "Weekly"),
+	Monthly UMETA(DisplayName = "Monthly"),
+	Yearly  UMETA(DisplayName = "Yearly"),
+};
+
+
+
 /**
  * Typed game-analytics helpers
  * All functions are available from both C++ and Blueprint (CleverTap|Gaming category).
  *
  * Optional parameters:
- *   Level/Stage/Placement — pass empty string TEXT("") to omit from the event
- *   Score                 — pass -1 to omit
- *   Value                 — pass -1.0f to omit
- *   Format                — pass ECleverTapAdFormat::None to omit
+ *   Level/Stage/Placement/Currency — pass empty string TEXT("") to omit from the event
+ *   Score                          — pass -1 to omit
+ *   Value/Price                    — pass -1.0f to omit
+ *   Format                         — pass ECleverTapAdFormat::None to omit
+ *   Period                         — pass ECleverTapSubscriptionPeriod::None to omit
  */
+
+
 UCLASS()
 class CLEVERTAP_API UCleverTapGameEvents : public UBlueprintFunctionLibrary
 {
@@ -98,6 +125,14 @@ public:
 	static void RecordErrorEvent(
 		ECleverTapErrorSeverity Severity,
 		const FString& Description);
+	
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	static void RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus Status,
+		const FString& ProductId,
+		float Price,
+		const FString& Currency,
+		ECleverTapSubscriptionPeriod Period);
 };
 
 

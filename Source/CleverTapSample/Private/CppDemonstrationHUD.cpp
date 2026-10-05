@@ -409,6 +409,47 @@ void ACppDemonstrationHUD::CallTypedEvents() // static
 	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 5 typed game events sent."));
 }
 
+void ACppDemonstrationHUD::CallSubscriptionEvents() // static
+{
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Firing 8 subscription lifecycle events..."));
+
+	const FString Product = TEXT("com.clevertap.premium_monthly");
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::TrialStarted, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=TrialStarted period=Monthly"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::PaidConversion, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=PaidConversion price=4.99 currency=USD"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Renewed, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Renewed price=4.99 currency=USD"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::BillingFailed, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=BillingFailed"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Cancelled, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Cancelled"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Expired, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Expired"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Restored, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Restored period=Monthly"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Refunded, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Refunded price=4.99 currency=USD"));
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 8 subscription events sent."));
+}
+
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()
 {
 	// Localize the names and descriptions of the android notification channels & groups
