@@ -6,6 +6,7 @@
 #include "CleverTapSubsystem.h"
 #include "CleverTapInstance.h"
 #include "CleverTapProperties.h"
+#include "CleverTapLog.h"
 #include "Engine.h"
 
 namespace
@@ -108,6 +109,11 @@ void UCleverTapGameEvents::RecordSubscriptionEvent(
 	ECleverTapSubscriptionPeriod Period)
 {
 	auto* CT = GetCT(); if (!CT) return;
+	if (ProductId.IsEmpty())
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("RecordSubscriptionEvent: ProductId is empty; event not recorded."));
+		return;
+	}
 
 	static const TCHAR* StatusStr[] = {
 		TEXT("TrialStarted"), TEXT("PaidConversion"), TEXT("Renewed"), TEXT("Cancelled"),

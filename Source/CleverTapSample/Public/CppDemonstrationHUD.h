@@ -68,6 +68,9 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
 	static void CallSubscriptionEvents();
 
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	static void CallSetLocale();
+
 	void LocalizeAndroidNotificationChannels();
 
 private:

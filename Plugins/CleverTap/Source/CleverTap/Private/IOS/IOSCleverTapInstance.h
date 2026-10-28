@@ -97,6 +97,7 @@ public:
   void SetOffline(bool bIsOffline) override;
   void SetOptOut(bool bIsOptingOut) override;
   void SetNetworkInformationRecording(bool bEnableCollection) override;
+  void SetLocale(const FString& Locale) override;
 
   bool
   LocalizeAndroidNotificationChannel(const FString &ChannelID,

@@ -1049,6 +1049,21 @@ void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bo
 	HandleException(Env, "enableDeviceNetworkInfoReporting()");
 }
 
+void SetLocale(JNIEnv* Env, jobject CleverTapInstance, const FString& Locale)
+{
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	// SDK 8.4.1 takes a String (not java.util.Locale) and stores it via DeviceInfo.setCustomLocale.
+	static jmethodID SetMethod = GetMethodID(Env, CleverTapAPIClass, "setLocale", "(Ljava/lang/String;)V");
+	if (!SetMethod)
+	{
+		return;
+	}
+	jstring JavaLocale = Env->NewStringUTF(TCHAR_TO_UTF8(*Locale));
+	Env->CallVoidMethod(CleverTapInstance, SetMethod, JavaLocale);
+	HandleException(Env, "setLocale()");
+	Env->DeleteLocalRef(JavaLocale);
+}
+
 void EnableIntentNotifications(JNIEnv* Env)
 {
 	static jclass BridgeClass = GetBridgeClass(Env);

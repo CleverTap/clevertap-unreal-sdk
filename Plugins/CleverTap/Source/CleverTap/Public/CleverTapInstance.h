@@ -706,6 +706,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetNetworkInformationRecording(bool bEnableCollection)
 		PURE_VIRTUAL(UCleverTapInstance::SetNetworkInformationRecording, ;);
+
+	/**
+	 * Overrides the locale CleverTap reports for this user (by default the device's OS locale), so campaigns
+	 *  are sent in the language the player chose in-game rather than the phone's language. Use the
+	 *  language_COUNTRY format, e.g. "fr_FR". Call it whenever the player changes language. Empty strings are ignored.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	virtual void SetLocale(const FString& Locale) PURE_VIRTUAL(UCleverTapInstance::SetLocale, ;);
 	
 	
 	// -------------------------------------------------------------------------

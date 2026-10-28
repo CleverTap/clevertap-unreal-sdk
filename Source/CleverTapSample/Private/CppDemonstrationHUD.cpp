@@ -450,6 +450,24 @@ void ACppDemonstrationHUD::CallSubscriptionEvents() // static
 	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 8 subscription events sent."));
 }
 
+void ACppDemonstrationHUD::CallSetLocale() // static
+{
+	// Toggles each tap; the follow-up event makes the locale change visible on the dashboard,
+	// since SetLocale itself has no on-screen effect.
+	static bool bUseFrench = true;
+	const FString Locale = bUseFrench ? TEXT("fr_FR") : TEXT("en_US");
+	bUseFrench = !bUseFrench;
+
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.SetLocale(Locale);
+
+	FCleverTapProperties Props;
+	Props.Map.Add(TEXT("locale_set"), Locale);
+	CleverTapInst.PushEventWithProperties(TEXT("Locale Test"), Props);
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[Locale] SetLocale(%s) called, 'Locale Test' event sent"), *Locale);
+}
+
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()
 {
 	// Localize the names and descriptions of the android notification channels & groups

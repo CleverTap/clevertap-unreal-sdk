@@ -480,6 +480,17 @@ void UAndroidCleverTapInstance::SetNetworkInformationRecording(bool bEnableColle
 	JNI::EnableDeviceNetworkInfoReporting(JNI::GetJNIEnv(), JavaCleverTapInstance, bEnableCollection);
 }
 
+void UAndroidCleverTapInstance::SetLocale(const FString& Locale)
+{
+	if (Locale.IsEmpty())
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("SetLocale: empty locale ignored"));
+		return;
+	}
+	UE_LOG(LogCleverTap, Log, TEXT("SetLocale(%s)"), *Locale);
+	JNI::SetLocale(JNI::GetJNIEnv(), JavaCleverTapInstance, Locale);
+}
+
 void UAndroidCleverTapInstance::BroadcastOnOpenUrl(const FString& Url)
 {
 	UE_LOG(LogCleverTap, Log, TEXT("OnOpenUrl(%s)"), *Url);
