@@ -1052,7 +1052,8 @@ void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bo
 void SetLocale(JNIEnv* Env, jobject CleverTapInstance, const FString& Locale)
 {
 	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
-	// SDK 8.4.1 takes a String (not java.util.Locale) and stores it via DeviceInfo.setCustomLocale.
+	// SDK 8.4.1+ takes a String (not java.util.Locale) and stores it in memory via DeviceInfo.setCustomLocale
+	// (not persisted, so callers must set it again on every launch).
 	static jmethodID SetMethod = GetMethodID(Env, CleverTapAPIClass, "setLocale", "(Ljava/lang/String;)V");
 	if (!SetMethod)
 	{

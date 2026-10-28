@@ -1,6 +1,20 @@
 # Changelog
 ==========
 
+## [1.4.0] - 2026-10-28
+
+### Updated
+- Android CleverTap SDK upgraded from **8.4.1** to **8.5.0** ([changelog](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)).
+- iOS CleverTap SDK upgraded from **7.8.1** to **7.9.0** ([changelog](https://github.com/CleverTap/clevertap-ios-sdk/blob/master/CHANGELOG.md#version-790-october-15-2026)).
+
+### Added
+- `UCleverTapGameEvents` — typed gameplay event helpers that wrap `PushEventWithProperties`: `RecordResourceEvent`, `RecordLevelEvent`, `RecordGameEvent`, `RecordAdEvent` and `RecordErrorEvent`, sent as `GameEvent_Resource`, `GameEvent_Level`, `GameEvent_Design`, `GameEvent_Ad` and `GameEvent_Error`. Callable from C++ and Blueprint (`CleverTap|Gaming`). These are custom events: they count toward your custom event limit and CleverTap doesn't treat them specially.
+- `UCleverTapGameEvents::RecordSubscriptionEvent()` — typed subscription lifecycle events (`TrialStarted`, `PaidConversion`, `Renewed`, `Cancelled`, `BillingFailed`, `Expired`, `Restored`, `Refunded`) with optional price, currency and period, sent as `GameEvent_Subscription` (a custom event; it doesn't record revenue like a Charged event). Call it from your own store/IAP callbacks. An empty `ProductId` drops the event and logs a warning.
+- `SetLocale(Locale)` — overrides the locale CleverTap reports for the user (default: the device locale), e.g. `"fr_FR"`, so campaigns use the language the player picked in-game. The override is not persisted by the native SDKs: call it at every launch with the saved language and again on each change. Empty strings are ignored.
+
+### Fixed — Android
+- **Push templates not rendered with manual initialization**: `PushTemplateNotificationHandler` was only registered when `bAutoInitializeSharedInstance=True` (the default is `False`), so games that initialize CleverTap manually received rich template pushes as plain notifications. The handler is now always registered in `GameApplication.onCreate()`.
+
 ## [1.3.0] - 2026-08-12
 
 ### Updated

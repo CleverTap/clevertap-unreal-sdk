@@ -374,7 +374,7 @@
 			<true>
 				<!-- The default version of clevertap-android-sdk to use is specified here. -->
 				<insert>
-					dependencies { implementation "com.clevertap.android:clevertap-android-sdk:8.4.1" }
+					dependencies { implementation "com.clevertap.android:clevertap-android-sdk:8.5.0" }
 </insert>
 				<!-- Check the latest sdk version at
 					 https://github.com/CleverTap/clevertap-android-sdk/blob/master/README.md#-installation
@@ -467,12 +467,15 @@
 	</gameApplicationAttachBaseContextAdditions>
 
 	<gameApplicationOnCreateAdditions>
+		<!-- Static handler: registered regardless of CTAutoInit so push templates render for manually-initialised games too. -->
+		<insert>
+			com.clevertap.android.sdk.CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
+		</insert>
 		<if condition="CTAutoInit">
 			<true>
 				<insert>
 					com.clevertap.android.sdk.CleverTapAPI CleverTapAPI = com.clevertap.android.sdk.CleverTapAPI.getDefaultInstance(getApplicationContext());
 					CleverTapAPI.suspendInAppNotifications();
-					CleverTapAPI.setNotificationHandler((com.clevertap.android.sdk.interfaces.NotificationHandler)new com.clevertap.android.pushtemplates.PushTemplateNotificationHandler());
 				</insert>
 			</true>
 		</if>

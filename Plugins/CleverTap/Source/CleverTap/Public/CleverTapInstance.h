@@ -710,7 +710,11 @@ public:
 	/**
 	 * Overrides the locale CleverTap reports for this user (by default the device's OS locale), so campaigns
 	 *  are sent in the language the player chose in-game rather than the phone's language. Use the
-	 *  language_COUNTRY format, e.g. "fr_FR". Call it whenever the player changes language. Empty strings are ignored.
+	 *  language_COUNTRY format, e.g. "fr_FR". Empty strings are ignored.
+	 *
+	 * The override is held in memory only (both native SDKs); after a restart CleverTap falls back to the device
+	 *  locale. Call it at every launch with the player's saved language (right after the SDK is initialized,
+	 *  before recording events) and again whenever the player changes language.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	virtual void SetLocale(const FString& Locale) PURE_VIRTUAL(UCleverTapInstance::SetLocale, ;);

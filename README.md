@@ -445,6 +445,21 @@ ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>
 CleverTap.Unmute();
 ```
 
+## SDK Control — SetLocale
+
+By default CleverTap reports the device's OS locale for the user, and campaigns use it to pick the language of push and in-app content. If players can choose a language in-game, call `SetLocale()` with that language so campaigns match the game instead of the phone. Use the `language_COUNTRY` format, e.g. `"fr_FR"`. Empty strings are ignored.
+
+The override is **held in memory only** by both native SDKs; after a restart CleverTap falls back to the device locale. Call `SetLocale()` at every launch with the player's saved language (right after the SDK is initialized, before recording events), and again whenever the player changes language.
+
+```cpp
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+
+// At startup, with the language your game saved, and on every language change
+CleverTap.SetLocale(TEXT("fr_FR"));
+```
+
+Exposed in Blueprint under the `CleverTap|System` category.
+
 ## Product Experiences (Variables)
 
 Product Experiences (PE) Variables let you define named, typed variables in your game code and override their values remotely from the CleverTap dashboard — without a code change or resubmission. Typical uses include tuning gameplay parameters, running A/B tests, and toggling features.
@@ -684,3 +699,79 @@ CleverTap.PushChargedEvent(ChargeDetails, Items);
 
 #### Blueprint
 ![Calling PushChargedEvent in Blueprint](/Docs/Images/BP_PushChargedEvent.png)
+
+## Game Events
+
+`UCleverTapGameEvents` provides typed helpers for common gameplay events. Each one wraps `PushEventWithProperties` with a fixed event name and property set, so events are consistent across games and group together in the CleverTap dashboard (all event names start with `GameEvent_`). Optional parameters are left out of the event when you pass their placeholder value (listed with each helper). The helpers are static, callable from C++ and Blueprint (category `CleverTap|Gaming`), and need no reference to the CleverTap instance. Calls made before the SDK is initialized are ignored.
+
+> **Note:** These are custom events, not CleverTap system events. They work like any event you record yourself with `PushEvent` / `PushEventWithProperties`. They show up with your other custom events in the dashboard and count toward your custom event limit. CleverTap doesn't treat them specially: for example, a subscription event doesn't record revenue the way a Charged event (`PushChargedEvent`) does. You can use them in segments, campaigns and reports like any other event.
+
+Include the header in C++:
+```cpp
+#include "CleverTapGameEvents.h"
+```
+
+#### Record a Resource Event
+
+Currency or items earned or spent. Sent as `GameEvent_Resource` with properties `flow`, `currency`, `amount`, `category`, `item`. All properties are always sent.
+
+```cpp
+UCleverTapGameEvents::RecordResourceEvent(
+    ECleverTapResourceFlow::Earned, TEXT("Gems"), 100.f, TEXT("DailyReward"), TEXT("LoginBonus"));
+UCleverTapGameEvents::RecordResourceEvent(
+    ECleverTapResourceFlow::Spent, TEXT("Coins"), 250.f, TEXT("Shop"), TEXT("SpeedBoost"));
+```
+
+#### Record a Level Event
+
+Level progress: `Started`, `Completed` or `Failed`. Sent as `GameEvent_Level` with `status`, `world` and optional `level`, `stage`, `score`. Pass `TEXT("")` to omit `Level` / `Stage`, and `-1` to omit `Score`.
+
+```cpp
+UCleverTapGameEvents::RecordLevelEvent(
+    ECleverTapLevelStatus::Started, TEXT("World1"), TEXT("Level3"), TEXT(""), -1);
+UCleverTapGameEvents::RecordLevelEvent(
+    ECleverTapLevelStatus::Completed, TEXT("World1"), TEXT("Level3"), TEXT(""), 4200);
+```
+
+#### Record a Custom Game Event
+
+Any other gameplay moment, with an optional numeric value. Sent as `GameEvent_Design` with `event` and optional `value` (pass `-1.0f` to omit). A `Category:Action:Detail` naming style keeps these easy to filter.
+
+```cpp
+UCleverTapGameEvents::RecordGameEvent(TEXT("Chest:Opened:Rare"), 1.f);
+```
+
+#### Record an Ad Event
+
+Ad interactions: `Shown`, `Clicked`, `Skipped`, `RewardGranted`. Sent as `GameEvent_Ad` with `action` and optional `format` (`Banner`, `Interstitial`, `RewardedVideo`, `OfferWall`, `Playable`; pass `ECleverTapAdFormat::None` to omit) and `placement` (pass `TEXT("")` to omit).
+
+```cpp
+UCleverTapGameEvents::RecordAdEvent(
+    ECleverTapAdEvent::RewardGranted, ECleverTapAdFormat::RewardedVideo, TEXT("PostLevel"));
+```
+
+#### Record an Error Event
+
+In-game errors, with severity `Low`, `Medium`, `High` or `Critical`. Sent as `GameEvent_Error` with `severity` and `description`.
+
+```cpp
+UCleverTapGameEvents::RecordErrorEvent(ECleverTapErrorSeverity::Low, TEXT("Inventory failed to load"));
+```
+
+#### Record a Subscription Event
+
+Subscription lifecycle changes: `TrialStarted`, `PaidConversion`, `Renewed`, `Cancelled`, `BillingFailed`, `Expired`, `Restored`, `Refunded`. Sent as `GameEvent_Subscription` with `status`, `product_id` and optional `price` (pass `-1.0f` to omit), `currency` (pass `TEXT("")` to omit) and `period` (`Weekly`, `Monthly`, `Yearly`; pass `ECleverTapSubscriptionPeriod::None` to omit).
+
+`ProductId` is required: an empty value drops the event and logs a `LogCleverTap` warning.
+
+The SDK does not listen to the App Store or Google Play itself. Call this from your own store / IAP callbacks when the subscription state changes.
+
+```cpp
+UCleverTapGameEvents::RecordSubscriptionEvent(
+    ECleverTapSubscriptionStatus::PaidConversion, TEXT("com.mygame.premium_monthly"),
+    4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::Monthly);
+
+UCleverTapGameEvents::RecordSubscriptionEvent(
+    ECleverTapSubscriptionStatus::Cancelled, TEXT("com.mygame.premium_monthly"),
+    -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+```
