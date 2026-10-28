@@ -80,11 +80,17 @@ enum class ECleverTapSubscriptionPeriod : uint8
  * All functions are available from both C++ and Blueprint (CleverTap|Gaming category).
  *
  * Optional parameters:
- *   Level/Stage/Placement/Currency — pass empty string TEXT("") to omit from the event
- *   Score                          — pass -1 to omit
- *   Value/Price                    — pass -1.0f to omit
- *   Format                         — pass ECleverTapAdFormat::None to omit
- *   Period                         — pass ECleverTapSubscriptionPeriod::None to omit
+ *   RecordLevelEvent        Level/Stage — pass empty string TEXT("") to omit from the event
+ *                           Score       — pass -1 to omit
+ *   RecordGameEvent         Value       — pass -1.0f to omit
+ *   RecordAdEvent           Format      — pass ECleverTapAdFormat::None to omit
+ *                           Placement   — pass TEXT("") to omit
+ *   RecordSubscriptionEvent Price       — pass -1.0f to omit
+ *                           Currency    — pass TEXT("") to omit
+ *                           Period      — pass ECleverTapSubscriptionPeriod::None to omit
+ *
+ * All other parameters are required and always sent, including RecordResourceEvent's Currency
+ *  (a resource event is meaningless without it) and RecordSubscriptionEvent's ProductId.
  */
 
 

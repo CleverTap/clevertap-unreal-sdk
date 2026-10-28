@@ -13,7 +13,7 @@
 - `SetLocale(Locale)` — overrides the locale CleverTap reports for the user (default: the device locale), e.g. `"fr_FR"`, so campaigns use the language the player picked in-game. The override is not persisted by the native SDKs: call it at every launch with the saved language and again on each change. Empty strings are ignored.
 
 ### Fixed — Android
-- **Push templates not rendered with manual initialization**: `PushTemplateNotificationHandler` was only registered when `bAutoInitializeSharedInstance=True` (the default is `False`), so games that initialize CleverTap manually received rich template pushes as plain notifications. The handler is now always registered in `GameApplication.onCreate()`.
+- **Push templates not rendered with manual initialization**: `PushTemplateNotificationHandler` was only registered when the Android build read `bAutoInitializeSharedInstance=True` from `DefaultEngine.ini`. The C++ default is `True`, but the Android packaging step treats a missing key as `False`, so games that set it to `False` (manual initialization) or left it out of the INI received rich template pushes as plain notifications. The handler is now always registered in `GameApplication.onCreate()`.
 
 ## [1.3.0] - 2026-08-12
 
