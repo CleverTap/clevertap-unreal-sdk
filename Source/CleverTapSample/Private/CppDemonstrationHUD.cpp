@@ -13,6 +13,7 @@
 #include "ViewModels/CppPrivacyTabViewModel.h"
 #include "ViewModels/CppProfileTabViewModel.h"
 #include "ViewModels/CppUserProfileViewModel.h"
+#include "CleverTapGameEvents.h"
 
 namespace {
 const FString SAVE_GAME_SLOT_NAME = TEXT("CppSaveState");
@@ -380,6 +381,91 @@ void ACppDemonstrationHUD::EndDisplay_MainMenu()
 
 	ActiveView->RemoveFromViewport();
 	ActiveView = nullptr;
+}
+
+void ACppDemonstrationHUD::CallTypedEvents() // static
+{
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Firing 5 typed game events..."));
+
+	UCleverTapGameEvents::RecordResourceEvent(
+		ECleverTapResourceFlow::Earned, TEXT("Gems"), 100.f, TEXT("DailyReward"), TEXT("LoginBonus"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Resource fired: flow=Earned currency=Gems amount=100 category=DailyReward item=LoginBonus"));
+
+	UCleverTapGameEvents::RecordLevelEvent(
+		ECleverTapLevelStatus::Completed, TEXT("World1"), TEXT("Level3"), TEXT(""), 4200);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Level fired: status=Completed world=World1 level=Level3 score=4200"));
+
+	UCleverTapGameEvents::RecordGameEvent(TEXT("Chest:Opened:Rare"), 1.f);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Design fired: event=Chest:Opened:Rare value=1.0"));
+
+	UCleverTapGameEvents::RecordAdEvent(
+		ECleverTapAdEvent::RewardGranted, ECleverTapAdFormat::RewardedVideo, TEXT("PostLevel"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Ad fired: action=RewardGranted format=RewardedVideo placement=PostLevel"));
+
+	UCleverTapGameEvents::RecordErrorEvent(
+		ECleverTapErrorSeverity::Low, TEXT("Inventory failed to load"));
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] GameEvent_Error fired: severity=Low description=Inventory failed to load"));
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 5 typed game events sent."));
+}
+
+void ACppDemonstrationHUD::CallSubscriptionEvents() // static
+{
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Firing 8 subscription lifecycle events..."));
+
+	const FString Product = TEXT("com.clevertap.premium_monthly");
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::TrialStarted, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=TrialStarted period=Monthly"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::PaidConversion, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=PaidConversion price=4.99 currency=USD"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Renewed, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Renewed price=4.99 currency=USD"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::BillingFailed, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=BillingFailed"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Cancelled, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Cancelled"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Expired, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Expired"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Restored, Product, -1.0f, TEXT(""), ECleverTapSubscriptionPeriod::Monthly);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Restored period=Monthly"));
+
+	UCleverTapGameEvents::RecordSubscriptionEvent(
+		ECleverTapSubscriptionStatus::Refunded, Product, 4.99f, TEXT("USD"), ECleverTapSubscriptionPeriod::None);
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] Subscription fired: status=Refunded price=4.99 currency=USD"));
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[GameEvents] All 8 subscription events sent."));
+}
+
+void ACppDemonstrationHUD::CallSetLocale() // static
+{
+	// Toggles each tap; the follow-up event makes the locale change visible on the dashboard,
+	// since SetLocale itself has no on-screen effect.
+	static bool bUseFrench = true;
+	const FString Locale = bUseFrench ? TEXT("fr_FR") : TEXT("en_US");
+	bUseFrench = !bUseFrench;
+
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.SetLocale(Locale);
+
+	FCleverTapProperties Props;
+	Props.Map.Add(TEXT("locale_set"), Locale);
+	CleverTapInst.PushEventWithProperties(TEXT("Locale Test"), Props);
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[Locale] SetLocale(%s) called, 'Locale Test' event sent"), *Locale);
 }
 
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()

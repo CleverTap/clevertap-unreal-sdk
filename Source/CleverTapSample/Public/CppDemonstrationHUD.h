@@ -61,6 +61,15 @@ private:
 
 	void BeginDisplay_MainMenu();
 	void EndDisplay_MainMenu();
+	
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	static void CallTypedEvents();
+	
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Gaming")
+	static void CallSubscriptionEvents();
+
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
+	static void CallSetLocale();
 
 	void LocalizeAndroidNotificationChannels();
 

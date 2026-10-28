@@ -70,6 +70,7 @@ public:
 	void SetOffline(bool bIsOffline) override;
 	void SetOptOut(bool bIsOptingOut) override;
 	void SetNetworkInformationRecording(bool bEnableCollection) override;
+	void SetLocale(const FString& Locale) override;
 	
 	void DefineStringVariable(const FString& Name, const FString& DefaultValue) override;
 	void DefineIntVariable(const FString& Name, int32 DefaultValue) override;

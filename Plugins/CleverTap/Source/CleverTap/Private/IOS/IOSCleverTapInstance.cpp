@@ -1174,6 +1174,19 @@ void UIOSCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollectio
 	[NativeInstance enableDeviceNetworkInfoReporting:bEnableCollection ? YES : NO];
 }
 
+void UIOSCleverTapInstance::SetLocale(const FString& Locale)
+{
+	check(NativeInstance != nil);
+	// Android ignores empty locales natively; iOS would wrap "" in an NSLocale, so guard here to match.
+	if (Locale.IsEmpty())
+	{
+		UE_LOG(LogCleverTap, Warning, TEXT("SetLocale: empty locale ignored"));
+		return;
+	}
+	UE_LOG(LogCleverTap, Log, TEXT("SetLocale(%s)"), *Locale);
+	[NativeInstance setLocale:[NSLocale localeWithLocaleIdentifier:Locale.GetNSString()]];
+}
+
 bool UIOSCleverTapInstance::LocalizeAndroidNotificationChannel(
 	const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription)
 {

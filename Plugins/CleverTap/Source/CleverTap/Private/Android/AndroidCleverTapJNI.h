@@ -72,6 +72,7 @@ void DismissPipInApp(JNIEnv* Env, jobject CleverTapInstance);
 void SetOffline(JNIEnv* Env, jobject CleverTapInstance, bool bIsOffline);
 void SetOptOut(JNIEnv* Env, jobject CleverTapInstance, bool bIsOptingOut);
 void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bool bEnableCollection);
+void SetLocale(JNIEnv* Env, jobject CleverTapInstance, const FString& Locale);
 
 void EnableIntentNotifications(JNIEnv* Env);
 

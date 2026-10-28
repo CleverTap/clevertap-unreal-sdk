@@ -179,6 +179,11 @@ void UNullCleverTapInstance::SetNetworkInformationRecording(bool bEnableCollecti
 	CleverTapSDK::Ignore(bEnableCollection);
 }
 
+void UNullCleverTapInstance::SetLocale(const FString& Locale)
+{
+	CleverTapSDK::Ignore(Locale);
+}
+
 void UNullCleverTapInstance::DefineStringVariable(const FString& Name, const FString& DefaultValue)
 	{ CleverTapSDK::Ignore(Name, DefaultValue); }
 
