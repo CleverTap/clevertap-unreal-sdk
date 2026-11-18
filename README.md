@@ -599,6 +599,25 @@ CleverTap.OnUserLogin(Profile);
 #### Blueprint
 ![Calling OnUserLogin in Blueprint](/Docs/Images/BP_OnUserLogin.png)
 
+#### Log in with your own CleverTap ID
+
+By default CleverTap creates its own ID for each user profile. To use your own ID instead (for example your player account ID), set `bUseCustomCleverTapId=True` in `Config/DefaultEngine.ini`, rebuild the app, and pass the ID when the user logs in:
+
+```ini
+[/Script/CleverTap.CleverTapConfig]
+bUseCustomCleverTapId=True
+```
+
+```cpp
+FCleverTapProperties Profile;
+Profile.Add(TEXT("Identity"), TEXT("player_123"));
+
+ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.OnUserLoginWithCleverTapId(Profile, TEXT("player_123")); // or CleverTap.OnUserLogin(Profile, TEXT("player_123"))
+```
+
+The setting is applied at build time (`CLEVERTAP_USE_CUSTOM_ID` in the AndroidManifest.xml, `CleverTapUseCustomId` in the iOS Info.plist). Without it, the native SDKs ignore the ID and CleverTap keeps creating its own. There is no way to change the CleverTap ID except at login (or when initializing the SDK with `InitializeSharedInstance(CleverTapId)`, if you initialize it manually). In the Editor the call does nothing. `OnUserLoginWithCleverTapId` is also available in Blueprint under `CleverTap|Profile`.
+
 ### Updating a User Profile with PushProfile()
 The user's profile can be enriched with additional properties at any time using the `PushProfile()` method. This
 supports arbitrary single value and multi-value properties like `OnUserLogin()`.
