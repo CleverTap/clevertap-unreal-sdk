@@ -3,6 +3,7 @@
 
 #include "CleverTapSample.h"
 #include "CleverTapSubsystem.h"
+#include "Containers/Ticker.h"
 #include "CppDemonstrationSaveGame.h"
 #include "Engine.h"
 #include "Kismet/GameplayStatics.h"
@@ -466,6 +467,56 @@ void ACppDemonstrationHUD::CallSetLocale() // static
 	CleverTapInst.PushEventWithProperties(TEXT("Locale Test"), Props);
 
 	UE_LOG(LogCleverTapSample, Display, TEXT("[Locale] SetLocale(%s) called, 'Locale Test' event sent"), *Locale);
+}
+
+namespace
+{
+	// On-screen counterpart of the Unity sample's toast
+	void ShowQAMessage(const FString& Message)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Message);
+		}
+	}
+}
+
+// Needs bUseCustomCleverTapId=True in DefaultEngine.ini, otherwise the native SDKs ignore the ID
+void ACppDemonstrationHUD::CallLoginWithCustomCleverTapId() // static
+{
+	const FString CleverTapId = TEXT("player_") + FGuid::NewGuid().ToString(EGuidFormats::Digits).Left(8).ToLower();
+	FCleverTapProperties Profile;
+	Profile.Map.Add(TEXT("Identity"), CleverTapId);
+
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.OnUserLoginWithCleverTapId(Profile, CleverTapId);
+
+	UE_LOG(LogCleverTapSample, Display, TEXT("[CustomId] OnUserLogin with CleverTap ID %s called"), *CleverTapId);
+	ShowQAMessage(FString::Printf(TEXT("Logging in as %s"), *CleverTapId));
+
+	// The profile switch is async, so wait before reading the ID back. The native SDKs store a custom ID with a
+	// prefix: "__h" on Android, "-h" on iOS.
+	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([CleverTapId](float) {
+		auto& Inst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+		const FString CurrentId = Inst.GetCleverTapId();
+		const bool bMatches = CurrentId == CleverTapId || CurrentId == TEXT("__h") + CleverTapId
+			|| CurrentId == TEXT("-h") + CleverTapId;
+		UE_LOG(LogCleverTapSample, Display, TEXT("[CustomId] GetCleverTapId() = %s (expected %s with optional __h/-h prefix)"),
+			*CurrentId, *CleverTapId);
+		ShowQAMessage(bMatches ? FString::Printf(TEXT("CleverTap ID is %s"), *CurrentId)
+							   : FString::Printf(TEXT("CleverTap ID is %s, not %s"), *CurrentId, *CleverTapId));
+		return false; // run once
+	}), 2.f);
+}
+
+// Send a few pushes and leave them in the tray, then tap; dismiss some and tap again
+void ACppDemonstrationHUD::CallGetActiveNotificationCount() // static
+{
+	auto& CleverTapInst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+	CleverTapInst.GetActiveNotificationCount([](int32 Count) {
+		UE_LOG(LogCleverTapSample, Display, TEXT("[NotificationCount] %d notification(s) in the tray"), Count);
+		ShowQAMessage(FString::Printf(TEXT("%d notification(s) in the tray"), Count));
+	});
 }
 
 void ACppDemonstrationHUD::LocalizeAndroidNotificationChannels()

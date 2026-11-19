@@ -370,6 +370,25 @@ bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const
 	return Success;
 }
 
+int32 GetActiveNotificationCount(JNIEnv* Env)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getActiveNotificationCount",
+		"(Landroid/content/Context;)I");
+	if (!Method)
+	{
+		return 0;
+	}
+
+	jobject Context = FAndroidApplication::GetGameActivityThis();
+	int32 Count = Env->CallStaticIntMethod(BridgeClass, Method, Context);
+	if (HandleException(Env, "getActiveNotificationCount()"))
+	{
+		Count = 0;
+	}
+	return Count;
+}
+
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
 {
 	static const char* ClassPath = "com/clevertap/android/unreal/UECleverTapListener";

@@ -1,6 +1,7 @@
 // Copyright CleverTap All Rights Reserved.
 #include "NullCleverTapInstance.h"
 
+#include "Async/Async.h"
 #include "CleverTapLog.h"
 #include "CleverTapSubsystem.h"
 #include "CleverTapUtilities.h"
@@ -143,6 +144,17 @@ bool UNullCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FStri
 {
 	CleverTapSDK::Ignore(GroupID, GroupName);
 	return false;
+}
+
+void UNullCleverTapInstance::SetApplicationIconBadgeNumber(int32 Number)
+{
+	CleverTapSDK::Ignore(Number);
+}
+
+void UNullCleverTapInstance::GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult)
+{
+	// No notification tray in the Editor; deliver 0 later on the game thread, like the device implementations.
+	AsyncTask(ENamedThreads::GameThread, [OnResult = MoveTemp(OnResult)]() { OnResult(0); });
 }
 
 void UNullCleverTapInstance::RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler)

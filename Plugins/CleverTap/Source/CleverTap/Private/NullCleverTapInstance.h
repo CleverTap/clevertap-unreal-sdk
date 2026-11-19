@@ -55,6 +55,8 @@ public:
 		const FString& ChannelID, const FText& ChannelName, const FText& ChannelDescription) override;
 
 	bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName) override;
+	void SetApplicationIconBadgeNumber(int32 Number) override;
+	void GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult) override;
 
 	void RegisterCleverTapUrlHandler(TUniqueFunction<bool(FString, ECleverTapChannel)> UrlHandler) override;
 

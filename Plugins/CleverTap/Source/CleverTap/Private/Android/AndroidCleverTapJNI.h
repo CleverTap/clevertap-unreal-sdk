@@ -23,6 +23,7 @@ bool LocalizeNotificationChannel(
 	JNIEnv* Env, const FString& ChannelId, const FText& ChannelName, const FText& Description);
 
 bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const FText& GroupName);
+int32 GetActiveNotificationCount(JNIEnv* Env);
 
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance);
 void RegisterPushPermissionResponseListener(JNIEnv* Env, jobject CleverTapInstance, jobject ListenerInstance);
