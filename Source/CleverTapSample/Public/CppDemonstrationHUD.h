@@ -71,6 +71,12 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|System")
 	static void CallSetLocale();
 
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Profile")
+	static void CallLoginWithCustomCleverTapId();
+
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	static void CallGetActiveNotificationCount();
+
 	void LocalizeAndroidNotificationChannels();
 
 private:

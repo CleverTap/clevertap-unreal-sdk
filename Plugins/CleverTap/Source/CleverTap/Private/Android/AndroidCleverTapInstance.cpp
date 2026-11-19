@@ -5,6 +5,7 @@
 #include "Android/AndroidCleverTapPropertiesJNI.h"
 #include "Android/AndroidJNIUtilities.h"
 
+#include "Async/Async.h"
 #include "CleverTapLog.h"
 #include "CleverTapLogLevel.h"
 #include "CleverTapUtilities.h"
@@ -250,6 +251,22 @@ bool UAndroidCleverTapInstance::LocalizeAndroidNotificationChannelGroup(const FS
 		UE_LOG(LogCleverTap, Error, TEXT("LocalizeAndroidNotificationChannelGroup(%s) failed. Unknown ID?"), *GroupId);
 	}
 	return Success;
+}
+
+void UAndroidCleverTapInstance::SetApplicationIconBadgeNumber(int32 Number)
+{
+	// Android has no app-side badge number API: the badge comes from channels with bShowBadge=True, and a push can
+	// set its own count with the wzrk_bc payload key.
+	UE_LOG(LogCleverTap, Log, TEXT("SetApplicationIconBadgeNumber(%d) ignored: iOS only"), Number);
+}
+
+void UAndroidCleverTapInstance::GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult)
+{
+	// NotificationManager answers synchronously; the result is still delivered later on the game thread so callers
+	// see the same behaviour as on iOS.
+	const int32 Count = JNI::GetActiveNotificationCount(JNI::GetJNIEnv());
+	UE_LOG(LogCleverTap, Log, TEXT("GetActiveNotificationCount() = %d"), Count);
+	AsyncTask(ENamedThreads::GameThread, [Count, OnResult = MoveTemp(OnResult)]() { OnResult(Count); });
 }
 
 ECleverTapPushPermissionStatus UAndroidCleverTapInstance::GetPushPermissionStatus()

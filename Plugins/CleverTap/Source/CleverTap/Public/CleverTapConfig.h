@@ -9,7 +9,7 @@
 /**
  * Configuration for CleverTap instances
  */
-UCLASS(BlueprintType, config = Engine)
+UCLASS(BlueprintType, config = Engine, defaultconfig)
 class CLEVERTAP_API UCleverTapConfig : public UObject
 {
 	GENERATED_BODY()

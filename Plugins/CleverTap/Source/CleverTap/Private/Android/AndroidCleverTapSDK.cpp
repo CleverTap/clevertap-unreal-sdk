@@ -31,6 +31,7 @@ UCleverTapInstance* FPlatformSDK::InitializeSharedInstance(const FCleverTapInsta
 	{
 		return nullptr;
 	}
+	JNI::RegisterUnrealSdk(Env, Instance);
 	return UAndroidCleverTapInstance::Create(Env, Instance);
 }
 
@@ -46,6 +47,7 @@ UCleverTapInstance* FPlatformSDK::InitializeSharedInstance(
 	{
 		return nullptr;
 	}
+	JNI::RegisterUnrealSdk(Env, Instance);
 	return UAndroidCleverTapInstance::Create(Env, Instance);
 }
 

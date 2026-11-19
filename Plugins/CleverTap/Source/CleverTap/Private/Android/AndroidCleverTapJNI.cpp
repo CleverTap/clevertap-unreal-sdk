@@ -1,5 +1,6 @@
 // Copyright CleverTap All Rights Reserved.
 #include "Android/AndroidCleverTapJNI.h"
+#include "CleverTapSdkVersion.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
 #include "Serialization/JsonReader.h"
@@ -368,6 +369,25 @@ bool LocalizeNotificationChannelGroup(JNIEnv* Env, const FString& GroupId, const
 	Env->DeleteLocalRef(JGroupId);
 	Env->DeleteLocalRef(JGroupName);
 	return Success;
+}
+
+int32 GetActiveNotificationCount(JNIEnv* Env)
+{
+	static jclass BridgeClass = GetBridgeClass(Env);
+	static jmethodID Method = GetStaticMethodID(Env, BridgeClass, "getActiveNotificationCount",
+		"(Landroid/content/Context;)I");
+	if (!Method)
+	{
+		return 0;
+	}
+
+	jobject Context = FAndroidApplication::GetGameActivityThis();
+	int32 Count = Env->CallStaticIntMethod(BridgeClass, Method, Context);
+	if (HandleException(Env, "getActiveNotificationCount()"))
+	{
+		Count = 0;
+	}
+	return Count;
 }
 
 jobject CreateUECleverTapListener(JNIEnv* Env, jobject CleverTapInstance, void* NativeInstance)
@@ -1047,6 +1067,29 @@ void EnableDeviceNetworkInfoReporting(JNIEnv* Env, jobject CleverTapInstance, bo
 	}
 	Env->CallVoidMethod(CleverTapInstance, SetMethod, bEnableCollection);
 	HandleException(Env, "enableDeviceNetworkInfoReporting()");
+}
+
+void RegisterUnrealSdk(JNIEnv* Env, jobject CleverTapInstance)
+{
+	// Name and version go into the "af" header of every request Core sends. Core keeps them in memory only,
+	// so this runs on every launch, right after the instance is obtained.
+	static jclass CleverTapAPIClass = GetCleverTapAPIClass(Env);
+	static jmethodID SetLibraryMethod = GetMethodID(Env, CleverTapAPIClass, "setLibrary", "(Ljava/lang/String;)V");
+	static jmethodID SetCustomSdkVersionMethod =
+		GetMethodID(Env, CleverTapAPIClass, "setCustomSdkVersion", "(Ljava/lang/String;I)V");
+	if (!SetLibraryMethod || !SetCustomSdkVersionMethod)
+	{
+		return;
+	}
+	jstring LibraryName = Env->NewStringUTF(CLEVERTAP_UNREAL_SDK_NAME);
+	Env->CallVoidMethod(CleverTapInstance, SetLibraryMethod, LibraryName);
+	HandleException(Env, "setLibrary()");
+	if (CLEVERTAP_UNREAL_SDK_VERSION > 0)
+	{
+		Env->CallVoidMethod(CleverTapInstance, SetCustomSdkVersionMethod, LibraryName, (jint)CLEVERTAP_UNREAL_SDK_VERSION);
+		HandleException(Env, "setCustomSdkVersion()");
+	}
+	Env->DeleteLocalRef(LibraryName);
 }
 
 void SetLocale(JNIEnv* Env, jobject CleverTapInstance, const FString& Locale)

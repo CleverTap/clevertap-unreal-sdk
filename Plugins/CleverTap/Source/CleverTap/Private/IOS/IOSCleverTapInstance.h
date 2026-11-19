@@ -105,6 +105,8 @@ public:
                                      const FText &ChannelDescription) override;
   bool LocalizeAndroidNotificationChannelGroup(const FString &GroupID,
                                                const FText &GroupName) override;
+  void SetApplicationIconBadgeNumber(int32 Number) override;
+  void GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult) override;
   // </UCleverTapInstance>
 	
 	//Product Experience

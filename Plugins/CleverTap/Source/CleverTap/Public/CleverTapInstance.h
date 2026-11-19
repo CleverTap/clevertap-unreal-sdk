@@ -54,6 +54,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVariablesFetched, bool, bSuccess)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVariablesChanged);
 
 /**
+ * Receives the result of GetActiveNotificationCount().
+ */
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnActiveNotificationCount, int32, Count);
+
+/**
  * Status of if the user has granted permission to send push notifications.
  */
 UENUM(BlueprintType)
@@ -575,6 +580,38 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
 	virtual bool LocalizeAndroidNotificationChannelGroup(const FString& GroupID, const FText& GroupName)
 		PURE_VIRTUAL(UCleverTapInstance::LocalizeAndroidNotificationChannel, return false;);
+
+	/**
+	 * iOS Only: Sets the number shown on the app icon badge. Pass 0 to clear it; negative values are ignored.
+	 *
+	 * Android has no API for an app to set a badge number. There the badge comes from notification channels with
+	 *  bShowBadge=True (configured in `Config/DefaultEngine.ini`), and a push can carry its own count with the
+	 *  `wzrk_bc` payload key, which the CleverTap Android SDK applies to the notification. Whether the launcher shows a
+	 *  number or only a dot depends on the device. No-op on non-iOS platforms.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	virtual void SetApplicationIconBadgeNumber(int32 Number)
+		PURE_VIRTUAL(UCleverTapInstance::SetApplicationIconBadgeNumber, ;);
+
+	/**
+	 * Gets the number of this app's notifications currently shown in the notification tray (Android) or Notification
+	 *  Center (iOS), e.g. to show your own app icon badge or in-game unread indicator. Notifications the user has
+	 *  opened or dismissed are not counted. On Android, group summary notifications are not counted either.
+	 *
+	 * The result is passed to OnResult later, on the game thread. It counts all of the app's notifications, not only
+	 *  CleverTap ones. Always 0 in the Editor and on unsupported platforms.
+	 */
+	virtual void GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult)
+		PURE_VIRTUAL(UCleverTapInstance::GetActiveNotificationCount, ;);
+
+	/**
+	 * Blueprint version of GetActiveNotificationCount(): the count is passed to the OnResult event.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "CleverTap|Push")
+	void GetActiveNotificationCount(const FOnActiveNotificationCount& OnResult)
+	{
+		GetActiveNotificationCount([OnResult](int32 Count) { OnResult.ExecuteIfBound(Count); });
+	}
 
 	/**
 	 * iOS Only: Register a URL handler if you would like to implement custom handling for URLs in the case of in-app

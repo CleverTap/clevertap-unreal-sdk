@@ -147,6 +147,24 @@ public class UECleverTapBridge {
         return true;
     }
 
+    public static int getActiveNotificationCount(Context context) {
+        int count = 0;
+        try {
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                for (android.service.notification.StatusBarNotification notification : nm.getActiveNotifications()) {
+                    // A group summary stands for the notifications under it, so don't count it twice
+                    if ((notification.getNotification().flags & android.app.Notification.FLAG_GROUP_SUMMARY) == 0) {
+                        count++;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            android.util.Log.e("CleverTap_UE", "getActiveNotificationCount error", t);
+        }
+        return count;
+    }
+
     public static JSONObject buildPushPrimerAlertConfig(Map<String, Object> params) {
         return CTLocalInApp.builder()
                 .setInAppType(CTLocalInApp.InAppType.ALERT)
