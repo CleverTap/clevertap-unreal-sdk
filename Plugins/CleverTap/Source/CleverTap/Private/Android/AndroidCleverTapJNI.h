@@ -15,6 +15,7 @@ void SetDefaultConfig(JNIEnv* Env, const FCleverTapInstanceConfig& Config);
 
 jobject GetDefaultInstance(JNIEnv* Env);
 jobject GetDefaultInstance(JNIEnv* Env, const FString& CleverTapId);
+void RegisterUnrealSdk(JNIEnv* Env, jobject CleverTapInstance);
 
 const char* CleverTapLogLevelJavaName(ECleverTapLogLevel LogLevel);
 bool SetDebugLevel(JNIEnv* Env, ECleverTapLogLevel Level);

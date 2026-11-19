@@ -106,6 +106,32 @@ The sound files must be included in the APK's `res/raw`; see the `AndroidSoundsD
 > - The plugin’s `CleverTap_Android_UPL.xml` reads these entries and injects the required Java into `GameApplication.onCreate()`. Errors in the `ini` syntax will cause the compilation of `GameApplication.java` to fail.
 > - The `AndroidNotificationChannelSlot` settings can only be edited directly in your project’s `Config/DefaultEngine.ini`; they are **not** available in the `Project Settings` GUI.
 
+#### App Icon Badge
+
+`bShowBadge` controls the app icon badge on Android: when it is `True`, the launcher shows a badge on the app icon while a notification from that channel is unread. Android has no API for the app to set a badge number. A push can carry its own count instead: the Android SDK reads `wzrk_bc` (badge count) and `wzrk_bi` (badge icon type) from the push payload and applies them to the notification. Whether the launcher shows a number or only a dot depends on the device.
+
+On iOS, set the number directly with `SetApplicationIconBadgeNumber()` (pass `0` to clear it). It is iOS only; on Android and in the Editor it does nothing. It is also available in Blueprint under `CleverTap|Push`.
+
+```cpp
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.SetApplicationIconBadgeNumber(3); // iOS only
+```
+
+#### Get the Number of Notifications in the Tray
+
+Use this to build your own badge, for example an unread indicator in your game's UI, or an app icon badge on Android with a launcher badge library of your choice. It returns how many of your app's notifications are currently shown in the notification tray (Android) or Notification Center (iOS). Notifications the user has opened or dismissed are not counted.
+
+```cpp
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+CleverTap.GetActiveNotificationCount([](int32 Count)
+{
+	UE_LOG(LogTemp, Display, TEXT("%d notification(s) in the tray"), Count);
+	// e.g. update your badge here
+});
+```
+
+The result arrives later, on the game thread. In Blueprint, connect an event to the `OnResult` pin of **Get Active Notification Count** (`CleverTap|Push`). It counts all of your app's notifications, not only CleverTap ones. On Android, group summary notifications are not counted. In the Editor the count is always 0. Call it again whenever you need a fresh value, for example when the app comes back to the foreground.
+
 #### Channel Localization 
 You can set the channel’s display name and description at runtime using Unreal's localization system. If you use runtime localization, there's no need to specify `Name` or `Description` in the `.ini`.
 
@@ -118,7 +144,7 @@ AndroidNotificationChannelSlot2=ID="news" | Importance=IMPORTANCE_HIGH | bShowBa
 ##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.LocalizeAndroidNotificationChannel(TEXT("general"),
         NSLOCTEXT("CleverTapSample", "ChannelName_general", "General"),
         NSLOCTEXT("CleverTapSample", "ChannelDesc_general", "General Notifications"));
@@ -143,7 +169,7 @@ Call `LocalizeAndroidNotificationChannelGroup()` early in startup and again afte
 ##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.LocalizeAndroidNotificationChannelGroup( TEXT("general"), 
         NSLOCTEXT("CleverTapSample", "ChannelGroupName_general", "General"));
 ```
@@ -323,7 +349,7 @@ After setting up your shared CleverTap instance the `OnPushNotificationClicked` 
 #### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.OnPushNotificationClicked.AddLambda([](const FCleverTapProperties& NotificationPayload)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Push notification was tapped"));
@@ -336,7 +362,7 @@ CleverTap.EnableOnPushNotificationClicked();
 
 ## In-App Notifications
 In-app notifications are initially suspended. When your callbacks are set up then call
-`ICleverTapInstance::ResumeInAppNotifications()` to begin receiving in-app notifications.
+`UCleverTapInstance::ResumeInAppNotifications()` to begin receiving in-app notifications.
 
 The payload parameters for all in-app notifications callbacks have their nested objects flattened as dot separated keys
 in the property map so that the object `{"a": { "b": 3.14 }}` would have a single entry of
@@ -350,7 +376,7 @@ parameter.
 ##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.OnInAppNotificationShown.AddLambda([](const FCleverTapProperties& Payload)
     {
 		UE_LOG(LogTemp, Log, TEXT("An in-app notification was shown: %s"), *ToDebugString(Payload));
@@ -367,7 +393,7 @@ with that button.
 ##### C++
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.OnInAppNotificationButtonClicked.AddLambda([](const FCleverTapProperties& Payload)
     {
 		UE_LOG(LogTemp, Log, TEXT("An in-app notification button clicked: %s"), *ToDebugString(Payload));
@@ -382,7 +408,7 @@ When an in-app notification is dismissed by the user this callback will be invok
 extra key/value pairs specified for the in-app notification in the CleverTap dashboard.
 ```c++
 CleverTapSys = GEngine->GetEngineSubsystem<UCleverTapSubsystem>();
-ICleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
+UCleverTapInstance& CleverTap = CleverTapSys->SharedInstance();
 CleverTap.OnInAppNotificationDismissed.AddLambda([](const FCleverTapProperties& Extras, const FCleverTapProperties& ActionExtras)
     {
 		UE_LOG(LogTemp, Log, TEXT("An in-app notification was dismissed. Extras: %s, ActionExtras: %s"),
@@ -395,10 +421,10 @@ CleverTap.OnInAppNotificationDismissed.AddLambda([](const FCleverTapProperties& 
 
 ### Suspend, Resume, and Discard In-App Notifications
 In-app notifications initially start suspended. If you like to discard any notifications that were queued while they
-were suspended then you can invoke `ICleverTapInstance::DiscardInAppNotifications()` to do so. Notifications can be
-resumed by calling `ICleverTapInstance::ResumeInAppNotifications()`. Any queued notification that happened while
+were suspended then you can invoke `UCleverTapInstance::DiscardInAppNotifications()` to do so. Notifications can be
+resumed by calling `UCleverTapInstance::ResumeInAppNotifications()`. Any queued notification that happened while
 suspended, and which has not been explicitly discarded, will be presented to the user. If you would like to suspend
-notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
+notifications again then call `UCleverTapInstance::SuspendInAppNotifications()`.
 
 #### Blueprint
 ![Calling SuspendInAppNotifications -> DiscardInAppNotifications -> ResumeInAppNotifications in Blueprint](/Docs/Images/BP_SuspendDiscardResume_InAppNotifications.png)
@@ -408,7 +434,7 @@ notifications again then call `ICleverTapInstance::SuspendInAppNotifications()`.
 Picture-in-Picture (PIP) in-app notifications can appear as floating overlays while your game is running. If you need to programmatically dismiss a visible PIP in-app — for example, when starting a cutscene or a critical gameplay sequence — call `DismissPipInApp()`. This frees the in-app display slot, allowing the next queued in-app to appear once the slot is available again.
 
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.DismissPipInApp();
 ```
 
@@ -423,7 +449,7 @@ Both methods are exposed as Blueprint nodes under the `CleverTap|Gaming` categor
 ### C++
 
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 
 // Before a boss fight / cutscene / loading screen
 CleverTap.PauseSDK();
@@ -441,7 +467,7 @@ CleverTap.ResumeSDK();
 `Unmute()` resumes event recording and network traffic after the CleverTap SDK has been muted server-side (via a dashboard mute operation). This is an Android-only feature; calling it on iOS or in the Editor is a no-op.
 
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.Unmute();
 ```
 
@@ -452,7 +478,7 @@ By default CleverTap reports the device's OS locale for the user, and campaigns 
 The override is **held in memory only** by both native SDKs; after a restart CleverTap falls back to the device locale. Call `SetLocale()` at every launch with the player's saved language (right after the SDK is initialized, before recording events), and again whenever the player changes language.
 
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 
 // At startup, with the language your game saved, and on every language change
 CleverTap.SetLocale(TEXT("fr_FR"));
@@ -555,13 +581,13 @@ For the full reference including all API signatures, dashboard workflow, and com
 `GetVariants()` returns the A/B test variants currently active for the user. Each entry in the returned array is a property map for one variant (typically containing keys like `"id"` and `"name"` as set up in the CleverTap dashboard).
 
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 
 TArray<TMap<FString, FString>> Variants = CleverTap.GetVariants();
 for (const TMap<FString, FString>& Variant : Variants)
 {
     const FString* VariantId = Variant.Find(TEXT("id"));
-    UE_LOG(LogTemp, Log, TEXT("Active variant: %s"), VariantId ? *VariantId : TEXT("(no id)"));
+    UE_LOG(LogTemp, Log, TEXT("Active variant: %s"), VariantId ? **VariantId : TEXT("(no id)"));
 }
 ```
 
@@ -575,24 +601,24 @@ initial "Anonymous" user profile with additional properties such as name, age, a
 #### C++
 ```cpp
 FCleverTapProperties Profile;
-Profile.Add(TEXT("Name"), TEXT("Jack Montana"));    // String
-Profile.Add(TEXT("Identity"), 61026032);            // String or Number
-Profile.Add(TEXT("Email"), TEXT("jack@gmail.com")); // Email string
-Profile.Add(TEXT("Phone"), TEXT("+14155551234"));   // with country code, starting with +
-Profile.Add(TEXT("Gender"), TEXT("M"));             // Can be either M or F
-Profile.Add(TEXT("DOB"), FCleverTapDate(1953, 3, 13));
+Profile.Map.Add(TEXT("Name"), TEXT("Jack Montana"));    // String
+Profile.Map.Add(TEXT("Identity"), 61026032);            // String or Number
+Profile.Map.Add(TEXT("Email"), TEXT("jack@gmail.com")); // Email string
+Profile.Map.Add(TEXT("Phone"), TEXT("+14155551234"));   // with country code, starting with +
+Profile.Map.Add(TEXT("Gender"), TEXT("M"));             // Can be either M or F
+Profile.Map.Add(TEXT("DOB"), FCleverTapDate(1953, 3, 13));
 
-Profile.Add(TEXT("MSG-email"), false);   // Disable email notifications
-Profile.Add(TEXT("MSG-push"), true);     // Enable push notifications
-Profile.Add(TEXT("MSG-sms"), false);     // Disable SMS notifications
-Profile.Add(TEXT("MSG-whatsapp"), true); // Enable WhatsApp notifications
+Profile.Map.Add(TEXT("MSG-email"), false);   // Disable email notifications
+Profile.Map.Add(TEXT("MSG-push"), true);     // Enable push notifications
+Profile.Map.Add(TEXT("MSG-sms"), false);     // Disable SMS notifications
+Profile.Map.Add(TEXT("MSG-whatsapp"), true); // Enable WhatsApp notifications
 
 TArray<FString> Stuff;
 Stuff.Add(TEXT("bag"));
 Stuff.Add(TEXT("shoes"));
-Profile.Add(TEXT("MyStuff"), Stuff); // Multi-Value array of string support
+Profile.Map.Add(TEXT("MyStuff"), Stuff); // Multi-Value array of string support
 
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.OnUserLogin(Profile);
 ```
 
@@ -610,13 +636,19 @@ bUseCustomCleverTapId=True
 
 ```cpp
 FCleverTapProperties Profile;
-Profile.Add(TEXT("Identity"), TEXT("player_123"));
+Profile.Map.Add(TEXT("Identity"), TEXT("player_123"));
 
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.OnUserLoginWithCleverTapId(Profile, TEXT("player_123")); // or CleverTap.OnUserLogin(Profile, TEXT("player_123"))
 ```
 
-The setting is applied at build time (`CLEVERTAP_USE_CUSTOM_ID` in the AndroidManifest.xml, `CleverTapUseCustomId` in the iOS Info.plist). Without it, the native SDKs ignore the ID and CleverTap keeps creating its own. There is no way to change the CleverTap ID except at login (or when initializing the SDK with `InitializeSharedInstance(CleverTapId)`, if you initialize it manually). In the Editor the call does nothing. `OnUserLoginWithCleverTapId` is also available in Blueprint under `CleverTap|Profile`.
+The setting is applied at build time (`CLEVERTAP_USE_CUSTOM_ID` in the AndroidManifest.xml, `CleverTapUseCustomId` in the iOS Info.plist). Without it, the native SDKs ignore the ID and CleverTap keeps creating its own.
+
+The ID must be 1 to 64 characters long and may contain only letters (`A-Z`, `a-z`), digits (`0-9`) and these special characters: `( ) ! : @ $ _ -`. Any other character, including `.` and spaces, makes the ID invalid (so `player@example.com` is not allowed): CleverTap then doesn't create the profile, and no events are logged against it. Check or convert your account IDs before passing them.
+
+The custom ID is only used when CleverTap creates a new profile at that login. It doesn't replace an existing CleverTap ID: if the identity already belongs to a profile, CleverTap switches to that profile and keeps its ID, and turning the setting on in an app update doesn't change the IDs of existing users.
+
+The native SDKs store it with a prefix, so `GetCleverTapId()` returns `__hplayer_123` on Android and `-hplayer_123` on iOS for the ID `player_123`. There is no way to change the CleverTap ID except at login (or when initializing the SDK with `InitializeSharedInstance(CleverTapId)`, if you initialize it manually). In the Editor the call does nothing. `OnUserLoginWithCleverTapId` is also available in Blueprint under `CleverTap|Profile`.
 
 ### Updating a User Profile with PushProfile()
 The user's profile can be enriched with additional properties at any time using the `PushProfile()` method. This
@@ -626,14 +658,14 @@ supports arbitrary single value and multi-value properties like `OnUserLogin()`.
 ```cpp
 FCleverTapProperties Profile;
 // Update an existing property
-Profile.Add(TEXT("MSG-push"), false);
+Profile.Map.Add(TEXT("MSG-push"), false);
 
 // Add new properties
-Profile.Add(TEXT("Tz"), TEXT("Asia/Kolkata"));
-Profile.Add(TEXT("Plan Type"), TEXT("Silver"));
-Profile.Add(TEXT("Score"), 100);
+Profile.Map.Add(TEXT("Tz"), TEXT("Asia/Kolkata"));
+Profile.Map.Add(TEXT("Plan Type"), TEXT("Silver"));
+Profile.Map.Add(TEXT("Score"), 100);
 
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.PushProfile(Profile);
 ```
 
@@ -646,11 +678,11 @@ arbitrary positive value.
 
 #### C++
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.IncrementValue(TEXT("Score"), 50);
 CleverTap.DecrementValue(TEXT("Score"), 100);
-CleverTap.IncrementValue(TEXT("Score"), 5.5);
-CleverTap.DecrementValue(TEXT("Score"), 3.14);
+CleverTap.IncrementValue(TEXT("Score"), 5.5f);
+CleverTap.DecrementValue(TEXT("Score"), 3.14f);
 ```
 
 #### Blueprint
@@ -662,16 +694,16 @@ User Events can be recorded any time after initialization.
 
 #### C++
 ```cpp
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 
 // event without properties
 CleverTap.PushEvent(TEXT("Event No Props"));
 
 // event with properties
 FCleverTapProperties Actions;
-Actions.Add("Product Name", "Casio Chronograph Watch");
-Actions.Add("Category", "Mens Accessories");
-Actions.Add("Price", 59.99);
+Actions.Map.Add("Product Name", "Casio Chronograph Watch");
+Actions.Map.Add("Category", "Mens Accessories");
+Actions.Map.Add("Price", 59.99);
 CleverTap.PushEvent(TEXT("Product viewed"), Actions);
 ```
 Event values can be any type that the `FCleverTapPropertyValue` variant type supports (`int32`, `int64`, `double`, `float`, `bool`, `const ANSICHAR*`, `FString`, or `FCleverTapDate`).
@@ -688,31 +720,31 @@ recorded and enriched with custom properties.
 ```cpp
 // charge event
 FCleverTapProperties ChargeDetails;
-ChargeDetails.Add("Amount", 300);
-ChargeDetails.Add("Payment Mode", "Credit card");
-ChargeDetails.Add("Charged ID", 24052014);
+ChargeDetails.Map.Add("Amount", 300);
+ChargeDetails.Map.Add("Payment Mode", "Credit card");
+ChargeDetails.Map.Add("Charged ID", 24052014);
 
 FCleverTapProperties Item1;
-Item1.Add("Product category", "books");
-Item1.Add("Book name", "The Millionaire next door");
-Item1.Add("Quantity", 1);
+Item1.Map.Add("Product category", "books");
+Item1.Map.Add("Book name", "The Millionaire next door");
+Item1.Map.Add("Quantity", 1);
 
 FCleverTapProperties Item2;
-Item2.Add("Product category", "books");
-Item2.Add("Book name", "Achieving inner zen");
-Item2.Add("Quantity", 1);
+Item2.Map.Add("Product category", "books");
+Item2.Map.Add("Book name", "Achieving inner zen");
+Item2.Map.Add("Quantity", 1);
 
 FCleverTapProperties Item3;
-Item3.Add("Product category", "books");
-Item3.Add("Book name", "Chuck it, let's do it");
-Item3.Add("Quantity", 5);
+Item3.Map.Add("Product category", "books");
+Item3.Map.Add("Book name", "Chuck it, let's do it");
+Item3.Map.Add("Quantity", 5);
 
 TArray<FCleverTapProperties> Items;
 Items.Add(Item1);
 Items.Add(Item2);
 Items.Add(Item3);
 
-ICleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
+UCleverTapInstance& CleverTap = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 CleverTap.PushChargedEvent(ChargeDetails, Items);
 ```
 

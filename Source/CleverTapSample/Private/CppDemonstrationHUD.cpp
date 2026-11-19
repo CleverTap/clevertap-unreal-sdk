@@ -484,6 +484,10 @@ namespace
 // Needs bUseCustomCleverTapId=True in DefaultEngine.ini, otherwise the native SDKs ignore the ID
 void ACppDemonstrationHUD::CallLoginWithCustomCleverTapId() // static
 {
+	// Each tap starts a new login; a check left over from an earlier tap must not report on this one.
+	static int32 LoginGeneration = 0;
+	const int32 ThisGeneration = ++LoginGeneration;
+
 	const FString CleverTapId = TEXT("player_") + FGuid::NewGuid().ToString(EGuidFormats::Digits).Left(8).ToLower();
 	FCleverTapProperties Profile;
 	Profile.Map.Add(TEXT("Identity"), CleverTapId);
@@ -496,7 +500,11 @@ void ACppDemonstrationHUD::CallLoginWithCustomCleverTapId() // static
 
 	// The profile switch is async, so wait before reading the ID back. The native SDKs store a custom ID with a
 	// prefix: "__h" on Android, "-h" on iOS.
-	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([CleverTapId](float) {
+	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([CleverTapId, ThisGeneration](float) {
+		if (ThisGeneration != LoginGeneration)
+		{
+			return false; // a newer login started; its own check will report
+		}
 		auto& Inst = GEngine->GetEngineSubsystem<UCleverTapSubsystem>()->SharedInstance();
 		const FString CurrentId = Inst.GetCleverTapId();
 		const bool bMatches = CurrentId == CleverTapId || CurrentId == TEXT("__h") + CleverTapId

@@ -1208,15 +1208,29 @@ void UIOSCleverTapInstance::SetApplicationIconBadgeNumber(int32 Number)
 		return;
 	}
 	UE_LOG(LogCleverTap, Log, TEXT("SetApplicationIconBadgeNumber(%d)"), Number);
-	// setBadgeCount: (iOS 16+, the project minimum) replaces UIApplication.applicationIconBadgeNumber, deprecated in iOS 17.
-	[[UNUserNotificationCenter currentNotificationCenter] setBadgeCount:Number
-		withCompletionHandler:^(NSError* Error) {
-			if (Error != nil)
-			{
-				UE_LOG(LogCleverTap, Warning, TEXT("SetApplicationIconBadgeNumber failed: %s"),
-					*FString{ Error.localizedDescription });
-			}
-		}];
+	// setBadgeCount: (iOS 16+) replaces UIApplication.applicationIconBadgeNumber, deprecated in iOS 17. Games built
+	// with this plugin can target iOS 15 (the UE 5.2 default), so fall back to the old property there.
+	if (@available(iOS 16.0, *))
+	{
+		[[UNUserNotificationCenter currentNotificationCenter] setBadgeCount:Number
+			withCompletionHandler:^(NSError* Error) {
+				if (Error != nil)
+				{
+					UE_LOG(LogCleverTap, Warning, TEXT("SetApplicationIconBadgeNumber failed: %s"),
+						*FString{ Error.localizedDescription });
+				}
+			}];
+	}
+	else
+	{
+		// UIApplication must be used on the main thread
+		dispatch_async(dispatch_get_main_queue(), ^{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+			[UIApplication sharedApplication].applicationIconBadgeNumber = Number;
+#pragma clang diagnostic pop
+		});
+	}
 }
 
 void UIOSCleverTapInstance::GetActiveNotificationCount(TUniqueFunction<void(int32)> OnResult)

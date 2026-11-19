@@ -1,6 +1,20 @@
 # Changelog
 ==========
 
+## [Unreleased]
+
+### Added
+- `SetApplicationIconBadgeNumber(Number)` — sets the app icon badge number on iOS (`0` clears it), using `UNUserNotificationCenter setBadgeCount:` on iOS 16+ and `applicationIconBadgeNumber` on iOS 15. iOS only; no-op on Android and in the Editor. Blueprint category `CleverTap|Push`.
+- `GetActiveNotificationCount(OnResult)` — gets how many of the app's notifications are currently shown in the notification tray (Android) or Notification Center (iOS), so games can build their own badge or unread indicator (on Android, e.g. with a launcher badge library). The count is delivered later on the game thread; group summaries aren't counted on Android; always 0 in the Editor. C++ (lambda) and Blueprint (`CleverTap|Push`, event pin).
+- The plugin now registers itself with the native SDKs as `Unreal` with its version (`setLibrary` + `setCustomSdkVersion`, e.g. `"Unreal":10400` for 1.4.0), so CleverTap can see which Unreal plugin version sends each request. Nothing to call; the version comes from `CleverTap.uplugin`.
+
+### Fixed
+- Changes made in **Project Settings → Plugins → CleverTap** were not saved to `Config/DefaultEngine.ini` (only to the per-user editor config), so Android and iOS packaging, which reads `DefaultEngine.ini`, never saw them. `UCleverTapConfig` is now `defaultconfig`, so every change there is written to `DefaultEngine.ini`.
+
+### Docs
+- README: "Log in with your own CleverTap ID" — how to use your own player ID as the CleverTap ID with `bUseCustomCleverTapId=True` and `OnUserLoginWithCleverTapId()` (both already supported).
+- README: "App Icon Badge" — on Android the badge comes from channels with `bShowBadge=True`, and a push can set its own count with the `wzrk_bc` payload key; Android has no API for the app to set a badge number.
+
 ## [1.4.0] - 2026-10-28
 
 ### Updated
